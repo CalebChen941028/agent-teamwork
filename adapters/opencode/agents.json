@@ -1,33 +1,53 @@
 {
   "name": "agent-teamwork",
-  "version": "0.2.0",
+  "version": "0.3.0",
+  "harness2_features": {
+    "task_level_guardrails": ["invariant", "domain"],
+    "cross_task_experience_library": "~/.config/agent-teamwork/experience.json",
+    "evidence_boundary_enforced": true,
+    "deliverable_shape_lock": true
+  },
   "roles": {
     "orchestrator": {
       "prompt": "roles/orchestrator.en.md",
+      "prompt_en": "roles/orchestrator.en.md",
+      "prompt_zh": "roles/orchestrator.zh.md",
       "model_tier": "heavy"
     },
     "worker": {
       "prompt": "roles/worker.en.md",
+      "prompt_en": "roles/worker.en.md",
+      "prompt_zh": "roles/worker.zh.md",
       "model_tier": "dynamic"
     },
     "critic": {
       "prompt": "roles/critic.en.md",
+      "prompt_en": "roles/critic.en.md",
+      "prompt_zh": "roles/critic.zh.md",
       "model_tier": "heavy"
     },
     "challenger": {
       "prompt": "roles/challenger.en.md",
+      "prompt_en": "roles/challenger.en.md",
+      "prompt_zh": "roles/challenger.zh.md",
       "model_tier": "heavy"
     },
     "reworker": {
       "prompt": "roles/reworker.en.md",
+      "prompt_en": "roles/reworker.en.md",
+      "prompt_zh": "roles/reworker.zh.md",
       "model_tier": "heavy"
     },
     "auditor": {
       "prompt": "roles/auditor.en.md",
+      "prompt_en": "roles/auditor.en.md",
+      "prompt_zh": "roles/auditor.zh.md",
       "model_tier": "heavy"
     },
     "scribe": {
       "prompt": "roles/scribe.en.md",
+      "prompt_en": "roles/scribe.en.md",
+      "prompt_zh": "roles/scribe.zh.md",
       "model_tier": "light"
     }
   }

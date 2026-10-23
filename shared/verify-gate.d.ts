@@ -19,6 +19,20 @@ export interface ChallengeLike {
   evidence?: string;
 }
 
+export interface HarnessGuardrail {
+  scope: "invariant" | "domain";
+  rule: string;
+  evidence: string;
+}
+
+export interface ExperienceEntry {
+  cue: string;
+  lesson: string;
+  evidence: string;
+  verdict?: "helped" | "hurt" | "no_effect" | "confounded";
+  confidence?: "high" | "medium" | "low";
+}
+
 export function formatFailureOutput(
   stdout?: string,
   stderr?: string,
@@ -28,6 +42,24 @@ export function formatFailureOutput(
 export function computeFailureSignature(output: string): string;
 
 export function computeGapSignature(gaps: string[]): string;
+
+export function normalizeRelPath(p: string): string;
+
+export function isPathAllowed(filePath: string, allowedPaths: string[]): boolean;
+
+export function findOutOfBoundsFiles(
+  currentFiles: string[],
+  baselineFiles: string[],
+  allowedPaths: string[],
+): string[];
+
+export function isValidExperienceEntry(entry: ExperienceEntry | null | undefined): boolean;
+
+export function formatHarnessGuardrails(
+  guardrails: HarnessGuardrail[],
+  maxItems?: number,
+  lang?: "zh" | "en",
+): string;
 
 export function formatConclusion(
   shortTask: string,

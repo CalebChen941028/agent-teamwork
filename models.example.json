@@ -1,19 +1,44 @@
 {
-  "default_light_model": "glm-4-flash",
+  "default_light_model": "deepseek-chat",
   "models": {
-    "glm-4-flash": {
-      "id": "glm-4-flash",
-      "vendor": "zhipu",
+    "deepseek-chat": {
+      "id": "deepseek-chat",
+      "vendor": "deepseek",
       "tier": "light"
+    },
+    "deepseek-reasoner": {
+      "id": "deepseek-reasoner",
+      "vendor": "deepseek",
+      "tier": "heavy"
     },
     "claude-3-5-haiku": {
       "id": "claude-3-5-haiku-20241022",
       "vendor": "anthropic",
       "tier": "light"
     },
-    "deepseek-chat": {
-      "id": "deepseek-chat",
-      "vendor": "deepseek",
+    "claude-3-7-sonnet": {
+      "id": "claude-3-7-sonnet-20250219",
+      "vendor": "anthropic",
+      "tier": "heavy"
+    },
+    "gpt-4o-mini": {
+      "id": "gpt-4o-mini",
+      "vendor": "openai",
+      "tier": "light"
+    },
+    "o3-mini": {
+      "id": "o3-mini",
+      "vendor": "openai",
+      "tier": "heavy"
+    },
+    "gemini-2.5-flash": {
+      "id": "gemini-2.5-flash",
+      "vendor": "google",
+      "tier": "light"
+    },
+    "glm-4-flash": {
+      "id": "glm-4-flash",
+      "vendor": "zhipu",
       "tier": "light"
     },
     "qwen-turbo": {

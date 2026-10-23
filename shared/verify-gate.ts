@@ -1,6 +1,8 @@
 /**
  * Pure functions for verification gates, failure output formatting,
- * stall detection signatures, teamwork gap calculations, and workflow conclusion formatting.
+ * stall detection signatures, strict path boundary validation,
+ * Harness² recursive experience/guardrail management,
+ * teamwork gap calculations, and workflow conclusion formatting.
  * Standalone verification gate for agent-teamwork.
  */
 
@@ -23,6 +25,27 @@ export interface MilestoneOutcomeLike {
 export interface ChallengeLike {
   foundIssue?: boolean;
   evidence?: string;
+}
+
+/**
+ * Harness² Task-Level Adaptation Lever (Invariant vs Domain-Specific)
+ */
+export interface HarnessGuardrail {
+  scope: "invariant" | "domain";
+  rule: string;
+  evidence: string;
+}
+
+/**
+ * Harness² Harnessing-Level Experience Entry ({ cue, lesson, evidence })
+ * Filters out confounded or speculative attributions.
+ */
+export interface ExperienceEntry {
+  cue: string;
+  lesson: string;
+  evidence: string;
+  verdict?: "helped" | "hurt" | "no_effect" | "confounded";
+  confidence?: "high" | "medium" | "low";
 }
 
 /**
@@ -115,6 +138,142 @@ export function computeGapSignature(gaps: string[]): string {
     })
     .sort()
     .join(" ; ");
+}
+
+/**
+ * Normalizes a relative file path (strips leading ./ and trailing /).
+ */
+export function normalizeRelPath(p: string): string {
+  return (p || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\.\//, "")
+    .replace(/\/+$/, "");
+}
+
+/**
+ * Checks whether a modified file path is permitted by a list of allowedPaths (C6).
+ * Enforces strict path segment boundaries so "src/app" does not match "src/app-other/x.ts",
+ * and never checks reverse substring inclusion (which previously allowed "src" when "src/a/b.ts" was specified).
+ * Supports exact file matches, directory prefix matches, and simple glob patterns (e.g. "src/*.ts", "**").
+ */
+export function isPathAllowed(filePath: string, allowedPaths: string[]): boolean {
+  const normFile = normalizeRelPath(filePath);
+  if (!normFile) return false;
+  if (!Array.isArray(allowedPaths) || allowedPaths.length === 0) return false;
+
+  for (const rawAllowed of allowedPaths) {
+    const normAllowed = normalizeRelPath(rawAllowed);
+    if (!normAllowed) continue;
+
+    if (normAllowed === "." || normAllowed === "*" || normAllowed === "**") {
+      return true;
+    }
+
+    // Handle glob patterns containing *
+    if (normAllowed.includes("*")) {
+      const escaped = normAllowed
+        .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/\*\*/g, "___DOUBLE_STAR___")
+        .replace(/\*/g, "[^/]*")
+        .replace(/___DOUBLE_STAR___/g, ".*");
+      const regex = new RegExp(`^${escaped}$`);
+      if (regex.test(normFile)) {
+        return true;
+      }
+      continue;
+    }
+
+    // Exact match or directory boundary prefix match
+    if (normFile === normAllowed || normFile.startsWith(`${normAllowed}/`)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Detects newly modified or untracked files compared to a baseline set of paths,
+ * and returns those that violate allowedPaths (C6).
+ */
+export function findOutOfBoundsFiles(
+  currentFiles: string[],
+  baselineFiles: string[],
+  allowedPaths: string[],
+): string[] {
+  const baseSet = new Set((baselineFiles || []).map(normalizeRelPath).filter(Boolean));
+  const touchedInMilestone = (currentFiles || [])
+    .map(normalizeRelPath)
+    .filter((f) => Boolean(f) && !baseSet.has(f));
+
+  return touchedInMilestone.filter((f) => !isPathAllowed(f, allowedPaths));
+}
+
+/**
+ * Validates whether an ExperienceEntry from Harness² reflection is transferable and non-confounded.
+ * Rejects entries marked as "confounded", "hurt", or "no_effect", or entries missing cue/lesson/evidence.
+ */
+export function isValidExperienceEntry(entry: ExperienceEntry | null | undefined): boolean {
+  if (!entry || typeof entry !== "object") return false;
+  const cue = typeof entry.cue === "string" ? entry.cue.trim() : "";
+  const lesson = typeof entry.lesson === "string" ? entry.lesson.trim() : "";
+  const evidence = typeof entry.evidence === "string" ? entry.evidence.trim() : "";
+
+  if (!cue || !lesson || !evidence) return false;
+  if (cue.toUpperCase() === "NO_ENTRY" || lesson.toUpperCase() === "NO_ENTRY") return false;
+
+  if (
+    entry.verdict &&
+    (entry.verdict === "confounded" || entry.verdict === "hurt" || entry.verdict === "no_effect")
+  ) {
+    return false;
+  }
+
+  if (entry.confidence === "low") {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Formats active Harness² guardrails (invariant + domain levers) into a compact context block
+ * to respect the Context Tax Hierarchy (keep always-on prose minimal and evidence-backed).
+ */
+export function formatHarnessGuardrails(
+  guardrails: HarnessGuardrail[],
+  maxItems: number = 6,
+  lang: "zh" | "en" = "zh",
+): string {
+  const valid = (guardrails || []).filter(
+    (g) => g && typeof g.rule === "string" && g.rule.trim().length > 0,
+  );
+  if (valid.length === 0) return "";
+
+  const sliced = valid.slice(-maxItems);
+  const inv = sliced.filter((g) => g.scope === "invariant");
+  const dom = sliced.filter((g) => g.scope === "domain");
+
+  const lines: string[] = [];
+  if (lang === "en") {
+    lines.push("[Harness² Active Execution Guardrails]");
+    if (inv.length > 0) {
+      lines.push("- Invariant Rules: " + inv.map((g) => g.rule.trim()).join(" | "));
+    }
+    if (dom.length > 0) {
+      lines.push("- Domain Rules: " + dom.map((g) => g.rule.trim()).join(" | "));
+    }
+  } else {
+    lines.push("【Harness² 动态执行护栏】");
+    if (inv.length > 0) {
+      lines.push("- 通用纪律 (Invariant)：" + inv.map((g) => g.rule.trim()).join("；"));
+    }
+    if (dom.length > 0) {
+      lines.push("- 领域护栏 (Domain)：" + dom.map((g) => g.rule.trim()).join("；"));
+    }
+  }
+  return lines.join("\n");
 }
 
 /**

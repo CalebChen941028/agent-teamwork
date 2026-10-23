@@ -9,27 +9,25 @@ if [[ ! -f "$MANIFEST_FILE" ]]; then
   exit 0
 fi
 
-python3 - <<EOF
-import json
-from pathlib import Path
+node -e '
+const fs = require("node:fs");
+const manifestPath = process.argv[1];
+const data = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+const ts = data.backup_timestamp || "";
 
-manifest_path = Path("$MANIFEST_FILE")
-data = json.loads(manifest_path.read_text(encoding="utf-8"))
+for (const f of data.files || []) {
+  const bak = ts ? `${f}.bak-${ts}` : "";
+  if (bak && fs.existsSync(bak)) {
+    fs.renameSync(bak, f);
+    console.log(`Restored: ${f} from backup`);
+  } else if (fs.existsSync(f)) {
+    fs.unlinkSync(f);
+    console.log(`Removed: ${f}`);
+  }
+}
 
-ts = data.get("backup_timestamp", "")
-
-for f in data.get("files", []):
-    fp = Path(f)
-    bak = Path(f"{f}.bak-{ts}") if ts else None
-    if bak and bak.is_file():
-        bak.replace(fp)
-        print(f"Restored: {fp} from backup")
-    elif fp.is_file():
-        fp.unlink()
-        print(f"Removed: {fp}")
-
-manifest_path.unlink()
-print("Removed manifest.")
-EOF
+fs.unlinkSync(manifestPath);
+console.log("Removed manifest.");
+' "$MANIFEST_FILE"
 
 echo "Uninstallation finished."

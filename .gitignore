@@ -3,4 +3,7 @@ node_modules/
 dist/
 coverage/
 models.local.json
+.teamwork/
+.agent-teamwork/
+*.bak-*
 *.log
