@@ -1,0 +1,34 @@
+{
+  "name": "agent-teamwork",
+  "version": "0.2.0",
+  "roles": {
+    "orchestrator": {
+      "prompt": "roles/orchestrator.en.md",
+      "model_tier": "heavy"
+    },
+    "worker": {
+      "prompt": "roles/worker.en.md",
+      "model_tier": "dynamic"
+    },
+    "critic": {
+      "prompt": "roles/critic.en.md",
+      "model_tier": "heavy"
+    },
+    "challenger": {
+      "prompt": "roles/challenger.en.md",
+      "model_tier": "heavy"
+    },
+    "reworker": {
+      "prompt": "roles/reworker.en.md",
+      "model_tier": "heavy"
+    },
+    "auditor": {
+      "prompt": "roles/auditor.en.md",
+      "model_tier": "heavy"
+    },
+    "scribe": {
+      "prompt": "roles/scribe.en.md",
+      "model_tier": "light"
+    }
+  }
+}
