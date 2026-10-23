@@ -1,7 +1,7 @@
 /**
  * Pure functions for verification gates, failure output formatting,
  * stall detection signatures, teamwork gap calculations, and workflow conclusion formatting.
- * Shared between agent-boost and agent-teamwork.
+ * Standalone verification gate for agent-teamwork.
  */
 
 /**

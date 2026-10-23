@@ -132,7 +132,7 @@ let localModelConfig: any = null;
 try {
   const cfgRes = await world.run("sh", [
     "-c",
-    "cat models.local.json 2>/dev/null || cat ~/.config/agent-boost/models.local.json 2>/dev/null || true",
+    "cat models.local.json 2>/dev/null || cat ~/.config/agent-teamwork/models.local.json 2>/dev/null || true",
   ]);
   if (cfgRes.exitCode === 0 && cfgRes.stdout.trim()) {
     localModelConfig = JSON.parse(cfgRes.stdout.trim());

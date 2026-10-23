@@ -19,5 +19,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Bilingual Scoping Interview Guide (`protocol/scoping-interview.md`).
 - Multi-agent adapter templates for Claude Code, OpenCode, Codex, and Generic assistants.
-- Shared synchronizer script `scripts/sync-shared.sh`.
 - Comprehensive unit tests in `tests/teamwork.test.mjs`.
