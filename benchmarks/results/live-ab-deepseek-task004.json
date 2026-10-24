@@ -1,0 +1,193 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T17:23:42.069Z",
+    "suite": "live-eval (deepseek-v4.1-flash Solo vs deepseek-v4.1-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "deepseek-v4.1-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-004"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-004",
+      "name": "Circular Schema Validator $ref Resolution",
+      "category": "Parser & Schema Validation",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 1123,
+          "completion": 29586,
+          "total": 30709,
+          "calls": 2
+        },
+        "timeMs": 153744.50924999997,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 86753
+          },
+          {
+            "turn": 2,
+            "modelChars": 15044,
+            "filesWritten": [
+              "src/schema/validator.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 66708
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 1,
+        "interceptedFiles": [
+          "package.json"
+        ],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 1706,
+          "completion": 7494,
+          "total": 9200,
+          "calls": 2
+        },
+        "timeMs": 40049.56904199999,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 804,
+            "filesWritten": [
+              "src/schema/validator.js",
+              "src/schema/resolver.js",
+              "tests/schema.test.js"
+            ],
+            "blockedFiles": [
+              "package.json"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 2466
+          },
+          {
+            "turn": 2,
+            "modelChars": 15059,
+            "filesWritten": [
+              "src/schema/resolver.js",
+              "src/schema/validator.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 37439
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 30709,
+        "avgTimeMs": 153745
+      },
+      {
+        "track": "teamwork",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 1,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 9200,
+        "avgTimeMs": 40050
+      }
+    ],
+    "delta": {
+      "passRatePts": 0,
+      "outOfBoundsFiles": 0,
+      "falseVictories": 0,
+      "tokenDeltaPct": -70,
+      "timeDeltaPct": -74
+    }
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T17:20:28.141Z",
+    "suite": "live-eval (deepseek-v4.1-flash Solo vs deepseek-v4.1-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "deepseek-v4.1-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-003"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-003",
+      "name": "Express Middleware Router Async Error Propagation",
+      "category": "Routing & Architecture",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 1097,
+          "completion": 24255,
+          "total": 25352,
+          "calls": 2
+        },
+        "timeMs": 159106.784583,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 108250
+          },
+          {
+            "turn": 2,
+            "modelChars": 4268,
+            "filesWritten": [
+              "src/router/layer.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 50453
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 1,
+        "interceptedFiles": [
+          "package.json"
+        ],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 589,
+          "completion": 14765,
+          "total": 15354,
+          "calls": 1
+        },
+        "timeMs": 81560.964167,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 61768,
+            "filesWritten": [
+              "src/router/layer.js",
+              "tests/router.test.js"
+            ],
+            "blockedFiles": [
+              "package.json"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 81411
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 25352,
+        "avgTimeMs": 159107
+      },
+      {
+        "track": "teamwork",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 1,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 15354,
+        "avgTimeMs": 81561
+      }
+    ],
+    "delta": {
+      "passRatePts": 0,
+      "outOfBoundsFiles": 0,
+      "falseVictories": 0,
+      "tokenDeltaPct": -39.4,
+      "timeDeltaPct": -48.7
+    }
+  }
+}

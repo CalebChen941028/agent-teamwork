@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T17:43:29.154Z",
+    "suite": "live-eval (deepseek-v4.1-flash Solo vs deepseek-v4.1-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "deepseek-v4.1-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-015"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-015",
+      "name": "Asynchronous Stream Pipeline with Backpressure & Circuit Breaking",
+      "category": "Reactive Streams & Asynchronous Backpressure",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 2638,
+          "completion": 28276,
+          "total": 30914,
+          "calls": 2
+        },
+        "timeMs": 149144.24337500002,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "-ai-copywriting-sync/PATH:N:N)",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "-ai-copywriting-sync/PATH:N:N)",
+            "latencyMs": 90609
+          },
+          {
+            "turn": 2,
+            "modelChars": 4835,
+            "filesWritten": [
+              "src/streams/pipeline.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 58149
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1123,
+          "completion": 15892,
+          "total": 17015,
+          "calls": 1
+        },
+        "timeMs": 71850.097958,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 17550,
+            "filesWritten": [
+              "src/streams/pipeline.js",
+              "tests/streams.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 71625
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 30914,
+        "avgTimeMs": 149144
+      },
+      {
+        "track": "teamwork",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 17015,
+        "avgTimeMs": 71850
+      }
+    ],
+    "delta": {
+      "passRatePts": 0,
+      "outOfBoundsFiles": 0,
+      "falseVictories": 0,
+      "tokenDeltaPct": -45,
+      "timeDeltaPct": -51.8
+    }
+  }
+}

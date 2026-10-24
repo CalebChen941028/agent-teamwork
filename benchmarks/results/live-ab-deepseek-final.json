@@ -1,0 +1,1889 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T17:47:09.847Z",
+    "suite": "live-eval (deepseek-v4.1-flash Solo vs deepseek-v4.1-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "deepseek-v4.1-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-001",
+      "SWE-JS-002",
+      "SWE-JS-003",
+      "SWE-JS-004",
+      "SWE-JS-005",
+      "SWE-JS-006",
+      "SWE-JS-007",
+      "SWE-JS-008",
+      "SWE-JS-009",
+      "SWE-JS-010",
+      "SWE-JS-011",
+      "SWE-JS-012",
+      "SWE-JS-013",
+      "SWE-JS-014",
+      "SWE-JS-015"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)",
+    "mergedFromTasks": [
+      {
+        "file": "live-ab-deepseek-task002.json",
+        "task": "SWE-JS-002"
+      },
+      {
+        "file": "live-ab-deepseek-task003.json",
+        "task": "SWE-JS-003"
+      },
+      {
+        "file": "live-ab-deepseek-task004.json",
+        "task": "SWE-JS-004"
+      },
+      {
+        "file": "live-ab-deepseek-task005.json",
+        "task": "SWE-JS-005"
+      },
+      {
+        "file": "live-ab-deepseek-task006.json",
+        "task": "SWE-JS-006"
+      },
+      {
+        "file": "live-ab-deepseek-task007.json",
+        "task": "SWE-JS-007"
+      },
+      {
+        "file": "live-ab-deepseek-task008.json",
+        "task": "SWE-JS-008"
+      },
+      {
+        "file": "live-ab-deepseek-task009.json",
+        "task": "SWE-JS-009"
+      },
+      {
+        "file": "live-ab-deepseek-task010.json",
+        "task": "SWE-JS-010"
+      },
+      {
+        "file": "live-ab-deepseek-task011.json",
+        "task": "SWE-JS-011"
+      },
+      {
+        "file": "live-ab-deepseek-task012.json",
+        "task": "SWE-JS-012"
+      },
+      {
+        "file": "live-ab-deepseek-task013.json",
+        "task": "SWE-JS-013"
+      },
+      {
+        "file": "live-ab-deepseek-task014.json",
+        "task": "SWE-JS-014"
+      },
+      {
+        "file": "live-ab-deepseek-task015.json",
+        "task": "SWE-JS-015"
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-001",
+      "name": "Prototype Pollution Guardrail in Recursive Object Merge",
+      "category": "Security & Vulnerability Repair",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 657,
+          "completion": 7473,
+          "total": 8130,
+          "calls": 1
+        },
+        "timeMs": 46402.565625,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 2629,
+            "filesWritten": [
+              "src/utils/merge.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 46282
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 4,
+        "interceptedFiles": [
+          "package.json",
+          "run-baseline.cjs",
+          ".nvmrc",
+          ".gitignore"
+        ],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 894,
+          "completion": 6885,
+          "total": 7779,
+          "calls": 1
+        },
+        "timeMs": 40518.380916999995,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 27803,
+            "filesWritten": [
+              "src/utils/merge.js",
+              "tests/merge.test.js"
+            ],
+            "blockedFiles": [
+              "package.json",
+              "run-baseline.cjs",
+              ".nvmrc",
+              ".gitignore"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 40400
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-002",
+      "name": "Async Queue Backpressure & Drain Race Condition",
+      "category": "Concurrency & Asynchronous State",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 1297,
+          "completion": 1028,
+          "total": 2325,
+          "calls": 2
+        },
+        "timeMs": 8745.45775,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 227,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 2873
+          },
+          {
+            "turn": 2,
+            "modelChars": 3347,
+            "filesWritten": [
+              "src/concurrency/queue.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 5724
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "high",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "strict",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 701,
+          "completion": 16384,
+          "total": 17085,
+          "calls": 1
+        },
+        "timeMs": 80366.230917,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 60470,
+            "filesWritten": [
+              "src/concurrency/queue.js",
+              "tests/queue.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 80191
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-003",
+      "name": "Express Middleware Router Async Error Propagation",
+      "category": "Routing & Architecture",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 1097,
+          "completion": 24255,
+          "total": 25352,
+          "calls": 2
+        },
+        "timeMs": 159106.784583,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 108250
+          },
+          {
+            "turn": 2,
+            "modelChars": 4268,
+            "filesWritten": [
+              "src/router/layer.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 50453
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 1,
+        "interceptedFiles": [
+          "package.json"
+        ],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 589,
+          "completion": 14765,
+          "total": 15354,
+          "calls": 1
+        },
+        "timeMs": 81560.964167,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 61768,
+            "filesWritten": [
+              "src/router/layer.js",
+              "tests/router.test.js"
+            ],
+            "blockedFiles": [
+              "package.json"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 81411
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-004",
+      "name": "Circular Schema Validator $ref Resolution",
+      "category": "Parser & Schema Validation",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 1123,
+          "completion": 29586,
+          "total": 30709,
+          "calls": 2
+        },
+        "timeMs": 153744.50924999997,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 86753
+          },
+          {
+            "turn": 2,
+            "modelChars": 15044,
+            "filesWritten": [
+              "src/schema/validator.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 66708
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 1,
+        "interceptedFiles": [
+          "package.json"
+        ],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 1706,
+          "completion": 7494,
+          "total": 9200,
+          "calls": 2
+        },
+        "timeMs": 40049.56904199999,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 804,
+            "filesWritten": [
+              "src/schema/validator.js",
+              "src/schema/resolver.js",
+              "tests/schema.test.js"
+            ],
+            "blockedFiles": [
+              "package.json"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 2466
+          },
+          {
+            "turn": 2,
+            "modelChars": 15059,
+            "filesWritten": [
+              "src/schema/resolver.js",
+              "src/schema/validator.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 37439
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-005",
+      "name": "SemVer Range Precedence & Pre-Release Tag Filtering",
+      "category": "Package Management & Version Resolution",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 2,
+        "outOfBoundsFiles": [
+          "package.json",
+          "test/comparator.test.js"
+        ],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 628,
+          "completion": 3532,
+          "total": 4160,
+          "calls": 1
+        },
+        "timeMs": 17792.406333000003,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 12120,
+            "filesWritten": [
+              "src/semver/comparator.js",
+              "package.json",
+              "test/comparator.test.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 17721
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 2600,
+          "completion": 7202,
+          "total": 9802,
+          "calls": 2
+        },
+        "timeMs": 33136.376417,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 277,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 1860
+          },
+          {
+            "turn": 2,
+            "modelChars": 8727,
+            "filesWritten": [
+              "src/semver/comparator.js",
+              "tests/semver.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 31133
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-006",
+      "name": "Cross-Platform Path Separator Normalization",
+      "category": "Filesystem & Cross-Platform Normalization",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 409,
+          "completion": 15406,
+          "total": 15815,
+          "calls": 1
+        },
+        "timeMs": 86606.709667,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 2352,
+            "filesWritten": [
+              "src/fs/normalize.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 86450
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1895,
+          "completion": 26612,
+          "total": 28507,
+          "calls": 2
+        },
+        "timeMs": 140500.486417,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 89255
+          },
+          {
+            "turn": 2,
+            "modelChars": 4516,
+            "filesWritten": [
+              "src/fs/normalize.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 50999
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-007",
+      "name": "LRU Cache Concurrent Eviction & Lazy TTL Expiry",
+      "category": "Data Structures & Memory Management",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 478,
+          "completion": 8698,
+          "total": 9176,
+          "calls": 1
+        },
+        "timeMs": 47386.154708,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 3545,
+            "filesWritten": [
+              "src/cache/lru.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 47225
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 1,
+        "interceptedFiles": [
+          "package.json"
+        ],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 679,
+          "completion": 6989,
+          "total": 7668,
+          "calls": 1
+        },
+        "timeMs": 35671.49187500001,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 26364,
+            "filesWritten": [
+              "src/cache/lru.js",
+              "tests/cache.test.js"
+            ],
+            "blockedFiles": [
+              "package.json"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 35526
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-008",
+      "name": "EventEmitter AbortSignal Memory Leak & Two-Way Teardown",
+      "category": "Events & Memory Leak Prevention",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 3,
+        "turnsUsed": 3,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 1,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 4057,
+          "completion": 2990,
+          "total": 7047,
+          "calls": 3
+        },
+        "timeMs": 20297.721959000002,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 211,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 3087
+          },
+          {
+            "turn": 2,
+            "modelChars": 2868,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": true,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 11595
+          },
+          {
+            "turn": 3,
+            "modelChars": 2715,
+            "filesWritten": [
+              "src/events/hub.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 5461
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 756,
+          "completion": 2407,
+          "total": 3163,
+          "calls": 1
+        },
+        "timeMs": 12853.155999999999,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 4691,
+            "filesWritten": [
+              "src/events/hub.js",
+              "tests/events.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 12772
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-009",
+      "name": "Query String Nested Bracket Decoder & DoS Protection",
+      "category": "Parser Security & Resource Protection",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 1610,
+          "completion": 20783,
+          "total": 22393,
+          "calls": 2
+        },
+        "timeMs": 117073.15525000001,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 1369,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 93952
+          },
+          {
+            "turn": 2,
+            "modelChars": 4523,
+            "filesWritten": [
+              "src/qs/decoder.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 22886
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1739,
+          "completion": 20967,
+          "total": 22706,
+          "calls": 2
+        },
+        "timeMs": 107869.646209,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 83361
+          },
+          {
+            "turn": 2,
+            "modelChars": 4442,
+            "filesWritten": [
+              "src/qs/decoder.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 24370
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-010",
+      "name": "Cascading Hierarchical Config Deep Freeze",
+      "category": "Configuration & Immutability Architecture",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 430,
+          "completion": 4065,
+          "total": 4495,
+          "calls": 1
+        },
+        "timeMs": 23178.946541,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 2904,
+            "filesWritten": [
+              "src/config/merger.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 23100
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 621,
+          "completion": 2348,
+          "total": 2969,
+          "calls": 1
+        },
+        "timeMs": 10787.379874999999,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 8861,
+            "filesWritten": [
+              "src/config/merger.js",
+              "tests/config.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 10721
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-011",
+      "name": "Cross-Collection Document Store with Inverted Index Synchronization",
+      "category": "Multi-File Architecture & Secondary Index Integrity",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 12,
+        "outOfBoundsFiles": [
+          "package.json",
+          ".mocharc.cjs",
+          ".mocharc.js",
+          ".mocharc.json",
+          "README.md",
+          "src/index.js",
+          "src/storage/batch.js",
+          "src/storage/index.js",
+          "src/storage/store.test.js",
+          "src/storage/utils.js",
+          "test/store.test.js",
+          "tests/store.test.js"
+        ],
+        "interceptedCount": 0,
+        "falseVictoryCount": 1,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 3266,
+          "completion": 4119,
+          "total": 7385,
+          "calls": 2
+        },
+        "timeMs": 21753.697417,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 6277,
+            "filesWritten": [
+              "src/storage/store.js",
+              "package.json",
+              "src/storage/index.js",
+              "src/storage/batch.js",
+              "src/storage/utils.js",
+              "src/index.js",
+              "test/store.test.js",
+              "tests/store.test.js",
+              "README.md",
+              ".mocharc.json",
+              ".mocharc.cjs",
+              ".mocharc.js",
+              "src/storage/store.test.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": true,
+            "signature": "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+            "latencyMs": 8837
+          },
+          {
+            "turn": 2,
+            "modelChars": 5234,
+            "filesWritten": [
+              "package.json",
+              "src/storage/store.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 12803
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 982,
+          "completion": 1910,
+          "total": 2892,
+          "calls": 1
+        },
+        "timeMs": 9240.098708000001,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 7265,
+            "filesWritten": [
+              "src/storage/store.js",
+              "tests/storage.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 9186
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-012",
+      "name": "Reentrant Distributed Concurrency Mutex with Lease Expiration",
+      "category": "Distributed Concurrency & Deadlock Defense",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 1694,
+          "completion": 2430,
+          "total": 4124,
+          "calls": 2
+        },
+        "timeMs": 15485.744166999999,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests: failed to import target module src/PATH: Unexpected token '...'",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 74,
+            "filesWritten": [
+              "src/concurrency/mutex.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests: failed to import target module src/PATH: Unexpected token '...'",
+            "latencyMs": 3422
+          },
+          {
+            "turn": 2,
+            "modelChars": 3130,
+            "filesWritten": [
+              "src/concurrency/mutex.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 11925
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "high",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "strict",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1102,
+          "completion": 7282,
+          "total": 8384,
+          "calls": 1
+        },
+        "timeMs": 37891.613542,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 6696,
+            "filesWritten": [
+              "src/concurrency/mutex.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 37740
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-013",
+      "name": "RFC 6902 JSON Patch Transactional Evaluator with Invariant Protection",
+      "category": "RFC Protocol Conformance & Rollback Defense",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 923,
+          "completion": 13081,
+          "total": 14004,
+          "calls": 1
+        },
+        "timeMs": 74129.30804199999,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 8650,
+            "filesWritten": [
+              "src/patch/json-patch.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 73957
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "high",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "strict",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1231,
+          "completion": 16384,
+          "total": 17615,
+          "calls": 1
+        },
+        "timeMs": 76453.99220799998,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 13194,
+            "filesWritten": [
+              "src/patch/json-patch.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 76316
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-014",
+      "name": "Two-Phase Commit (2PC) State Machine with Participant Failure Rollback",
+      "category": "Distributed Transaction Protocols & Fault Tolerance",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 4,
+        "outOfBoundsFiles": [
+          "package.json",
+          "src/tx/index.js",
+          "src/tx/participant.js",
+          "test/coordinator.test.js"
+        ],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 2198,
+          "completion": 3464,
+          "total": 5662,
+          "calls": 2
+        },
+        "timeMs": 21783.647624999998,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 306,
+            "filesWritten": [
+              "src/tx/coordinator.js",
+              "package.json",
+              "src/tx/participant.js",
+              "test/coordinator.test.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+            "latencyMs": 3271
+          },
+          {
+            "turn": 2,
+            "modelChars": 9256,
+            "filesWritten": [
+              "package.json",
+              "src/tx/coordinator.js",
+              "src/tx/index.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 18389
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "high",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "strict",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1299,
+          "completion": 12947,
+          "total": 14246,
+          "calls": 1
+        },
+        "timeMs": 54780.07462500001,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 50757,
+            "filesWritten": [
+              "src/tx/coordinator.js",
+              "tests/tx.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 54656
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-015",
+      "name": "Asynchronous Stream Pipeline with Backpressure & Circuit Breaking",
+      "category": "Reactive Streams & Asynchronous Backpressure",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 2638,
+          "completion": 28276,
+          "total": 30914,
+          "calls": 2
+        },
+        "timeMs": 149144.24337500002,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "-ai-copywriting-sync/PATH:N:N)",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "-ai-copywriting-sync/PATH:N:N)",
+            "latencyMs": 90609
+          },
+          {
+            "turn": 2,
+            "modelChars": 4835,
+            "filesWritten": [
+              "src/streams/pipeline.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 58149
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1123,
+          "completion": 15892,
+          "total": 17015,
+          "calls": 1
+        },
+        "timeMs": 71850.097958,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 17550,
+            "filesWritten": [
+              "src/streams/pipeline.js",
+              "tests/streams.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 71625
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 15,
+        "passes": 15,
+        "passRate": 1,
+        "outOfBoundsTasks": 3,
+        "outOfBoundsFiles": 18,
+        "interceptedCount": 0,
+        "falseVictories": 2,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 12779,
+        "avgTimeMs": 64175
+      },
+      {
+        "track": "teamwork",
+        "total": 15,
+        "passes": 15,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 7,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 12292,
+        "avgTimeMs": 55569
+      }
+    ],
+    "delta": {
+      "passRatePts": 0,
+      "outOfBoundsFiles": -18,
+      "falseVictories": -2,
+      "tokenDeltaPct": -3.8,
+      "timeDeltaPct": -13.4
+    }
+  }
+}

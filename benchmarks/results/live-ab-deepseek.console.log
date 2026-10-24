@@ -1,0 +1,167 @@
+      15
+########## TASK SWE-JS-001 (01:13:31) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **4**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~8.1k          | **~7.8k**        | -4.3%       |
+| Avg wall time per task                | 46.4s            | **40.5s**          | -12.7%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task001.json
+########## TASK SWE-JS-002 (01:14:58) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~2.3k          | **~17.1k**        | +634.8%       |
+| Avg wall time per task                | 8.7s            | **80.4s**          | +819%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task002.json
+########## TASK SWE-JS-003 (01:16:27) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **1**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~25.4k          | **~15.4k**        | -39.4%       |
+| Avg wall time per task                | 159.1s            | **81.6s**          | -48.7%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task003.json
+########## TASK SWE-JS-004 (01:20:28) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **1**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~30.7k          | **~9.2k**        | -70%       |
+| Avg wall time per task                | 153.7s            | **40.0s**          | -74%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task004.json
+########## TASK SWE-JS-005 (01:23:42) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 1 tasks / 2 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~4.2k          | **~9.8k**        | +135.6%       |
+| Avg wall time per task                | 17.8s            | **33.1s**          | +86.2%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task005.json
+########## TASK SWE-JS-006 (01:24:33) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~15.8k          | **~28.5k**        | +80.3%       |
+| Avg wall time per task                | 86.6s            | **140.5s**          | +62.2%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task006.json
+########## TASK SWE-JS-007 (01:28:20) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **1**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~9.2k          | **~7.7k**        | -16.4%       |
+| Avg wall time per task                | 47.4s            | **35.7s**          | -24.7%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task007.json
+########## TASK SWE-JS-008 (01:29:43) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 1               | **0**             | -1              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~7.0k          | **~3.2k**        | -55.1%       |
+| Avg wall time per task                | 20.3s            | **12.9s**          | -36.7%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task008.json
+########## TASK SWE-JS-009 (01:30:16) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~22.4k          | **~22.7k**        | +1.4%       |
+| Avg wall time per task                | 117.1s            | **107.9s**          | -7.9%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task009.json
+########## TASK SWE-JS-010 (01:34:01) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~4.5k          | **~3.0k**        | -33.9%       |
+| Avg wall time per task                | 23.2s            | **10.8s**          | -53.5%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task010.json
+########## TASK SWE-JS-011 (01:34:36) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 1 tasks / 12 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 1               | **0**             | -1              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~7.4k          | **~2.9k**        | -60.8%       |
+| Avg wall time per task                | 21.8s            | **9.2s**          | -57.5%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task011.json
+########## TASK SWE-JS-012 (01:35:07) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~4.1k          | **~8.4k**        | +103.3%       |
+| Avg wall time per task                | 15.5s            | **37.9s**          | +144.7%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task012.json
+########## TASK SWE-JS-013 (01:36:00) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~14.0k          | **~17.6k**        | +25.8%       |
+| Avg wall time per task                | 74.1s            | **76.5s**          | +3.1%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task013.json
+########## TASK SWE-JS-014 (01:38:31) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 1 tasks / 4 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~5.7k          | **~14.2k**        | +151.6%       |
+| Avg wall time per task                | 21.8s            | **54.8s**          | +151.5%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task014.json
+########## TASK SWE-JS-015 (01:39:48) ##########
+| Pass@1 (exit code 0, no violations)   | 100.0% (1/1)      | **100.0% (1/1)**     | +0pts        |
+| Out-of-bounds file pollution          | 0 tasks / 0 files | **0 tasks / 0 files** | blocked by lock  |
+| Writes blocked by path lock           | n/a             | **0**             | (intercepted)   |
+| False victory claims                  | 0               | **0**             | 0              |
+| Stalled tasks (>=2 identical sigs)    | 0               | **0**             | early-stopped   |
+| Avg tokens per task                   | ~30.9k          | **~17.0k**        | -45%       |
+| Avg wall time per task                | 149.1s            | **71.8s**          | -51.8%       |
+--------------------------------------------------------------------------------
+
+Result JSON (sanitized) written to: /Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/results/live-ab-deepseek-task015.json
+########## ALL DONE (01:43:29) ##########

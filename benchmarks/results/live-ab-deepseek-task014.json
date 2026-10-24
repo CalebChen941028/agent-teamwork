@@ -1,0 +1,185 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T17:39:48.034Z",
+    "suite": "live-eval (deepseek-v4.1-flash Solo vs deepseek-v4.1-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "deepseek-v4.1-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-014"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-014",
+      "name": "Two-Phase Commit (2PC) State Machine with Participant Failure Rollback",
+      "category": "Distributed Transaction Protocols & Fault Tolerance",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 4,
+        "outOfBoundsFiles": [
+          "package.json",
+          "src/tx/index.js",
+          "src/tx/participant.js",
+          "test/coordinator.test.js"
+        ],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 2198,
+          "completion": 3464,
+          "total": 5662,
+          "calls": 2
+        },
+        "timeMs": 21783.647624999998,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 306,
+            "filesWritten": [
+              "src/tx/coordinator.js",
+              "package.json",
+              "src/tx/participant.js",
+              "test/coordinator.test.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+            "latencyMs": 3271
+          },
+          {
+            "turn": 2,
+            "modelChars": 9256,
+            "filesWritten": [
+              "package.json",
+              "src/tx/coordinator.js",
+              "src/tx/index.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 18389
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "high",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "strict",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1299,
+          "completion": 12947,
+          "total": 14246,
+          "calls": 1
+        },
+        "timeMs": 54780.07462500001,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 50757,
+            "filesWritten": [
+              "src/tx/coordinator.js",
+              "tests/tx.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 54656
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 1,
+        "outOfBoundsFiles": 4,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 5662,
+        "avgTimeMs": 21784
+      },
+      {
+        "track": "teamwork",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 14246,
+        "avgTimeMs": 54780
+      }
+    ],
+    "delta": {
+      "passRatePts": 0,
+      "outOfBoundsFiles": -4,
+      "falseVictories": 0,
+      "tokenDeltaPct": 151.6,
+      "timeDeltaPct": 151.5
+    }
+  }
+}

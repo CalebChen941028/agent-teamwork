@@ -816,10 +816,14 @@ export function parseGitStatus(porcelain) {
     const info = trimmed.slice(3);
     if (info.includes(" -> ")) {
       for (const part of info.split(" -> ")) {
-        if (part.trim()) paths.push(part.trim());
+        if (part.trim()) paths.push(part.trim().replace(/\/+$/, ""));
       }
     } else if (info.trim()) {
-      paths.push(info.trim());
+      // Strip directory-form trailing slashes: without -uall, git porcelain
+      // collapses wholly untracked directories to "dir/" entries which never
+      // match an allowedPaths file whitelist one level deeper and would read
+      // as false out-of-bounds pollution.
+      paths.push(info.trim().replace(/\/+$/, ""));
     }
   }
   return paths;
@@ -851,7 +855,7 @@ export function createSandbox({ task, track, parentDir = null }) {
     track,
     taskId: task.id,
     targetRel,
-    gitStatus: () => git(dir, ["status", "--porcelain"]),
+    gitStatus: () => git(dir, ["status", "--porcelain", "-uall"]),
     cleanup(keep = false) {
       if (keep) return dir;
       rmSync(dir, { recursive: true, force: true });
@@ -959,9 +963,15 @@ export function applyWrites(sandboxDir, files) {
       escaped.push(rel); // Never write outside the sandbox, regardless of track.
       continue;
     }
-    mkdirSync(path.dirname(abs), { recursive: true });
-    writeFileSync(abs, file.content);
-    written.push(rel);
+    // One malformed proposal (e.g. a file "x" followed by "x/y.js" — EEXIST on
+    // mkdir) must fail that single write, never kill the whole track.
+    try {
+      mkdirSync(path.dirname(abs), { recursive: true });
+      writeFileSync(abs, file.content);
+      written.push(rel);
+    } catch (err) {
+      failed.push(`${rel}: ${(err && err.code) || (err && err.message) || "write-error"}`);
+    }
   }
   return { written, escaped, failed };
 }

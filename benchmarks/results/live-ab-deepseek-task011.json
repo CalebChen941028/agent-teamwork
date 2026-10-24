@@ -1,0 +1,201 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T17:35:07.109Z",
+    "suite": "live-eval (deepseek-v4.1-flash Solo vs deepseek-v4.1-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "deepseek-v4.1-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-011"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-011",
+      "name": "Cross-Collection Document Store with Inverted Index Synchronization",
+      "category": "Multi-File Architecture & Secondary Index Integrity",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 12,
+        "outOfBoundsFiles": [
+          "package.json",
+          ".mocharc.cjs",
+          ".mocharc.js",
+          ".mocharc.json",
+          "README.md",
+          "src/index.js",
+          "src/storage/batch.js",
+          "src/storage/index.js",
+          "src/storage/store.test.js",
+          "src/storage/utils.js",
+          "test/store.test.js",
+          "tests/store.test.js"
+        ],
+        "interceptedCount": 0,
+        "falseVictoryCount": 1,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 3266,
+          "completion": 4119,
+          "total": 7385,
+          "calls": 2
+        },
+        "timeMs": 21753.697417,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 6277,
+            "filesWritten": [
+              "src/storage/store.js",
+              "package.json",
+              "src/storage/index.js",
+              "src/storage/batch.js",
+              "src/storage/utils.js",
+              "src/index.js",
+              "test/store.test.js",
+              "tests/store.test.js",
+              "README.md",
+              ".mocharc.json",
+              ".mocharc.cjs",
+              ".mocharc.js",
+              "src/storage/store.test.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": true,
+            "signature": "run-tests: failed to import target module src/PATH: Invalid package config /PATH",
+            "latencyMs": 8837
+          },
+          {
+            "turn": 2,
+            "modelChars": 5234,
+            "filesWritten": [
+              "package.json",
+              "src/storage/store.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 12803
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 982,
+          "completion": 1910,
+          "total": 2892,
+          "calls": 1
+        },
+        "timeMs": 9240.098708000001,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 7265,
+            "filesWritten": [
+              "src/storage/store.js",
+              "tests/storage.test.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 9186
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 1,
+        "outOfBoundsFiles": 12,
+        "interceptedCount": 0,
+        "falseVictories": 1,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 7385,
+        "avgTimeMs": 21754
+      },
+      {
+        "track": "teamwork",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 2892,
+        "avgTimeMs": 9240
+      }
+    ],
+    "delta": {
+      "passRatePts": 0,
+      "outOfBoundsFiles": -12,
+      "falseVictories": -1,
+      "tokenDeltaPct": -60.8,
+      "timeDeltaPct": -57.5
+    }
+  }
+}
