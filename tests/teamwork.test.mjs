@@ -361,6 +361,117 @@ test("synthesizeMicroTestPlan: generates empirical verification plans and assert
   const mdPlan = synthesizeMicroTestPlan("docs/REPORT.md");
   assert.equal(mdPlan.testType, "ast_shape");
   assert.ok(mdPlan.suggestedCommand.includes("test -s"));
+
+  // Empty deliverable fallback check
+  const emptyPlan = synthesizeMicroTestPlan("", "Default acceptance");
+  assert.equal(emptyPlan.testType, "smoke");
+  assert.equal(emptyPlan.suggestedCommand, "test -s .");
+  assert.ok(emptyPlan.synthesizedAssertionSnippet.includes('fs.existsSync(".")'));
+
+  // Go & Rust syntax checks
+  const goPlan = synthesizeMicroTestPlan("cmd/main.go");
+  assert.equal(goPlan.testType, "syntax");
+  assert.ok(goPlan.suggestedCommand.includes("go vet"));
+
+  const rsPlan = synthesizeMicroTestPlan("src/lib.rs");
+  assert.equal(rsPlan.testType, "syntax");
+  assert.ok(rsPlan.suggestedCommand.includes("cargo check"));
+});
+
+test("Regression: multilingual cue ranking, unicode guardrail preservation, globstar root matching, and fallback robustness", () => {
+  // 1. formatFailureOutput with maxLength = 0
+  assert.equal(formatFailureOutput("hello", "world", 0), "");
+
+  // 2. Globstar root matching: **/*.ts must match root foo.ts and reject foo.js
+  assert.equal(isPathAllowed("foo.ts", ["**/*.ts"]), true, "**/*.ts must match root foo.ts");
+  assert.equal(isPathAllowed("src/bar.ts", ["**/*.ts"]), true);
+  assert.equal(isPathAllowed("foo.js", ["**/*.ts"]), false);
+
+  // 3. findOutOfBoundsFiles deduplication
+  const outDedupe = findOutOfBoundsFiles(["a.ts", "a.ts"], [], ["allowed/*.ts"]);
+  assert.deepEqual(outDedupe, ["a.ts"]);
+
+  // 4. formatHarnessGuardrails invariant preservation under capacity overflow
+  const guardrailsOverflow = [
+    { scope: "invariant", rule: "Always run tests", evidence: "Rule 1" },
+    { scope: "domain", rule: "Domain Rule 1", evidence: "D1" },
+    { scope: "domain", rule: "Domain Rule 2", evidence: "D2" },
+    { scope: "domain", rule: "Domain Rule 3", evidence: "D3" },
+    { scope: "domain", rule: "Domain Rule 4", evidence: "D4" },
+  ];
+  const formattedGov = formatHarnessGuardrails(guardrailsOverflow, 2, "en");
+  assert.ok(formattedGov.includes("Always run tests"), "Invariant must be preserved under capacity overflow");
+
+  // 5. formatTeamworkConclusion pluralization
+  const conclusionPlural = formatTeamworkConclusion(0, true, true, 2, "en");
+  assert.ok(conclusionPlural.includes("with 2 replans"));
+  const conclusionSingle = formatTeamworkConclusion(0, true, true, 1, "en");
+  assert.ok(conclusionSingle.includes("with 1 replan"));
+
+  // 6. resolveModelConfiguration alias and modelId reverse resolution
+  const cfg = {
+    default_light_model: "fast",
+    models: {
+      fast: { id: "custom-fast-v1", tier: "light" },
+      smart: { id: "custom-smart-v2", tier: "heavy" },
+    },
+  };
+  const resExactId = resolveModelConfiguration("custom-smart-v2", cfg);
+  assert.equal(resExactId.modelId, "custom-smart-v2");
+  assert.equal(resExactId.tier, "heavy", "Should resolve tier by matching model ID in config values");
+
+  // 7. rankExperienceLibrary with Cyrillic and Chinese multilingual cues
+  const multiLib = [
+    {
+      cue: "Когда падают тесты базы данных",
+      lesson: "Проверить миграции и блокировки",
+      evidence: "Решено в М1",
+      verdict: "helped",
+      confidence: "high",
+    },
+    {
+      cue: "Когда падают сетевые запросы",
+      lesson: "Проверить таймауты сокетов",
+      evidence: "Решено в М2",
+      verdict: "helped",
+      confidence: "high",
+    },
+    {
+      cue: "当执行数据库迁移脚本时",
+      lesson: "必须先清理外键并拓扑排序",
+      evidence: "解决数据库死锁",
+      verdict: "helped",
+      confidence: "high",
+    },
+  ];
+  const cyrillicMatch = rankExperienceLibrary(multiLib, "падают тесты", 1);
+  assert.equal(cyrillicMatch.length, 1);
+  assert.equal(cyrillicMatch[0].cue, "Когда падают тесты базы данных");
+
+  const chineseMatch = rankExperienceLibrary(multiLib, "执行数据库迁移", 1);
+  assert.equal(chineseMatch.length, 1);
+  assert.equal(chineseMatch[0].cue, "当执行数据库迁移脚本时");
+
+  // 8. composeHarnessGuardrails with Cyrillic / non-ASCII guardrails
+  const cyrillicGuardrails = [
+    { scope: "invariant", rule: "Все тесты должны пройти", evidence: "тест" },
+    { scope: "domain", rule: "все тесты должны пройти", evidence: "дубликат" },
+  ];
+  const composedCyrillic = composeHarnessGuardrails([], cyrillicGuardrails, 5);
+  assert.equal(composedCyrillic.length, 1, "Cyrillic guardrails must not be silently dropped and should deduplicate");
+  assert.equal(composedCyrillic[0].scope, "invariant");
+  assert.equal(composedCyrillic[0].rule, "Все тесты должны пройти");
+
+  // 9. resolveMilestoneTopology with sensitive items
+  const genericTitleMs = {
+    title: "General system update",
+    done: "All items completed",
+    items: [{ id: "sec-it", detail: "Update jwt validation", allowedPaths: ["src/auth/jwt.ts"] }],
+  };
+  const secTopo = resolveMilestoneTopology(genericTitleMs, "hybrid");
+  assert.equal(secTopo.risk, "critical", "Milestone with sensitive item paths must be classified as critical");
+  assert.equal(secTopo.workerTier, "heavy");
+  assert.equal(secTopo.adversarialChallenger, true);
 });
 
 test("Installer & Build verification smoke test across all supported agent targets and languages", () => {

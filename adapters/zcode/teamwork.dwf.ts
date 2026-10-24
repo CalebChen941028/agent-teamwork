@@ -136,6 +136,11 @@ function formatFailureOutput(
   stderr: string = "",
   maxLength: number = 2000,
 ): string {
+  const cap = Math.max(0, typeof maxLength === "number" && !isNaN(maxLength) ? Math.floor(maxLength) : 2000);
+  if (cap === 0) {
+    return "";
+  }
+
   const out = (stdout || "").trim();
   const err = (stderr || "").trim();
 
@@ -146,11 +151,11 @@ function formatFailureOutput(
     combined = out || err;
   }
 
-  if (combined.length <= maxLength) {
+  if (combined.length <= cap) {
     return combined;
   }
 
-  return combined.slice(-maxLength);
+  return combined.slice(-cap);
 }
 
 function computeFailureSignature(output: string): string {
@@ -226,8 +231,10 @@ function isPathAllowed(filePath: string, allowedPaths: string[]): boolean {
     if (normAllowed.includes("*")) {
       const escaped = normAllowed
         .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/\*\*\//g, "___DOUBLE_STAR_SLASH___")
         .replace(/\*\*/g, "___DOUBLE_STAR___")
         .replace(/\*/g, "[^/]*")
+        .replace(/___DOUBLE_STAR_SLASH___/g, "(?:.*/)?")
         .replace(/___DOUBLE_STAR___/g, ".*");
       const regex = new RegExp(`^${escaped}$`);
       if (regex.test(normFile)) {
@@ -254,7 +261,7 @@ function findOutOfBoundsFiles(
     .map(normalizeRelPath)
     .filter((f) => Boolean(f) && !baseSet.has(f));
 
-  return touchedInMilestone.filter((f) => !isPathAllowed(f, allowedPaths));
+  return Array.from(new Set(touchedInMilestone.filter((f) => !isPathAllowed(f, allowedPaths))));
 }
 
 function isValidExperienceEntry(entry: ExperienceEntry | null | undefined): boolean {
@@ -285,14 +292,12 @@ function formatHarnessGuardrails(
   maxItems: number = 6,
   lang: "zh" | "en" = "zh",
 ): string {
-  const valid = (guardrails || []).filter(
-    (g) => g && typeof g.rule === "string" && g.rule.trim().length > 0,
-  );
-  if (valid.length === 0) return "";
+  const cap = Math.max(1, typeof maxItems === "number" && !isNaN(maxItems) ? Math.floor(maxItems) : 6);
+  const composed = composeHarnessGuardrails(guardrails || [], [], cap);
+  if (composed.length === 0) return "";
 
-  const sliced = valid.slice(-maxItems);
-  const inv = sliced.filter((g) => g.scope === "invariant");
-  const dom = sliced.filter((g) => g.scope === "domain");
+  const inv = composed.filter((g) => g.scope === "invariant");
+  const dom = composed.filter((g) => g.scope === "domain");
 
   const lines: string[] = [];
   if (lang === "en") {
@@ -371,10 +376,12 @@ function formatTeamworkConclusion(
   if (lang === "en") {
     if (openGaps === 0) {
       const verifyText = verifyCommandRan && verifyPassed ? ", final verification command passed" : "";
-      return `Initiative completed: all milestones passed acceptance${replansUsed > 0 ? ` (with ${replansUsed} replan)` : ""}${verifyText}, audit passed.`;
+      const replanText = replansUsed > 0 ? ` (with ${replansUsed} ${replansUsed === 1 ? "replan" : "replans"})` : "";
+      return `Initiative completed: all milestones passed acceptance${replanText}${verifyText}, audit passed.`;
     }
     const verifyFailText = verifyCommandRan && !verifyPassed ? ", final verification command failed" : "";
-    return `Initiative partially completed with ${openGaps} open gap(s)${verifyFailText}${replansUsed > 0 ? ` (${replansUsed} replans used)` : ""}. See findings and report.`;
+    const replanText = replansUsed > 0 ? ` (${replansUsed} ${replansUsed === 1 ? "replan" : "replans"} used)` : "";
+    return `Initiative partially completed with ${openGaps} open gap(s)${verifyFailText}${replanText}. See findings and report.`;
   }
 
   if (openGaps === 0) {
@@ -391,9 +398,17 @@ function resolveModelConfiguration(
 ): { modelId: string | null; tier: "light" | "heavy" | "default" } {
   const req = (requestedName || "").trim();
   if (req) {
-    if (localConfig && localConfig.models && localConfig.models[req]) {
-      const m = localConfig.models[req];
-      return { modelId: m.id || req, tier: m.tier || "light" };
+    if (localConfig && localConfig.models) {
+      if (localConfig.models[req]) {
+        const m = localConfig.models[req];
+        return { modelId: m.id || req, tier: m.tier || "light" };
+      }
+      const modelsList: any[] = Object.values(localConfig.models);
+      for (const val of modelsList) {
+        if (val && val.id === req) {
+          return { modelId: val.id, tier: val.tier || "light" };
+        }
+      }
     }
     return { modelId: req, tier: "light" };
   }
@@ -421,9 +436,9 @@ function rankExperienceLibrary(
     return [];
   }
 
-  const cap = Math.max(1, typeof maxItems === "number" ? maxItems : 6);
+  const cap = Math.max(1, typeof maxItems === "number" && !isNaN(maxItems) ? Math.floor(maxItems) : 6);
   const q = (queryContext || "").toLowerCase();
-  const queryTokens = q.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+  const queryTokens = q.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]|[\p{L}\p{N}]+/gu) || [];
 
   if (queryTokens.length === 0) {
     return valid.slice(-cap);
@@ -434,8 +449,8 @@ function rankExperienceLibrary(
   const scored = valid.map((entry, index) => {
     const cueStr = (entry.cue || "").toLowerCase();
     const lessonStr = (entry.lesson || "").toLowerCase();
-    const cueTokens = cueStr.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
-    const lessonTokens = lessonStr.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+    const cueTokens = cueStr.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]|[\p{L}\p{N}]+/gu) || [];
+    const lessonTokens = lessonStr.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]|[\p{L}\p{N}]+/gu) || [];
 
     let cueMatches = 0;
     for (const t of cueTokens) {
@@ -443,7 +458,7 @@ function rankExperienceLibrary(
         cueMatches++;
       } else {
         for (const qt of queryTokenSet) {
-          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s")) {
+          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s" || t === qt + "es" || qt === t + "es")) {
             cueMatches++;
             break;
           }
@@ -457,7 +472,7 @@ function rankExperienceLibrary(
         lessonMatches++;
       } else {
         for (const qt of queryTokenSet) {
-          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s")) {
+          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s" || t === qt + "es" || qt === t + "es")) {
             lessonMatches++;
             break;
           }
@@ -501,7 +516,7 @@ function composeHarnessGuardrails(
   proposed: HarnessGuardrail[],
   maxItems: number = 6,
 ): HarnessGuardrail[] {
-  const cap = Math.max(1, typeof maxItems === "number" ? maxItems : 6);
+  const cap = Math.max(1, typeof maxItems === "number" && !isNaN(maxItems) ? Math.floor(maxItems) : 6);
   const all = [...(existing || []), ...(proposed || [])];
 
   const valid = all.filter(
@@ -517,7 +532,7 @@ function composeHarnessGuardrails(
     const rawRule = g.rule.trim();
     const scope = g.scope === "invariant" ? "invariant" : "domain";
     const evidence = typeof g.evidence === "string" ? g.evidence.trim() : "";
-    const normKey = rawRule.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, " ").trim();
+    const normKey = rawRule.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim() || rawRule.toLowerCase().trim();
 
     if (!normKey) continue;
 
@@ -569,12 +584,15 @@ function resolveMilestoneTopology(
   const title = typeof ms.title === "string" ? ms.title : "";
   const done = typeof ms.done === "string" ? ms.done : "";
   const items = Array.isArray(ms.items) ? ms.items : [];
+  const itemDetails = items
+    .map((it) => `${(it && it.detail) || ""} ${Array.isArray(it && it.allowedPaths) ? it.allowedPaths.join(" ") : ""}`)
+    .join(" ");
 
   let risk = "low";
   if (rawRisk === "critical" || rawRisk === "high" || rawRisk === "medium" || rawRisk === "low") {
     risk = rawRisk;
   } else {
-    const text = `${title} ${done}`.toLowerCase();
+    const text = `${title} ${done} ${itemDetails}`.toLowerCase();
     if (/(security|auth|crypto|migration|breaking|kernel|root|database|payment|破坏性|安全|认证|密码|鉴权)/i.test(text)) {
       risk = "critical";
     } else if (/(core|refactor|redesign|protocol|concurrency|race|重构|协议|并发|接口变更)/i.test(text)) {
@@ -633,12 +651,13 @@ function synthesizeMicroTestPlan(
   contextSnippet: string = "",
 ): MicroTestPlan {
   const normPath = normalizeRelPath(deliverablePath);
+  const target = normPath || ".";
   const ext = normPath.includes(".") ? (normPath.split(".").pop() || "").toLowerCase() : "";
 
   let testType = "smoke";
-  let suggestedCommand = "test -s " + (normPath || ".");
+  let suggestedCommand = "test -s " + target;
   let shapeValidationRule = "File existence and non-empty byte size";
-  let synthesizedAssertionSnippet = "assert.ok(fs.existsSync(\"" + normPath + "\") && fs.statSync(\"" + normPath + "\").size > 0);";
+  let synthesizedAssertionSnippet = "assert.ok(fs.existsSync(\"" + target + "\") && fs.statSync(\"" + target + "\").size > 0);";
 
   if (ext === "ts") {
     testType = "syntax";
@@ -665,6 +684,16 @@ function synthesizeMicroTestPlan(
     suggestedCommand = "bash -n " + normPath;
     shapeValidationRule = "Shell script syntax dry-run verification for " + normPath;
     synthesizedAssertionSnippet = "bash -n " + normPath;
+  } else if (ext === "go") {
+    testType = "syntax";
+    suggestedCommand = "go vet ./" + (normPath ? (normPath.endsWith(".go") ? normPath : normPath + "/...") : "...");
+    shapeValidationRule = "Go vet static compilation and package integrity for " + normPath;
+    synthesizedAssertionSnippet = "go vet ./" + normPath;
+  } else if (ext === "rs") {
+    testType = "syntax";
+    suggestedCommand = "cargo check";
+    shapeValidationRule = "Rust cargo type check and compilation integrity";
+    synthesizedAssertionSnippet = "cargo check";
   } else if (ext === "md" || ext === "markdown" || ext === "txt") {
     testType = "ast_shape";
     suggestedCommand = "test -s " + (normPath || "README.md");
