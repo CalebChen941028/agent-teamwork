@@ -274,7 +274,7 @@ export function resolveLiveApiKey({
       key: zhipuEnv,
       source: "ZHIPUAI_API_KEY",
       baseUrl: ZHIPU_CHAT_COMPLETIONS_URL,
-      model: "glm-5.3",
+      model: "glm-4-flash",
       extraHeaders: {},
       vendor: "zhipu",
     };
@@ -304,7 +304,7 @@ export function resolveLiveApiKey({
         key: legacy,
         source: "models.local.json (legacy zhipu_api_key)",
         baseUrl: ZHIPU_CHAT_COMPLETIONS_URL,
-        model: "glm-5.3",
+        model: "glm-4-flash",
         extraHeaders: {},
         vendor: "zhipu",
       };

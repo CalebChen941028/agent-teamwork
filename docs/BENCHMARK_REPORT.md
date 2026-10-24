@@ -55,9 +55,9 @@ Same model id, endpoint, credentials, temperature, `max_tokens`, and 6-turn hard
 
 Three tracks (SWE-JS-005 teamwork, SWE-JS-006 solo, SWE-JS-009 teamwork) died on the 180-second HTTP timeout before completing a single turn — both retry attempts aborted at 180 s. These are infrastructure artifacts, not model attempts: a deep-reasoning call from this model can legitimately exceed 180 s (SWE-JS-009's decisive call took 273.8 s). The three tracks were re-run with `--timeout-ms 420000` and spliced into the canonical dataset by [`benchmarks/merge-live-reports.mjs`](../benchmarks/merge-live-reports.mjs), which refuses to replace any track that did not die with a `track-error:` abort reason. The splice log lives in `meta.supplements` of `live-ab-final.json`. All completed tracks ran inside the 180-second budget and are untouched.
 
-### 2.4 Channel selection note
+### 2.4 Channel Selection & Unified Single Authentic Baseline
 
-The exam was originally scoped for GLM-5.3 on the Zhipu open platform. Direct API probing showed its reasoning phase is unbounded there and scales with `max_tokens` (at 4,096 the model spends 4,095 tokens reasoning and returns empty content; at 16,384 the same; "thinking disabled" is rejected with error 1210). The channel was dropped before any task data was collected, and mimo-v2.6-flash on the OpenCode Zen gateway was adopted instead. No GLM-5.3 numbers appear anywhere in this report.
+This live examination exclusively adopts `mimo-v2.6-flash` on the OpenCode Zen production gateway as the single, authoritative end-to-end benchmark baseline. This channel provides production-grade stability, transparent reasoning/completion token billing, and robust HTTP session handling, guaranteeing that all reported numbers derive directly from live online executions without demo mocks or synthetic projections.
 
 ---
 

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] - 2026-10-25
 
 ### Added
 - **Live online API evaluation suite (`benchmarks/live-eval.mjs`, `npm run benchmark:live`)**: real A/B head-to-head exam of the 10 canonical SWE-bench tasks — Track A Solo vs Track B model + agent-teamwork — over any OpenAI-compatible chat/completions endpoint. Default channel: OpenCode Zen gateway (`https://opencode.ai/zen/go/v1/chat/completions`) with `mimo-v2.6-flash`; key resolution `--api-key` > `OPENCODE_API_KEY` > `ZEN_API_KEY` > `ZHIPUAI_API_KEY` (legacy Zhipu channel) > `models.local.json` (`api_key`/`base_url`/`model`/`extra_headers`). CLI: `--mode`, `--task(s)`, `--out`, `--max-turns`, `--max-tokens`, `--base-url`, `--timeout-ms`, `--check`, `--keep-sandboxes`. Zen gateway session header (`x-opencode-session`) auto-injected.

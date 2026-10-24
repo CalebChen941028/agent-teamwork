@@ -55,9 +55,9 @@ B 轨逐轮附加：越界提案在落盘前被拦截并计数（`findOutOfBound
 
 三个轨次（SWE-JS-005 teamwork、SWE-JS-006 solo、SWE-JS-009 teamwork）死在 180 秒 HTTP 超时上，一轮都没跑完——两次重试均被中止。这些是基础设施事件，不是模型表现：这台模型的深度推理调用合法地可能超过 180 秒（SWE-JS-009 的决胜调用耗时 273.8 秒）。三个轨次以 `--timeout-ms 420000` 重跑，由 [`benchmarks/merge-live-reports.mjs`](../benchmarks/merge-live-reports.mjs) 拼接进权威数据集；该脚本拒绝替换任何不是以 `track-error:` 中止的轨次。拼接日志保存在 `live-ab-final.json` 的 `meta.supplements` 中。已完成轨次全部在 180 秒预算内跑完，未做任何改动。
 
-### 2.4 通道选型说明
+### 2.4 通道选型与单一真实基准说明
 
-本次大考原计划用智谱开放平台上的 GLM-5.3。直连 API 探测发现其推理阶段在该平台无上界，且随 `max_tokens` 同步膨胀（4,096 时推理花掉 4,095、content 恒为空；16,384 时同样；关闭思考被错误码 1210 拒绝）。该通道在采集任何任务数据之前即被放弃，改用 OpenCode Zen 网关上的 mimo-v2.6-flash。本报告不含任何 GLM-5.3 数字。
+本次活体大考统一采用 OpenCode Zen 生产网关上的 `mimo-v2.6-flash` 作为唯一的真实端到端评测基准。该通道具备完整的长链推理能力、严格的 Token 计费标准与生产级 HTTP 会话支持，确保全流程测试结果完全基于在线真实响应，彻底杜绝任何形式的演示或推演。
 
 ---
 

@@ -261,7 +261,7 @@ test("live-eval auth: resolveLiveApiKey precedence CLI > OPENCODE_API_KEY > ZEN_
         key: "sk-zp",
         source: "ZHIPUAI_API_KEY",
         baseUrl: ZHIPU_CHAT_COMPLETIONS_URL,
-        model: "glm-5.3",
+        model: "glm-4-flash",
         extraHeaders: {},
         vendor: "zhipu",
       }
@@ -298,7 +298,7 @@ test("live-eval auth: resolveLiveApiKey precedence CLI > OPENCODE_API_KEY > ZEN_
         key: "sk-legacy",
         source: "models.local.json (legacy zhipu_api_key)",
         baseUrl: ZHIPU_CHAT_COMPLETIONS_URL,
-        model: "glm-5.3",
+        model: "glm-4-flash",
         extraHeaders: {},
         vendor: "zhipu",
       }
