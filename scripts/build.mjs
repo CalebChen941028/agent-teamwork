@@ -76,6 +76,8 @@ const requiredFiles = [
   "roles/auditor.en.md",
   "roles/scribe.zh.md",
   "roles/scribe.en.md",
+  "docs/BENCHMARK_REPORT.md",
+  "docs/BENCHMARK_REPORT.zh-CN.md",
 ];
 
 for (const rel of requiredFiles) {

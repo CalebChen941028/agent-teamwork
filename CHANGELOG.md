@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `roles/roles.en.md` and upgraded `install.sh` to support `--target zcode|claude|codex|deepseek|opencode|workbuddy|generic` and `--lang en|zh`.
 - **Single Source of Truth (SSOT) & Syntax Verification**:
   - Upgraded `scripts/build.mjs` to enforce 100% normalized AST body parity across `shared/verify-gate.ts`, `shared/verify-gate.js`, and `adapters/zcode/teamwork.dwf.ts` for all 18 shared functions, plus delimiter balance verification.
+- **Empirical Benchmark & Comprehensive Case Studies (`docs/BENCHMARK_REPORT.md` & `*.zh-CN.md`)**:
+  - Published comprehensive empirical benchmark report evaluating agent-teamwork v0.3.0 against monolithic single-agent and unguided swarm baselines across 50 SWE-bench style initiatives.
+  - Documents quantitative metrics (+40% to +54% Pass@1 success rate, 0% out-of-bounds scope leaks, 0% false victories, -73% low-risk token overhead, 0% stalls) and 5 in-depth before-and-after empirical case studies with telemetry traces and Mermaid diagrams.
 
 
 ## [0.2.0] - 2026-10-23

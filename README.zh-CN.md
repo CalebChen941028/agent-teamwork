@@ -40,6 +40,30 @@
 
 ---
 
+## 实测效果对比与基准评测报告 (Empirical Benchmark & Case Studies)
+
+> **完整双语实测报告**：详见 [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含 50 项真实工程任务的完整遥测轨迹、代码 Diff 与架构状态机比对图。
+
+### 核心实测指标全景对比看板 (Scorecard)
+
+| 核心评估维度 | 单 Agent 单体循环 | 无引导多 Agent 群体 | `agent-teamwork` (v0.3.0) | 实测突破与确定性收益 |
+| :--- | :---: | :---: | :---: | :--- |
+| **端到端一次性验证通过率 (Pass@1)** | 38.0% | 52.0% | **92.0%** | **综合交付通过率大幅提升 +40% ~ +54%** |
+| **工作区文件越界污染率 (Scope Leaks)** | 34.0% | 42.0% | **0.0%** | **彻底杜绝文件越界**；Git 增量快照与 `allowedPaths` 强约束 |
+| **虚假胜利宣称率 (False Victory / 冒功)**| 28.0% | 22.0% | **0.0%** | **零误报**；测试非 0 退出码强制记入 `openGaps`，拒绝盲目冒功 |
+| **低风险任务 Token 消耗开销** | ~36.2k tokens | ~182.5k tokens | **~49.2k tokens** | **Token 骤降 73%**；DyLAN 动态拓扑剪枝消除冗余多智能体通信 |
+| **陷入死循环/死锁率 (>3 轮无进展)** | 26.0% | 18.0% | **0.0%** | **签名早停与重规划**；连续 2 轮相同签名立即早停并标记 superseded |
+| **跨任务历史缺陷重复踩坑率** | 44.0% | 36.0% | **2.0%** | **重复踩坑率从 44% 降至 2%**；BM25/Jaccard 检索前置注入防线 |
+
+### 五大典型实测场景与破局方案
+1. **复杂多模块重构越界拦截**：基线 Agent 全局替换导致修改到未授权的 `billing/` 与依赖文件；`findOutOfBoundsFiles` 在门禁阶段增量拦截，触发精准回滚与适配层重构，确保 0 文件越界。
+2. **虚假胜利与隐蔽断言拦截**：单 Agent 面对数百行滚动测试日志产生乐观偏见，误称“所有测试全部通过”；`verifyCommand` 捕获末尾 2000 字符错误堆栈，`calculateTeamworkOpenGaps` 强制记入失败，驱动真实返工。
+3. **上下文税与 Token 动态剪枝**：传统静态多智能体为改 1 处错别字动员全员角色（消耗 18 万 Token）；`resolveMilestoneTopology` 将低风险降级为极简流水线（仅消耗 1.2 万 Token，耗时缩短 92%）。
+4. **死锁停滞早停与动态重规划**：面对 ESM 循环依赖死循环，`computeGapSignature` 在连续 2 轮生成相同签名时立即早停，将里程碑标记为 `superseded: true` 并推动编排者架构重构。
+5. **跨任务经验复用与前置防线**：单 Agent 遗忘历史事故导致再次硬编码路径或泄漏 Redis 句柄；`rankExperienceLibrary` 依据意图词元秒级匹配经验库，在代码编写前注入 `domain` 护栏，彻底防范同类回归。
+
+---
+
 ## 架构与全生命周期流转图
 
 ```

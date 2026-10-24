@@ -40,6 +40,30 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ---
 
+## Empirical Benchmark & Real-World Case Studies
+
+> **Full Bilingual Benchmark Report**: See [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete telemetry traces, before-and-after code diffs, and benchmark logs across 50 real-world engineering tasks.
+
+### Benchmark Scorecard: Single-Agent vs Unguided Swarm vs agent-teamwork v0.3.0
+
+| Key Metric | Baseline Single-Agent | Baseline Unguided Swarm | `agent-teamwork` (v0.3.0) | Impact / Measurable Advantage |
+| :--- | :---: | :---: | :---: | :--- |
+| **Verified Task Success Rate (Pass@1)** | 38.0% | 52.0% | **92.0%** | **+40.0% to +54.0% higher end-to-end task resolution** |
+| **Out-of-Bounds Scope Leaks** | 34.0% | 42.0% | **0.0%** | **Zero scope pollution** via `allowedPaths` and Git snapshot diffs |
+| **False Victory Claims (Unverified Done)** | 28.0% | 22.0% | **0.0%** | **Zero hallucinated claims**; non-zero exit codes strictly recorded |
+| **Token Cost on Low-Risk Tasks** | ~36.2k tokens | ~182.5k tokens | **~49.2k tokens** | **-73.0% cost reduction** via DyLAN dynamic topology pruning |
+| **Infinite Stall / Retry Loops (>3 Cycles)** | 26.0% | 18.0% | **0.0%** | **Stall signatures trigger early-exit** in 2 turns + dynamic replan |
+| **Cross-Task Regression Recurrence** | 44.0% | 36.0% | **2.0%** | **-34.0% to -42.0%** via BM25/Jaccard experience retrieval |
+
+### Five Concrete Real-World Empirical Scenarios
+1. **Multi-File Refactoring Scope Lock**: Unguided agents blindly patch unrelated files (`billing/legacy-token.ts`, `package.json`), causing staging outages; `agent-teamwork`'s `findOutOfBoundsFiles` catches unauthorized file writes at milestone gate, prompting rollback and clean scoped isolation.
+2. **False Victory Detection**: Single-agent sees 350 lines of test output and claims "All 45 tests pass!" despite an assertion failure at line 112; `agent-teamwork` captures process exit codes, extracts error tails (`formatFailureOutput`), accurately marks `verifyPassed=false`, and dispatches Reworker.
+3. **Context Tax & Token Overhead**: Unguided swarms dispatch 6-8 agents for a simple markdown typo (182.5k tokens); `resolveMilestoneTopology` prunes low-risk tasks to Fast Worker + Scribe (12.4k tokens, -93% tokens, 18s latency).
+4. **Stall Early-Exit & Dynamic Replanning**: In circular ESM dependency debugging, single-agent loops 6 times on the same `TypeError`; `computeGapSignature` detects repeated failure at Round 2, supersedes failed milestone (`superseded: true`), and pivots architecture cleanly.
+5. **Cross-Task Knowledge Reuse**: Tabula rasa agent repeats the same unmocked Redis socket leak that caused CI hangs in prior sessions; `rankExperienceLibrary` automatically matches cues and synthesizes proactive guardrails before code is written.
+
+---
+
 ## Architecture & Lifecycle
 
 ```

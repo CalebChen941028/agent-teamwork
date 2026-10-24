@@ -493,3 +493,99 @@ test("Installer & Build verification smoke test across all supported agent targe
   });
   assert.ok(buildOut.includes("Build verification successful!"));
 });
+
+test("Empirical Benchmark Scenarios: end-to-end telemetry and report verification", () => {
+  // 1. Verify docs existence and bilingual report content completeness
+  const enReportPath = path.join(rootDir, "docs", "BENCHMARK_REPORT.md");
+  const zhReportPath = path.join(rootDir, "docs", "BENCHMARK_REPORT.zh-CN.md");
+  assert.ok(fs.existsSync(enReportPath), "English benchmark report must exist");
+  assert.ok(fs.existsSync(zhReportPath), "Chinese benchmark report must exist");
+
+  const enReport = fs.readFileSync(enReportPath, "utf8");
+  const zhReport = fs.readFileSync(zhReportPath, "utf8");
+
+  // Check that all 5 scenarios are documented in both reports
+  const scenarios = [
+    "Multi-File Refactoring",
+    "False Victory Detection",
+    "Context Tax",
+    "Stall Recovery",
+    "Cross-Task Knowledge Reuse",
+  ];
+  for (const s of scenarios) {
+    assert.ok(enReport.includes(s), `English report must cover scenario: ${s}`);
+  }
+  const zhScenarios = [
+    "复杂多文件重构",
+    "虚假胜利检测",
+    "上下文税",
+    "死锁停滞早停",
+    "跨任务经验复用",
+  ];
+  for (const s of zhScenarios) {
+    assert.ok(zhReport.includes(s), `Chinese report must cover scenario: ${s}`);
+  }
+
+  // 2. Scenario 1 simulation: Multi-file refactoring scope boundary leak detection
+  const allowed = ["src/auth/**", "tests/auth/**"];
+  const outOfBounds = findOutOfBoundsFiles(["src/auth/jwt.ts", "src/billing/legacy-token.ts", "package.json"], [], allowed);
+  assert.deepEqual(outOfBounds, ["src/billing/legacy-token.ts", "package.json"], "Must catch all out-of-bounds files");
+
+  // 3. Scenario 2 simulation: False victory detection on failed test exit
+  const brokenTail = formatFailureOutput("Ran 45 tests\n".repeat(20), "FAIL tests/queue/batch.test.ts:112\nAssertionError\nExited with code 1", 1000);
+  assert.ok(brokenTail.includes("AssertionError"));
+  const gapsWithBrokenTest = calculateTeamworkOpenGaps([{ milestone: "M1", passed: true, evidence: "ok", gaps: [] }], true, true, false);
+  assert.equal(gapsWithBrokenTest, 1, "Failed test must increment openGaps and prevent false victory");
+  const honestConclusion = formatTeamworkConclusion(gapsWithBrokenTest, true, false, 0, "en");
+  assert.ok(honestConclusion.includes("final verification command failed"));
+
+  // 4. Scenario 3 simulation: Context tax dynamic topology pruning
+  const docMilestone = { title: "Fix typo in docs and sync readme", done: "done", items: [{ id: "1", detail: "doc", allowedPaths: ["README.md"] }] };
+  const authMilestone = { title: "Refactor RS256 token verification", done: "done", items: [{ id: "1", detail: "auth", allowedPaths: ["src/auth/jwt.ts"] }] };
+  const docTopo = resolveMilestoneTopology(docMilestone, "hybrid");
+  const authTopo = resolveMilestoneTopology(authMilestone, "hybrid");
+  assert.equal(docTopo.risk, "low");
+  assert.equal(docTopo.workerTier, "light");
+  assert.equal(docTopo.adversarialChallenger, false);
+  assert.equal(docTopo.requireMicroTest, false);
+  assert.equal(authTopo.risk, "critical");
+  assert.equal(authTopo.workerTier, "heavy");
+  assert.equal(authTopo.adversarialChallenger, true);
+  assert.equal(authTopo.criticStrictness, "exhaustive");
+  assert.equal(authTopo.requireMicroTest, true);
+
+  // 5. Scenario 4 simulation: Stall recovery signature early-exit & superseded marking
+  const sig1 = computeGapSignature(["circular dependency at utils.js"]);
+  const sig2 = computeGapSignature(["circular dependency at utils.js"]);
+  assert.equal(sig1, sig2, "Identical failure causes identical signature");
+  const replannedMilestones = [
+    { milestone: "M2-old", passed: false, superseded: true, evidence: "stalled", gaps: ["circular dependency"] },
+    { milestone: "M2-new", passed: true, evidence: "extracted kernel.js", gaps: [] },
+  ];
+  const activeGaps = calculateTeamworkOpenGaps(replannedMilestones, true, true, true);
+  assert.equal(activeGaps, 0, "Superseded milestone must be excluded from openGaps");
+
+  // 6. Scenario 5 simulation: Cross-task experience retrieval matching
+  const testLib = [
+    {
+      cue: "integration test redis session socket paths",
+      lesson: "Always inject mock Redis adapter and ephemeral sandbox",
+      evidence: "commit e4f2b1",
+      verdict: "helped",
+      confidence: "high",
+    },
+  ];
+  const ranked = rankExperienceLibrary(testLib, "add integration test suite for session storage adapter", 1);
+  assert.equal(ranked.length, 1);
+  assert.ok(ranked[0].lesson.includes("mock Redis adapter"));
+  const injectedGuardrails = composeHarnessGuardrails([], [{ scope: "domain", rule: ranked[0].lesson, evidence: ranked[0].evidence }], 10);
+  assert.equal(injectedGuardrails.length, 1);
+  assert.equal(injectedGuardrails[0].rule, ranked[0].lesson);
+
+  // 7. Verify README links
+  const readmeEn = fs.readFileSync(path.join(rootDir, "README.md"), "utf8");
+  const readmeZh = fs.readFileSync(path.join(rootDir, "README.zh-CN.md"), "utf8");
+  assert.ok(readmeEn.includes("docs/BENCHMARK_REPORT.md"));
+  assert.ok(readmeZh.includes("docs/BENCHMARK_REPORT.zh-CN.md"));
+});
+
