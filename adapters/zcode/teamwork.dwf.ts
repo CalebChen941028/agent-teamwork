@@ -986,6 +986,7 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
   // C6: Rework with fresh agent, explicit allowedPaths, stall signature early-exit, and adversarial re-verification
   let reworkRounds = 0;
   let lastGapSig = computeGapSignature(gate.gaps);
+  let lastReworkDirtySnapshot = (await listWorkspaceDirtyFiles()).sort().join("\n");
   const reworker = agent(isEn ? `Reworker-${executed}` : `返工-${executed}`, {
     system: isEn
       ? `You resolve acceptance gaps with minimal surgical edits. Modify ONLY files within the milestone's allowedPaths; never touch unallocated files. ${HARNESS2_EVIDENCE_BOUNDARY}`
@@ -1006,6 +1007,10 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
         ? `Milestone "${ms.title}" failed acceptance (Round ${reworkRounds}). Fix the following gaps strictly within allowedPaths:\n${msAllowedPathsSummary}\n${currentGuardrailsText ? `${currentGuardrailsText}\n` : ""}Gaps:\n${gate.gaps.join("\n")}`
         : `里程碑「${ms.title}」验收未通过，请修复以下缺口。\n注意允许修改的文件路径范围（严禁越界）：\n${msAllowedPathsSummary}\n${currentGuardrailsText ? `${currentGuardrailsText}\n` : ""}缺口清单：\n${gate.gaps.join("\n")}`,
     );
+
+    const currentReworkDirtySnapshot = (await listWorkspaceDirtyFiles()).sort().join("\n");
+    const reworkWroteFiles = currentReworkDirtySnapshot !== lastReworkDirtySnapshot;
+    lastReworkDirtySnapshot = currentReworkDirtySnapshot;
 
     gate = await critic.ask<GateVerdict>(
       isEn
@@ -1035,15 +1040,17 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
 
     if (!gate.passed) {
       const currentGapSig = computeGapSignature(gate.gaps);
-      if (currentGapSig !== "no-gaps" && currentGapSig === lastGapSig) {
+      if (reworkWroteFiles && currentGapSig !== "no-gaps" && currentGapSig === lastGapSig) {
         log(
           isEn
-            ? `Stall detected: identical gap signature after rework round ${reworkRounds}; exiting rework loop early.`
-            : `检测到停滞：第 ${reworkRounds} 轮返工后验收缺口签名完全未变，提前结束无效返工。`,
+            ? `Stall detected: identical gap signature after rework round ${reworkRounds} with file modifications; exiting rework loop early.`
+            : `检测到停滞：第 ${reworkRounds} 轮返工修改文件后验收缺口签名完全未变，提前结束无效返工。`,
         );
         break;
       }
-      lastGapSig = currentGapSig;
+      if (reworkWroteFiles) {
+        lastGapSig = currentGapSig;
+      }
     }
   }
 

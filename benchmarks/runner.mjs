@@ -6,7 +6,7 @@
  * - Agent / Model: Google Antigravity + Gemini 3.8 Flash (High)
  * - Platform: macOS arm64 (Apple Silicon, Darwin Kernel)
  * - Runtime: Node.js v22.23.1
- * - Suite: 10 Canonical Multi-File Repair & Refactoring Tasks
+ * - Suite: 15 Canonical Multi-File Repair & Refactoring Tasks
  */
 
 import os from "node:os";

@@ -276,8 +276,8 @@ test("Benchmark Documentation & Parity: Bilingual live reports and README links 
     assert.ok(doc.includes("41.7%"), "must carry the real shared-failure token saving");
   }
 
-  // All 10 canonical task ids are listed in both root portals
-  const taskIds = Array.from({ length: 10 }, (_, i) => `SWE-JS-${String(i + 1).padStart(3, "0")}`);
+  // All 15 canonical task ids are listed in both root portals
+  const taskIds = Array.from({ length: 15 }, (_, i) => `SWE-JS-${String(i + 1).padStart(3, "0")}`);
   for (const id of taskIds) {
     assert.ok(enRoot.includes(id), `English portal missing task ${id}`);
     assert.ok(zhRoot.includes(id), `Chinese portal missing task ${id}`);
@@ -309,27 +309,27 @@ test("Benchmark Documentation & Parity: Bilingual live reports and README links 
   assert.ok(readmeZh.includes("docs/BENCHMARK_REPORT.zh-CN.md"));
 });
 
-test("Benchmark Suite: 10 Canonical SWE-bench Tasks execute deterministically with 100% Pass@1 and zero leaks", async () => {
+test("Benchmark Suite: 15 Canonical SWE-bench Tasks execute deterministically with 100% Pass@1 and zero leaks", async () => {
   const { BENCHMARK_TASKS } = await import("../benchmarks/tasks.mjs");
   const { runAllBenchmarks } = await import("../benchmarks/runner.mjs");
-  assert.equal(BENCHMARK_TASKS.length, 10, "Must feature exactly 10 canonical tasks");
+  assert.equal(BENCHMARK_TASKS.length, 15, "Must feature exactly 15 canonical tasks");
 
   // Run benchmark suite in quiet mode to avoid polluting test runner output
   const report = await runAllBenchmarks({ quiet: true });
 
-  assert.equal(report.summary.total, 10);
+  assert.equal(report.summary.total, 15);
   assert.equal(report.summary.teamworkPassRate, 1.0, "agent-teamwork must achieve 100% Pass@1");
   assert.equal(report.summary.teamworkScopeLeaks, 0.0, "agent-teamwork must have zero scope leaks");
   assert.equal(report.summary.teamworkFalseVictories, 0.0, "agent-teamwork must have zero false victories");
   assert.equal(report.summary.teamworkStalls, 0.0, "agent-teamwork must have zero stall cycles");
 
-  // Assert all 10 canonical tasks have dynamic risk topologies resolved
+  // Assert all 15 canonical tasks have dynamic risk topologies resolved
   assert.ok(report.results.every((r) => Boolean(r.topology && r.topology.risk && r.topology.workerTier)));
 
   // Assert baseline failures are authentically detected
   assert.equal(report.summary.baselinePassRate, 0.0, "Baseline must fail ground-truth tests or scope boundaries");
-  assert.equal(report.summary.baselineScopeLeaks, 0.7, "Baseline must exhibit 70% scope leaks");
+  assert.equal(report.summary.baselineScopeLeaks, 11 / 15, "Baseline must exhibit 11/15 scope leaks");
   assert.equal(report.summary.baselineFalseVictories, 0.8, "Baseline must exhibit 80% false victories");
-  assert.equal(report.summary.baselineStalls, 0.1, "Baseline must exhibit 10% stall loops");
+  assert.equal(report.summary.baselineStalls, 2 / 15, "Baseline must exhibit 2/15 stall loops");
 });
 

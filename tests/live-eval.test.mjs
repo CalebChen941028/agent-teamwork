@@ -214,9 +214,9 @@ test("live-eval orchestration: runLiveEval rejects invalid modes and selectTasks
     /Invalid mode "bogus" \(expected ab\|baseline\|teamwork\)/
   );
 
-  // selectTasks: null => all 10 canonical tasks; dedupe; unknown id => hard error listing valid ids
-  assert.equal(selectTasks(null).length, 10);
-  assert.equal(selectTasks([]).length, 10);
+  // selectTasks: null => all 15 canonical tasks; dedupe; unknown id => hard error listing valid ids
+  assert.equal(selectTasks(null).length, 15);
+  assert.equal(selectTasks([]).length, 15);
   assert.deepEqual(
     selectTasks(["SWE-JS-001", "SWE-JS-001"]).map((t) => t.id),
     ["SWE-JS-001"]
@@ -767,6 +767,34 @@ test("live-eval Track B (teamwork): path lock intercepts writes, stagnation forc
     assert.ok(s1 && s2 && s3);
     assert.equal(s1, s2);
     assert.equal(s2, s3);
+  } finally {
+    fs.rmSync(parentDir, { recursive: true, force: true });
+  }
+});
+
+test("live-eval Track B (teamwork): reasoning turns without file modification do not trigger false stagnation early-stop", async () => {
+  const parentDir = makeParentDir();
+  try {
+    const reasoningReply1 = "I am analyzing the problem structure and identifying prototype pollution vectors. STATUS: CONTINUE";
+    const reasoningReply2 = "I am examining constructor.prototype guards and planning the surgical fix. STATUS: CONTINUE";
+    const scriptedClient = makeScriptedClient([reasoningReply1, reasoningReply2, successReply()]);
+
+    const result = await runTeamworkTrack({
+      task: SWE001,
+      client: scriptedClient,
+      maxTurns: 4,
+      parentDir,
+    });
+
+    // Write-aware stagnation ensures reasoning turns (0 files written) do not increment stagnation rounds
+    assert.equal(result.pass, true, "Must successfully pass on turn 3 once the fix lands");
+    assert.equal(result.passTurn, 3);
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.stagnationRounds, 0, "Reasoning turns must produce 0 stagnation rounds");
+    assert.equal(result.replansUsed, 0, "No forced replan should occur during pure reasoning");
+    assert.equal(result.abortReason, null);
+    assert.equal(result.stalled, false);
+    assert.equal(result.turnsUsed, 3);
   } finally {
     fs.rmSync(parentDir, { recursive: true, force: true });
   }

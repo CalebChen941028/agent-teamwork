@@ -63,6 +63,18 @@ The honest headline: on this reasoning model, the harness **lowered** Pass@1 whi
 | SWE-JS-009 qs nested decoder + DoS cap | Parser security | ✔ | ✔ | 5 / 15.8k | 2 / 26.8k |
 | SWE-JS-010 Config deep-freeze immutability | Config | ✖ | ✖ | 6 / 13.7k | 3 / 5.3k |
 
+### 2.1 Expanded Canonical Benchmark Suite (Full 15 Tasks)
+
+Following the initial 10-task evaluation on mimo-v2.6-flash, the canonical benchmark suite has been expanded to 15 standard software engineering tasks (`SWE-JS-001` through `SWE-JS-015`), adding 5 high-difficulty architectural scenarios:
+
+| Task ID | Task Name & Category | Verification Invariants & Failure Risks |
+| :--- | :--- | :--- |
+| `SWE-JS-011` | Inverted Index Document Store (Coupled State Machine) | Transactional batch updates, tag index synchronization, atomic rollback, and ghost reference prevention |
+| `SWE-JS-012` | Reentrant Distributed Mutex (Concurrency & Deadlock Defense) | Reentrant async mutex with lease expiration auto-reclamation, FIFO queueing, and ownership validation |
+| `SWE-JS-013` | RFC 6902 JSON Patch Evaluator (RFC Protocol Conformance) | Full RFC 6902 operators, JSON Pointer navigation, atomic rollback on test failure, and prototype pollution defense |
+| `SWE-JS-014` | Two-Phase Commit State Machine (Distributed Transactions) | Multi-participant prepare/commit/abort state machine with crash handling and complete rollback isolation |
+| `SWE-JS-015` | Backpressure Stream Pipeline (Reactive Streams Flow Control) | highWaterMark backpressure, chunk batching, downstream error propagation, and clean pipeline destruction |
+
 Notes: SWE-JS-003 Solo ended on exit code 13 (unsettled top-level await in the model's rewrite). SWE-JS-006 Solo produced the run's single false victory (claimed done on turn 1 while failing; passed on turn 2). Three tracks that died on the 180 s HTTP timeout were re-run at 420 s and merged via `benchmarks/merge-live-reports.mjs`; the splice log is in `live-ab-final.json → meta.supplements`.
 
 ---

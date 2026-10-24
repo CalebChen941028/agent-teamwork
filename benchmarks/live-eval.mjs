@@ -79,7 +79,7 @@ export const ZHIPU_CHAT_COMPLETIONS_URL = "https://open.bigmodel.cn/api/paas/v4/
 export const DEFAULT_BASE_URL = OPENCODE_ZEN_CHAT_COMPLETIONS_URL;
 export const DEFAULT_MODEL = "mimo-v2.6-flash";
 export const DEFAULT_MAX_TURNS = 6;
-export const DEFAULT_REQUEST_TIMEOUT_MS = 180000;
+export const DEFAULT_REQUEST_TIMEOUT_MS = 420000;
 export const DEFAULT_MAX_RETRIES = 1;
 // Reasoning models emit reasoning_content before content; the completion budget
 // must cover both. 16384 leaves room for reasoning plus a complete file payload.
@@ -105,13 +105,11 @@ function defaultLocalConfigPath() {
 }
 
 const FILE_TAG_PROTOCOL = [
-  "Communication protocol (strict):",
-  '1. To write a file, emit a block in exactly this shape:',
-  '<file path="relative/path/from/repo/root">',
-  "...the entire final file content (complete, no diffs, no placeholders)...",
+  "File Protocol:",
+  '<file path="relative/path/to/file">',
+  "...complete file content (no diffs, no placeholders)...",
   "</file>",
-  "2. Emit complete file contents only. Never emit diffs or \"// rest unchanged\" snippets.",
-  "3. End every reply with exactly one final line: STATUS: DONE or STATUS: CONTINUE.",
+  "End reply with: STATUS: DONE or STATUS: CONTINUE.",
 ].join("\n");
 
 // ---------------------------------------------------------------------------
@@ -696,38 +694,31 @@ export function buildScopingContract(task) {
 
 export function renderScopingContract(contract) {
   return [
-    "# Initiative Scope Contract (scoping-interview locked)",
-    `- Primary Goal: ${contract.primaryGoal}`,
-    `- The Goal Behind the Goal: ${contract.goalBehindGoal}`,
-    "- Deliverable Shape Lock:",
-    `  - Entry file: ${contract.deliverableShapeLock.entryFile} (${contract.deliverableShapeLock.exportShape})`,
-    `  - Allowed write boundary: ${contract.deliverableShapeLock.allowedPaths.join(", ")}`,
-    "- Acceptance Criteria:",
-    ...contract.acceptanceCriteria.map((c, i) => `  ${i + 1}. ${c}`),
-    "- Out of Scope (Non-Goals):",
-    ...contract.outOfScope.map((c) => `  - ${c}`),
-    `- Verification Anchor: ${contract.verificationAnchor}`,
-    `- Risk Tier (resolveMilestoneTopology): ${contract.topology.risk}`,
+    `# Initiative Scope: ${contract.primaryGoal}`,
+    `- Entry file: ${contract.deliverableShapeLock.entryFile} (${contract.deliverableShapeLock.exportShape})`,
+    `- Allowed write boundary: ${contract.deliverableShapeLock.allowedPaths.join(", ")}`,
+    `- Acceptance: verifier subprocess exits 0 with zero out-of-bounds writes`,
+    `- Risk Tier: ${contract.topology.risk}`,
   ].join("\n");
 }
 
 export function buildTopologyDirectives(topology) {
   const directives = [
-    `TOPOLOGY ROUTING (DyLAN, resolveMilestoneTopology): risk=${topology.risk}, workerTier=${topology.workerTier}, parallelism=${topology.parallelism}, criticStrictness=${topology.criticStrictness}, adversarialChallenger=${topology.adversarialChallenger}, requireMicroTest=${topology.requireMicroTest}.`,
+    `TOPOLOGY ROUTING: risk=${topology.risk}, workerTier=${topology.workerTier}.`,
   ];
   if (topology.criticStrictness === "exhaustive" || topology.criticStrictness === "strict") {
     directives.push(
-      `Critic (${topology.criticStrictness}): before replying, re-read your diff line by line and verify every edge case implied by the tests.`
+      `Critic (${topology.criticStrictness}): verify edge cases implied by the tests.`
     );
   }
   if (topology.adversarialChallenger) {
     directives.push(
-      "ADVERSARIAL CHALLENGER: before claiming completion, attack your own solution — enumerate the assertions that could still fail and why your code survives each one."
+      "ADVERSARIAL CHALLENGER: attack your own solution before claiming completion."
     );
   }
   if (topology.requireMicroTest) {
     directives.push(
-      "MICRO-TEST REQUIREMENT: alongside the file block, state one empirical micro-check (input -> expected output) proving the riskiest branch is fixed."
+      "MICRO-TEST: state one empirical check proving the riskiest branch is fixed."
     );
   }
   return directives.join("\n");
@@ -741,14 +732,10 @@ export function buildTeamworkSystemPrompt(task) {
     "",
     renderScopingContract(contract),
     "",
-    "Execution discipline (enforced by the engine, not by trust):",
-    "- PHYSICAL PATH LOCK: every proposed write is checked against the allowed write boundary " +
-      "with findOutOfBoundsFiles. Out-of-bounds writes are blocked — they never reach disk — and counted. Do not propose them.",
-    "- FAILURE TAIL FEED: on failure you receive only the preserved tail of the verifier output " +
-      "(formatFailureOutput), where the decisive stack trace lives.",
-    `- STAGNATION EARLY-STOP: ${STAGNATION_THRESHOLD} consecutive identical failure signatures (computeGapSignature) force one replan; a further repeat aborts the initiative. When told to replan, change strategy fundamentally — never retry the same fix.`,
-    "- STRICT EXIT-CODE ACCOUNTING (calculateTeamworkOpenGaps): success is recognized ONLY when " +
-      "the verifier subprocess exits 0 AND zero out-of-bounds writes landed. Prose claims have no effect; false victories are recorded as metrics.",
+    "Execution discipline (enforced by engine):",
+    "- PATH LOCK: Out-of-bounds writes are blocked before reaching disk. Modify ONLY allowed paths.",
+    "- VERIFICATION: Subprocess exit code 0 is the single source of truth. Prose claims are ignored.",
+    `- STAGNATION EARLY-STOP: ${STAGNATION_THRESHOLD} consecutive identical failure signatures after code edits trigger replan / abort.`,
     "",
     buildTopologyDirectives(contract.topology),
     "",
@@ -1044,17 +1031,22 @@ export async function runSoloTrack({
         ? null
         : computeGapSignature([formatFailureOutput(run.stdout, run.stderr, FAILURE_TAIL_CAP) || "unknown-failure"]);
       gapSignatureTrail.push(signature);
+      const wroteFiles = writeReport.written.length > 0;
       if (run.exitCode === 0) {
         passed = true;
         passTurn = turn;
       } else {
         if (claim) falseVictoryCount += 1;
-        if (signature === lastSignature) {
-          consecutive += 1;
-          stagnationRounds += 1; // recorded, never acted on — Solo has no early stop
-        } else {
-          consecutive = 1;
-          lastSignature = signature;
+        // Write-aware stagnation: Only count stagnation when disk writes actually landed.
+        // Pure reasoning/analysis turns without file modifications must not trigger false loop detection.
+        if (wroteFiles) {
+          if (signature === lastSignature) {
+            consecutive += 1;
+            stagnationRounds += 1; // recorded, never acted on — Solo has no early stop
+          } else {
+            consecutive = 1;
+            lastSignature = signature;
+          }
         }
         maxConsecutiveSameSignature = Math.max(maxConsecutiveSameSignature, consecutive);
       }
@@ -1122,16 +1114,22 @@ export async function runSoloTrack({
 // Track B — With agent-teamwork (contract + path lock + tail feed + early stop)
 // ---------------------------------------------------------------------------
 
-function teamworkFeedback({ run, failureTail, blockedFiles, replanDirective }) {
+function teamworkFeedback({ run, failureTail, blockedFiles, replanDirective, wroteFiles }) {
   const parts = [`[ENGINE VERIFICATION] exit code: ${run.exitCode}`];
   if (blockedFiles.length > 0) {
     parts.push(`[PATH LOCK] blocked out-of-bounds writes (NOT written, counted): ${blockedFiles.join(", ")}`);
+  }
+  if (!wroteFiles) {
+    parts.push(
+      "[NO DISK WRITES] You produced analysis but wrote no files to disk. " +
+        "Analysis alone cannot pass verification. You must emit <file path=\"...\">...</file> blocks to modify code."
+    );
   }
   parts.push("[PRESERVED FAILURE TAIL — formatFailureOutput]");
   parts.push(failureTail || "(no output captured)");
   if (replanDirective) {
     parts.push(
-      "[STAGNATION] identical failure signature repeated — the current approach is superseded. " +
+      "[STAGNATION] identical failure signature repeated after file modification — the current approach is superseded. " +
         "Replan: adopt a fundamentally different strategy; do not retry the same fix."
     );
   }
@@ -1192,6 +1190,8 @@ export async function runTeamworkTrack({
       for (const e of writeReport.escaped) interceptedFiles.push(e);
       interceptedCount += blocked.length + writeReport.escaped.length;
 
+      const wroteFiles = writeReport.written.length > 0;
+
       const run = runTestsInSandbox({ sandboxDir: sandbox.dir, taskId: task.id, targetRel: sandbox.targetRel, nonce: turn });
       lastRun = run;
       lastExitCode = run.exitCode;
@@ -1207,12 +1207,16 @@ export async function runTeamworkTrack({
         passTurn = turn;
       } else {
         if (claim) falseVictoryCount += 1;
-        if (signature === lastSignature) {
-          consecutive += 1;
-          stagnationRounds += 1;
-        } else {
-          consecutive = 1;
-          lastSignature = signature;
+        // Write-aware stagnation: Only count stagnation when disk writes actually landed.
+        // Pure reasoning/analysis turns without file modifications must not trigger false loop detection.
+        if (wroteFiles) {
+          if (signature === lastSignature) {
+            consecutive += 1;
+            stagnationRounds += 1;
+          } else {
+            consecutive = 1;
+            lastSignature = signature;
+          }
         }
         maxConsecutiveSameSignature = Math.max(maxConsecutiveSameSignature, consecutive);
       }
@@ -1261,7 +1265,7 @@ export async function runTeamworkTrack({
       messages.push({ role: "assistant", content });
       messages.push({
         role: "user",
-        content: teamworkFeedback({ run, failureTail, blockedFiles: blocked, replanDirective }),
+        content: teamworkFeedback({ run, failureTail, blockedFiles: blocked, replanDirective, wroteFiles }),
       });
     }
 
