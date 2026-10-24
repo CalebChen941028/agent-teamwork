@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Live online API evaluation suite (`benchmarks/live-eval.mjs`, `npm run benchmark:live`)**: real A/B head-to-head exam of the 10 canonical SWE-bench tasks — Track A Solo vs Track B model + agent-teamwork — over any OpenAI-compatible chat/completions endpoint. Default channel: OpenCode Zen gateway (`https://opencode.ai/zen/go/v1/chat/completions`) with `mimo-v2.6-flash`; key resolution `--api-key` > `OPENCODE_API_KEY` > `ZEN_API_KEY` > `ZHIPUAI_API_KEY` (legacy Zhipu channel) > `models.local.json` (`api_key`/`base_url`/`model`/`extra_headers`). CLI: `--mode`, `--task(s)`, `--out`, `--max-turns`, `--max-tokens`, `--base-url`, `--timeout-ms`, `--check`, `--keep-sandboxes`. Zen gateway session header (`x-opencode-session`) auto-injected.
+- **`benchmarks/merge-live-reports.mjs`**: auditable splice of supplemental re-runs (e.g. after HTTP-timeout track errors) into a canonical dataset; refuses to replace non-infra-errored tracks.
+- **Raw run artifacts committed under `benchmarks/results/`**: `live-ab-final.json` (canonical), `live-ab-full.json` + console log (primary run), three single-track supplements, single-task validation run.
+- **18 offline unit tests for the live harness** (`tests/live-eval.test.mjs`): injectable transport, scripted clients, sandbox/verifier exit codes, redaction — zero network by construction.
+
+### Changed
+- **All benchmark reports replaced with live-run data only**: `BENCHMARKS.md`, `BENCHMARKS.zh-CN.md`, `docs/BENCHMARK_REPORT.md`, `docs/BENCHMARK_REPORT.zh-CN.md`, plus README scorecards (bilingual) and `skills/teamwork/SKILL.md`. The headline live result on mimo-v2.6-flash (2026-10-24): Solo 70.0% Pass@1 (7/10) vs + agent-teamwork 40.0% (4/10) — Pass@1 regressed while every guardrail axis held (0 out-of-bounds in both arms, 1→0 false victories, −41.7% tokens on shared failures, −7.4% avg tokens, +59.9% wall time). Root cause diagnosed and documented: `computeGapSignature` reads the reasoning model's pre-payload "thinking" turns as stagnation and aborts at turn 3 of 6.
+- **Clarification of the [0.3.0] benchmark entry**: its quantitative figures were produced by the offline runner (`benchmarks/runner.mjs`) over pre-recorded task implementations under the Antigravity + Gemini 3.8 Flash environment — a deterministic simulation of harness accounting, not live model behavior. Those numbers are superseded by the live exam above and no longer appear in the reports.
+- `npm run benchmark` (offline runner) is now documented as the Level-1 state-machine gate; `npm run benchmark:live` is the Level-2 empirical gate.
+- `models.example.json` registers `mimo-v2.6-flash` (vendor `opencode`, tier `heavy`, Zen endpoint).
+
 ## [0.3.0] - 2026-10-24
 
 ### Added

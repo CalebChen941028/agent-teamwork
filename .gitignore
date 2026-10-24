@@ -7,3 +7,7 @@ models.local.json
 .agent-teamwork/
 *.bak-*
 *.log
+.live-baseline.json
+.live-teamwork.json
+.serena/
+.video_agent/

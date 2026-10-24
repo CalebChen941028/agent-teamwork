@@ -41,6 +41,17 @@
       "vendor": "zhipu",
       "tier": "light"
     },
+    "glm-5.3": {
+      "id": "glm-5.3",
+      "vendor": "zhipu",
+      "tier": "heavy"
+    },
+    "mimo-v2.6-flash": {
+      "id": "mimo-v2.6-flash",
+      "vendor": "opencode",
+      "tier": "heavy",
+      "endpoint": "https://opencode.ai/zen/go/v1/chat/completions"
+    },
     "qwen-turbo": {
       "id": "qwen-turbo",
       "vendor": "aliyun",

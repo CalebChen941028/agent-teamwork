@@ -42,25 +42,28 @@
 
 ## 实测效果对比与基准评测报告 (Empirical Benchmark & Case Studies)
 
-> **完整双语实测报告**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含 10 项对齐 SWE-bench / Aider 标准化多文件工程任务的完整遥测轨迹、组件消融实验、代码 Diff 与架构状态机比对图。本地一键复现：`npm run benchmark`。
+> **完整双语活体评测报告**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含方法论、逐题遥测、失败形态分析与原始运行证据，覆盖 10 项对齐 SWE-bench / Aider 的标准任务。一键复现：`npm run benchmark:live`（真实 API 调用；配置见[单测与构建校验](#单测与构建校验双层门禁架构)）。
 
-### 核心实测指标全景对比看板 (Scorecard - Antigravity + Gemini 3.8 Flash High)
+### 实测成绩看板 (Scorecard - OpenCode Zen + mimo-v2.6-flash, 2026-10-24)
 
-| 核心评估维度 | 原生单 Agent (无引导 Baseline) | `agent-teamwork` (v0.3.0) | 相对基线提升幅度 | 实测突破与确定性收益 |
+一次真实 A/B 活体大考，两轨模型/端点/预算完全一致，胜负由真实子进程退出码裁决：
+
+| 核心指标 | Solo（无引导） | `agent-teamwork` (v0.3.0) | 差值 | 说明 |
 | :--- | :---: | :---: | :---: | :--- |
-| **端到端一次性验证通过率 (Pass@1)** | 0.0% (0/10) | **100.0% (10/10)** | **+100.0%** | 微测试自动合成驱动客观终局交付 |
-| **工作区文件越界污染率 (Scope Leaks)** | 70.0% (7/10) | **0.0% (0/10)** | **-70.0% (完全杜绝)** | 物理路径范围锁 (`findOutOfBoundsFiles`) 拦截无关文件 |
-| **虚假胜利宣称率 (False Victory / 冒功)**| 80.0% (8/10) | **0.0% (0/10)** | **-80.0% (零误报)** | 进程非 0 退出码强制记入 `openGaps`，杜绝近因偏见 |
-| **陷入死循环/死锁率 (>2 轮无进展)** | 10.0% (1/10) | **0.0% (0/10)** | **-10.0% (早停重规划)**| DJB2 失败签名检测 (`computeGapSignature`) 2 轮早停 |
-| **低风险任务平均 Token 开销** | ~42.7k tokens | **~38.9k tokens** | **Token 节省 8.8%** | DyLAN 动态拓扑剪枝消除冗余多智能体通信 |
-| **单任务平均执行耗时** | 1.6s | **1.1s** | **耗时缩短 31.3%** | 规避盲目循环尝试与深层调试死锁 |
+| **Pass@1** | **70.0% (7/10)** | 40.0% (4/10) | −30 个百分点 | 早停在第 3 轮中止，Solo 用第 4–5 轮收敛 |
+| **越界写入** | 0 | **0** | — | 本场两轨均未越界 |
+| **虚假胜利宣称** | 1 | **0** | **−1** | Solo 在 SWE-JS-006 第 1 轮失败时宣称完成 |
+| **双方共同失败 3 题 Token** | 55.5k | **32.4k** | **−41.7%** | 第 3 轮中止止损 |
+| **单题平均 Token** | 10,520 | **9,746** | **−7.4%** | 尾部反馈抑制上下文膨胀 |
+| **单题平均耗时** | 98.4 秒 | 157.4 秒 | +59.9% | 深度推理调用偏长 |
 
-### 五大典型实测场景与破局方案
-1. **复杂多模块重构越界拦截**：基线 Agent 全局替换导致修改到未授权的 `billing/` 与依赖文件；`findOutOfBoundsFiles` 在门禁阶段增量拦截，触发精准回滚与适配层重构，确保 0 文件越界。
-2. **虚假胜利与隐蔽断言拦截**：单 Agent 面对数百行滚动测试日志产生乐观偏见，误称“所有测试全部通过”；`verifyCommand` 捕获末尾 2000 字符错误堆栈，`calculateTeamworkOpenGaps` 强制记入失败，驱动真实返工。
-3. **上下文税与 Token 动态剪枝**：传统静态多智能体为改 1 处错别字动员全员角色（消耗 18 万 Token）；`resolveMilestoneTopology` 将低风险降级为极简流水线（仅消耗 1.2 万 Token，耗时缩短 92%）。
-4. **死锁停滞早停与动态重规划**：面对 ESM 循环依赖死循环，`computeGapSignature` 在连续 2 轮生成相同签名时立即早停，将里程碑标记为 `superseded: true` 并推动编排者架构重构。
-5. **跨任务经验复用与前置防线**：单 Agent 遗忘历史事故导致再次硬编码路径或泄漏 Redis 句柄；`rankExperienceLibrary` 依据意图词元秒级匹配经验库，在代码编写前注入 `domain` 护栏，彻底防范同类回归。
+完整脚手架在这台推理模型上拉低了 Pass@1，同时赢下全部护栏维度。已诊断的原因：`computeGapSignature` 把载荷前的"思考轮"误判为停滞。分析与四条具体修复见 [docs/BENCHMARK_REPORT.zh-CN.md §4–§6](docs/BENCHMARK_REPORT.zh-CN.md#4-输掉的差距由什么构成)。
+
+### 本次活体运行的四个实测场景
+1. **推理预算挤占**：推理耗尽 completion 预算的轮次只返回 200–900 字符的分析短文、不含文件；载荷轮返回 3k–12k 字符。更大的 teamwork 提示放大了挤占——三道争议题失利的根源。
+2. **虚假胜利被捕获记录**：Solo 在 SWE-JS-006 第 1 轮宣称完成而校验退出码为 1；宣称被记为指标，循环继续，第 2 轮真正通过。引擎核算层零此类记录。
+3. **注定失败任务的止损**：双方都失败的三题上，停滞中止把 Token 消耗削减 41.7%（SWE-JS-010：13.7k → 5.3k，−61%）。
+4. **深度推理的招牌胜局**：SWE-JS-009 上 teamwork 轨 2 轮收敛（Solo 用了 5 轮），一次 273.8 秒的推理调用后首写即交出正确解码器。
 
 ---
 
@@ -141,6 +144,7 @@
 
 ## v0.3.0 重大特性与架构升级
 
+- **真实在线 A/B 评测套件**：`npm run benchmark:live` 把 10 项标准任务作为真实大考跑在任意 OpenAI 兼容端点上（默认 OpenCode Zen + `mimo-v2.6-flash`）——见上方[实测成绩看板](#实测成绩看板-scorecard---opencode-zen--mimo-v26-flash-2026-10-24)。
 - **动态风险拓扑路由**：全量实现 `resolveMilestoneTopology`，跨 TypeScript、JavaScript 与 ZCode DWF 保持 100% 逻辑对齐。
 - **混合经验检索模块**：引入 `rankExperienceLibrary`，以 BM25 + Jaccard 替代朴素截断。
 - **提议-组合护栏合成**：引入 `composeHarnessGuardrails`，内建 Context Tax 上限控制与冲突消解。
@@ -198,14 +202,45 @@
 
 ---
 
-## 单测与构建校验
+## 单测与构建校验：双层门禁架构
 
-运行内置单元测试与三端代码一致性构建校验：
+**Level-1 —— 确定性离线门禁（零网络、零 API Key）：**
 
 ```bash
-node --test tests/teamwork.test.mjs
-node scripts/build.mjs
+npm test                      # node scripts/build.mjs（SSOT 同构 + 开源合规扫描）+ 全量单元测试
+npm run benchmark             # Level-1 状态机基准评测（离线 runner，跑 10 项标准任务）
 ```
+
+**Level-2 —— 真实在线 API 评测（`npm run benchmark:live`）：**
+
+对同一套 10 项 SWE-bench 标准任务发起真实 A/B 活体大考——A 轨（Solo：单模型单体 Prompt、无任何护栏）vs B 轨（模型 + agent-teamwork：范围契约、物理路径锁、失败尾部反馈、停滞早停）——每题在 `os.tmpdir()` 下独立 Git 沙箱中执行，胜负严格由真实子进程退出码、真实 `usage` Token 账单与真实网络耗时裁决。
+
+端点与密钥配置（默认：OpenCode Zen 网关 + `mimo-v2.6-flash`）：
+
+```bash
+# 方式一：环境变量
+export OPENCODE_API_KEY="oc_sk_..."          # 或 ZEN_API_KEY
+
+# 方式二：models.local.json（仓库根目录，已被 git-ignore）
+{
+  "api_key": "oc_sk_...",
+  "base_url": "https://opencode.ai/zen/go/v1/chat/completions",
+  "model": "mimo-v2.6-flash",
+  "vendor": "opencode",
+  "extra_headers": { "x-opencode-session": "zcode-live-eval" }
+}
+
+# 连通性预检与一键复现
+npm run benchmark:live -- --check                          # 鉴权预检 + 微型探针调用
+npm run benchmark:live                                     # 全量 10 题 A/B 大考
+npm run benchmark:live -- --task SWE-JS-001                # 单题快速验证（--tasks 的别名）
+npm run benchmark:live -- --tasks SWE-JS-001,SWE-JS-004    # 任务子集
+npm run benchmark:live -- --mode baseline                  # 仅 Solo 对照轨
+npm run benchmark:live -- --mode teamwork                  # 仅 agent-teamwork 实验轨
+npm run benchmark:live -- --out live-report.json           # 落盘脱敏后的结果 JSON
+```
+
+通过 `--base-url` 可接入任意 OpenAI 兼容 chat/completions 端点（例如经 `ZHIPUAI_API_KEY` 的智谱通道）；无密钥时 CLI 快速失败并给出指引，绝不编造数据。
 
 ---
 

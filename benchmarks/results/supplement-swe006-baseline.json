@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T14:53:57.599Z",
+    "suite": "live-eval (mimo-v2.6-flash Solo vs mimo-v2.6-flash + agent-teamwork)",
+    "mode": "baseline",
+    "model": "mimo-v2.6-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-006"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-006",
+      "name": "Cross-Platform Path Separator Normalization",
+      "category": "Filesystem & Cross-Platform Normalization",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 1,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 2730,
+          "completion": 6916,
+          "total": 9646,
+          "calls": 2
+        },
+        "timeMs": 138890.929041,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "PASS N/N :: should normalize standard Windows path and redundant dots",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 6213,
+            "filesWritten": [
+              "src/fs/normalize.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": true,
+            "signature": "PASS N/N :: should normalize standard Windows path and redundant dots",
+            "latencyMs": 38105
+          },
+          {
+            "turn": 2,
+            "modelChars": 2476,
+            "filesWritten": [
+              "src/fs/normalize.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 100696
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 1,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 9646,
+        "avgTimeMs": 138891
+      }
+    ]
+  }
+}

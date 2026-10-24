@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T15:00:52.530Z",
+    "suite": "live-eval (mimo-v2.6-flash Solo vs mimo-v2.6-flash + agent-teamwork)",
+    "mode": "teamwork",
+    "model": "mimo-v2.6-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-009"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-009",
+      "name": "Query String Nested Bracket Decoder & DoS Protection",
+      "category": "Parser Security & Resource Protection",
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 2428,
+          "completion": 24402,
+          "total": 26830,
+          "calls": 2
+        },
+        "timeMs": 414773.946958,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 273811
+          },
+          {
+            "turn": 2,
+            "modelChars": 8230,
+            "filesWritten": [
+              "src/qs/decoder.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 140705
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "teamwork",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 26830,
+        "avgTimeMs": 414774
+      }
+    ]
+  }
+}

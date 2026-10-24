@@ -1,0 +1,1521 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T14:40:32.844Z",
+    "suite": "live-eval (mimo-v2.6-flash Solo vs mimo-v2.6-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "mimo-v2.6-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-001",
+      "SWE-JS-002",
+      "SWE-JS-003",
+      "SWE-JS-004",
+      "SWE-JS-005",
+      "SWE-JS-006",
+      "SWE-JS-007",
+      "SWE-JS-008",
+      "SWE-JS-009",
+      "SWE-JS-010"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)",
+    "supplements": [
+      {
+        "file": "supplement-swe005-teamwork.json",
+        "task": "SWE-JS-005",
+        "track": "teamwork",
+        "replacedAbortReason": "track-error: Live API request failed after 2 attempt(s): This operation was aborted",
+        "replacedTimeMs": 360352.48291600007
+      },
+      {
+        "file": "supplement-swe006-baseline.json",
+        "task": "SWE-JS-006",
+        "track": "baseline",
+        "replacedAbortReason": "track-error: Live API request failed after 2 attempt(s): This operation was aborted",
+        "replacedTimeMs": 360372.942334
+      },
+      {
+        "file": "supplement-swe009-teamwork.json",
+        "task": "SWE-JS-009",
+        "track": "teamwork",
+        "replacedAbortReason": "track-error: Live API request failed after 2 attempt(s): This operation was aborted",
+        "replacedTimeMs": 360352.9375
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-001",
+      "name": "Prototype Pollution Guardrail in Recursive Object Merge",
+      "category": "Security & Vulnerability Repair",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 676,
+          "completion": 5157,
+          "total": 5833,
+          "calls": 1
+        },
+        "timeMs": 82093.114833,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 5009,
+            "filesWritten": [
+              "src/utils/merge.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 81987
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1256,
+          "completion": 2559,
+          "total": 3815,
+          "calls": 1
+        },
+        "timeMs": 72200.318625,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 4909,
+            "filesWritten": [
+              "src/utils/merge.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 72127
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-002",
+      "name": "Async Queue Backpressure & Drain Race Condition",
+      "category": "Concurrency & Asynchronous State",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 4,
+        "turnsUsed": 4,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 2,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 3,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 4085,
+          "completion": 1282,
+          "total": 5367,
+          "calls": 4
+        },
+        "timeMs": 52590.67083299998,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 309,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 20937
+          },
+          {
+            "turn": 2,
+            "modelChars": 163,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 5227
+          },
+          {
+            "turn": 3,
+            "modelChars": 200,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 6721
+          },
+          {
+            "turn": 4,
+            "modelChars": 4009,
+            "filesWritten": [
+              "src/concurrency/queue.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 19525
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 3,
+        "turnsUsed": 3,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 1,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 2,
+        "abortReason": null,
+        "replansUsed": 1,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance (with 1 replan), final verification command passed, audit passed.",
+        "topology": {
+          "risk": "high",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "strict",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 4340,
+          "completion": 3664,
+          "total": 8004,
+          "calls": 3
+        },
+        "timeMs": 93507.70070900003,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 279,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 10033
+          },
+          {
+            "turn": 2,
+            "modelChars": 251,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 7042
+          },
+          {
+            "turn": 3,
+            "modelChars": 6584,
+            "filesWritten": [
+              "src/concurrency/queue.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 76235
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-003",
+      "name": "Express Middleware Router Async Error Propagation",
+      "category": "Routing & Architecture",
+      "baseline": {
+        "track": "baseline",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 6,
+        "exitCode": 13,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 4,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 5,
+        "abortReason": "turn-budget-exhausted",
+        "tokens": {
+          "prompt": 7972,
+          "completion": 2186,
+          "total": 10158,
+          "calls": 6
+        },
+        "timeMs": 45668.292000000016,
+        "failureTail": "Warning: Detected unsettled top-level await at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-003-3eGt3F/run-tests.mjs:36\n    await gt.run(impl);\n    ^",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "Warning: Detected unsettled top-level await at file:///PATH:N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 274,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 3388
+          },
+          {
+            "turn": 2,
+            "modelChars": 209,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 5373
+          },
+          {
+            "turn": 3,
+            "modelChars": 234,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4633
+          },
+          {
+            "turn": 4,
+            "modelChars": 93,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 2172
+          },
+          {
+            "turn": 5,
+            "modelChars": 90,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 2292
+          },
+          {
+            "turn": 6,
+            "modelChars": 8329,
+            "filesWritten": [
+              "src/router/layer.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 13,
+            "claimedDone": false,
+            "signature": "Warning: Detected unsettled top-level await at file:///PATH:N",
+            "latencyMs": 27587
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 3,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 2,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 3,
+        "abortReason": "stagnation-early-stop",
+        "replansUsed": 1,
+        "openGaps": 2,
+        "conclusion": "Initiative partially completed with 2 open gap(s), final verification command failed (1 replan used). See findings and report.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 4313,
+          "completion": 2273,
+          "total": 6586,
+          "calls": 3
+        },
+        "timeMs": 247768.99929099996,
+        "failureTail": "run-tests summary: task=SWE-JS-003 total=1 failed=1\n--- stderr ---\nFAIL 1/1 :: should catch async error and forward to error middleware\n    Error: live-eval starter stub: implementation missing for SWE-JS-003\n        at new liveEvalStarterStubSWEJS003 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-003-M4HF18/src/router/layer.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:269:26)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-003-M4HF18/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 838,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 53037
+          },
+          {
+            "turn": 2,
+            "modelChars": 624,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 5278
+          },
+          {
+            "turn": 3,
+            "modelChars": 530,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 9014
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-004",
+      "name": "Circular Schema Validator $ref Resolution",
+      "category": "Parser & Schema Validation",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 432,
+          "completion": 2087,
+          "total": 2519,
+          "calls": 1
+        },
+        "timeMs": 33508.30220799998,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 8552,
+            "filesWritten": [
+              "src/schema/validator.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 33454
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 3,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 2,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 3,
+        "abortReason": "stagnation-early-stop",
+        "replansUsed": 1,
+        "openGaps": 2,
+        "conclusion": "Initiative partially completed with 2 open gap(s), final verification command failed (1 replan used). See findings and report.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 4068,
+          "completion": 524,
+          "total": 4592,
+          "calls": 3
+        },
+        "timeMs": 24958.034583,
+        "failureTail": "run-tests summary: task=SWE-JS-004 total=1 failed=1\n--- stderr ---\nFAIL 1/1 :: should validate cyclic self-referencing schema and data without stack overflow\n    Error: live-eval starter stub: implementation missing for SWE-JS-004\n        at liveEvalStarterStubSWEJS004 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-004-sTpnre/src/schema/validator.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:420:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-004-sTpnre/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 535,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 14094
+          },
+          {
+            "turn": 2,
+            "modelChars": 504,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4888
+          },
+          {
+            "turn": 3,
+            "modelChars": 635,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 5864
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-005",
+      "name": "SemVer Range Precedence & Pre-Release Tag Filtering",
+      "category": "Package Management & Version Resolution",
+      "baseline": {
+        "track": "baseline",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 6,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 5,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 6,
+        "abortReason": "turn-budget-exhausted",
+        "tokens": {
+          "prompt": 23620,
+          "completion": 8034,
+          "total": 31654,
+          "calls": 6
+        },
+        "timeMs": 190514.375292,
+        "failureTail": "run-tests summary: task=SWE-JS-005 total=3 failed=3\n--- stderr ---\nFAIL 1/3 :: should reject pre-release versions for normal caret ranges\n    Error: live-eval starter stub: implementation missing for SWE-JS-005\n        at liveEvalStarterStubSWEJS005 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-005-HC7Z2V/src/semver/comparator.js?v=6:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:515:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-005-HC7Z2V/run-tests.mjs:36:14\nFAIL 2/3 :: should permit pre-release only when comparator explicitly includes matching pre-release tuple\n    Error: live-eval starter stub: implementation missing for SWE-JS-005\n        at liveEvalStarterStubSWEJS005 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-005-HC7Z2V/src/semver/comparator.js?v=6:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:524:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-005-HC7Z2V/run-tests.mjs:36:14\nFAIL 3/3 :: should enforce 0.x.y breaking changes for caret ranges\n    Error: live-eval starter stub: implementation missing for SWE-JS-005\n        at liveEvalStarterStubSWEJS005 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-005-HC7Z2V/src/semver/comparator.js?v=6:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:531:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-005-HC7Z2V/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 399,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4935
+          },
+          {
+            "turn": 2,
+            "modelChars": 345,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4756
+          },
+          {
+            "turn": 3,
+            "modelChars": 300,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 57021
+          },
+          {
+            "turn": 4,
+            "modelChars": 11896,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 108229
+          },
+          {
+            "turn": 5,
+            "modelChars": 522,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 8106
+          },
+          {
+            "turn": 6,
+            "modelChars": 249,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 7215
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 3,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 2,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 3,
+        "abortReason": "stagnation-early-stop",
+        "replansUsed": 1,
+        "openGaps": 2,
+        "conclusion": "Initiative partially completed with 2 open gap(s), final verification command failed (1 replan used). See findings and report.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 6167,
+          "completion": 14278,
+          "total": 20445,
+          "calls": 3
+        },
+        "timeMs": 267793.295292,
+        "failureTail": "run-tests summary: task=SWE-JS-005 total=3 failed=3\n--- stderr ---\nFAIL 1/3 :: should reject pre-release versions for normal caret ranges\n    Error: live-eval starter stub: implementation missing for SWE-JS-005\n        at liveEvalStarterStubSWEJS005 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-005-9sAhZS/src/semver/comparator.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:515:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-005-9sAhZS/run-tests.mjs:36:14\nFAIL 2/3 :: should permit pre-release only when comparator explicitly includes matching pre-release tuple\n    Error: live-eval starter stub: implementation missing for SWE-JS-005\n        at liveEvalStarterStubSWEJS005 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-005-9sAhZS/src/semver/comparator.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:524:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-005-9sAhZS/run-tests.mjs:36:14\nFAIL 3/3 :: should enforce 0.x.y breaking changes for caret ranges\n    Error: live-eval starter stub: implementation missing for SWE-JS-005\n        at liveEvalStarterStubSWEJS005 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-005-9sAhZS/src/semver/comparator.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:531:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-005-9sAhZS/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 326,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 5842
+          },
+          {
+            "turn": 2,
+            "modelChars": 435,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 2922
+          },
+          {
+            "turn": 3,
+            "modelChars": 500,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 258824
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-006",
+      "name": "Cross-Platform Path Separator Normalization",
+      "category": "Filesystem & Cross-Platform Normalization",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 1,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 2730,
+          "completion": 6916,
+          "total": 9646,
+          "calls": 2
+        },
+        "timeMs": 138890.929041,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "PASS N/N :: should normalize standard Windows path and redundant dots",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 6213,
+            "filesWritten": [
+              "src/fs/normalize.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": true,
+            "signature": "PASS N/N :: should normalize standard Windows path and redundant dots",
+            "latencyMs": 38105
+          },
+          {
+            "turn": 2,
+            "modelChars": 2476,
+            "filesWritten": [
+              "src/fs/normalize.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 100696
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 3,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 2,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 3,
+        "abortReason": "stagnation-early-stop",
+        "replansUsed": 1,
+        "openGaps": 2,
+        "conclusion": "Initiative partially completed with 2 open gap(s), final verification command failed (1 replan used). See findings and report.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 5054,
+          "completion": 7729,
+          "total": 12783,
+          "calls": 3
+        },
+        "timeMs": 326031.0844170002,
+        "failureTail": "run-tests summary: task=SWE-JS-006 total=2 failed=2\n--- stderr ---\nFAIL 1/2 :: should normalize standard Windows path and redundant dots\n    Error: live-eval starter stub: implementation missing for SWE-JS-006\n        at liveEvalStarterStubSWEJS006 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-006-oiB0Nm/src/fs/normalize.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:609:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-006-oiB0Nm/run-tests.mjs:36:14\nFAIL 2/2 :: should preserve escaped glob wildcards and UNC network paths\n    Error: live-eval starter stub: implementation missing for SWE-JS-006\n        at liveEvalStarterStubSWEJS006 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-006-oiB0Nm/src/fs/normalize.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:616:24)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-006-oiB0Nm/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 637,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 5140
+          },
+          {
+            "turn": 2,
+            "modelChars": 467,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 3047
+          },
+          {
+            "turn": 3,
+            "modelChars": 470,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 136202
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-007",
+      "name": "LRU Cache Concurrent Eviction & Lazy TTL Expiry",
+      "category": "Data Structures & Memory Management",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 508,
+          "completion": 7810,
+          "total": 8318,
+          "calls": 1
+        },
+        "timeMs": 143746.14191600005,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 9810,
+            "filesWritten": [
+              "src/cache/lru.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 143619
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 3,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 2,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 3,
+        "abortReason": "stagnation-early-stop",
+        "replansUsed": 1,
+        "openGaps": 2,
+        "conclusion": "Initiative partially completed with 2 open gap(s), final verification command failed (1 replan used). See findings and report.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 4140,
+          "completion": 2420,
+          "total": 6560,
+          "calls": 3
+        },
+        "timeMs": 62029.030292000156,
+        "failureTail": "run-tests summary: task=SWE-JS-007 total=1 failed=1\n--- stderr ---\nFAIL 1/1 :: should lazily evict expired entries before evicting unexpired active entries\n    Error: live-eval starter stub: implementation missing for SWE-JS-007\n        at new liveEvalStarterStubSWEJS007 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-007-rrZZPj/src/cache/lru.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:689:25)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-007-rrZZPj/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 313,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4182
+          },
+          {
+            "turn": 2,
+            "modelChars": 277,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4092
+          },
+          {
+            "turn": 3,
+            "modelChars": 4011,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 53655
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-008",
+      "name": "EventEmitter AbortSignal Memory Leak & Two-Way Teardown",
+      "category": "Events & Memory Leak Prevention",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 556,
+          "completion": 1702,
+          "total": 2258,
+          "calls": 1
+        },
+        "timeMs": 39025.03245899989,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 4170,
+            "filesWritten": [
+              "src/events/hub.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 38645
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 1040,
+          "completion": 1484,
+          "total": 2524,
+          "calls": 1
+        },
+        "timeMs": 23771.20804200042,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 3243,
+            "filesWritten": [
+              "src/events/hub.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 23714
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-009",
+      "name": "Query String Nested Bracket Decoder & DoS Protection",
+      "category": "Parser Security & Resource Protection",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 5,
+        "turnsUsed": 5,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 3,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 4,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 7909,
+          "completion": 7845,
+          "total": 15754,
+          "calls": 5
+        },
+        "timeMs": 211559.26279200008,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 360,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 7481
+          },
+          {
+            "turn": 2,
+            "modelChars": 377,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 20492
+          },
+          {
+            "turn": 3,
+            "modelChars": 270,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4165
+          },
+          {
+            "turn": 4,
+            "modelChars": 6456,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 142216
+          },
+          {
+            "turn": 5,
+            "modelChars": 7331,
+            "filesWritten": [
+              "src/qs/decoder.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 36436
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 2,
+        "turnsUsed": 2,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 1,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 2428,
+          "completion": 24402,
+          "total": 26830,
+          "calls": 2
+        },
+        "timeMs": 414773.946958,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 0,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 273811
+          },
+          {
+            "turn": 2,
+            "modelChars": 8230,
+            "filesWritten": [
+              "src/qs/decoder.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 140705
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    },
+    {
+      "id": "SWE-JS-010",
+      "name": "Cascading Hierarchical Config Deep Freeze",
+      "category": "Configuration & Immutability Architecture",
+      "baseline": {
+        "track": "baseline",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 6,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 5,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 6,
+        "abortReason": "turn-budget-exhausted",
+        "tokens": {
+          "prompt": 11379,
+          "completion": 2309,
+          "total": 13688,
+          "calls": 6
+        },
+        "timeMs": 46788.93070799997,
+        "failureTail": "run-tests summary: task=SWE-JS-010 total=1 failed=1\n--- stderr ---\nFAIL 1/1 :: should cascade merge with priority and enforce deep immutability\n    Error: live-eval starter stub: implementation missing for SWE-JS-010\n        at liveEvalStarterStubSWEJS010 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-010-YF2M5u/src/config/merger.js?v=6:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:978:23)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-baseline-SWE-JS-010-YF2M5u/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 547,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 6565
+          },
+          {
+            "turn": 2,
+            "modelChars": 313,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 2429
+          },
+          {
+            "turn": 3,
+            "modelChars": 3358,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 12713
+          },
+          {
+            "turn": 4,
+            "modelChars": 240,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4820
+          },
+          {
+            "turn": 5,
+            "modelChars": 3223,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 15113
+          },
+          {
+            "turn": 6,
+            "modelChars": 344,
+            "filesWritten": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 4940
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": false,
+        "passTurn": null,
+        "turnsUsed": 3,
+        "exitCode": 1,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 2,
+        "stalled": true,
+        "maxConsecutiveSameSignature": 3,
+        "abortReason": "stagnation-early-stop",
+        "replansUsed": 1,
+        "openGaps": 2,
+        "conclusion": "Initiative partially completed with 2 open gap(s), final verification command failed (1 replan used). See findings and report.",
+        "topology": {
+          "risk": "low",
+          "parallelism": "sequential",
+          "adversarialChallenger": false,
+          "criticStrictness": "standard",
+          "workerTier": "light",
+          "requireMicroTest": false
+        },
+        "tokens": {
+          "prompt": 3993,
+          "completion": 1329,
+          "total": 5322,
+          "calls": 3
+        },
+        "timeMs": 41165.96241699997,
+        "failureTail": "run-tests summary: task=SWE-JS-010 total=1 failed=1\n--- stderr ---\nFAIL 1/1 :: should cascade merge with priority and enforce deep immutability\n    Error: live-eval starter stub: implementation missing for SWE-JS-010\n        at liveEvalStarterStubSWEJS010 (file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-010-OEf2zg/src/config/merger.js?v=3:4:9)\n        at Object.run (file:///Volumes/calebchen/Skills/zcode-boost-teamwork-anti-ai-copywriting-sync/agent-teamwork/benchmarks/tasks.mjs:978:23)\n        at file:///private/var/folders/xz/hz55v1g90ld0ys9ggtx6z7r00000gn/T/live-eval-teamwork-SWE-JS-010-OEf2zg/run-tests.mjs:36:14",
+        "gapSignatureTrail": [
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N",
+          "run-tests summary: task=SWE-JS-N total=N failed=N"
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 298,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 9077
+          },
+          {
+            "turn": 2,
+            "modelChars": 244,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 3677
+          },
+          {
+            "turn": 3,
+            "modelChars": 374,
+            "filesWritten": [],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 1,
+            "claimedDone": false,
+            "signature": "run-tests summary: task=SWE-JS-N total=N failed=N",
+            "latencyMs": 28286
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 10,
+        "passes": 7,
+        "passRate": 0.7,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 1,
+        "stalledTasks": 5,
+        "stagnationRounds": 19,
+        "replansUsed": 0,
+        "avgTokens": 10520,
+        "avgTimeMs": 98439
+      },
+      {
+        "track": "teamwork",
+        "total": 10,
+        "passes": 4,
+        "passRate": 0.4,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 7,
+        "stagnationRounds": 13,
+        "replansUsed": 7,
+        "avgTokens": 9746,
+        "avgTimeMs": 157400
+      }
+    ],
+    "delta": {
+      "passRatePts": -30,
+      "outOfBoundsFiles": 0,
+      "falseVictories": -1,
+      "tokenDeltaPct": -7.4,
+      "timeDeltaPct": 59.9
+    }
+  }
+}

@@ -2,10 +2,10 @@
  * Canonical Engineering Benchmark Suite (10 Tasks)
  * Grounded in Princeton/Stanford SWE-bench (Lite/Verified) and Aider Multi-File Benchmark methodology.
  *
- * Evaluated under:
- * - Environment: Google Antigravity + Gemini 3.8 Flash (High)
- * - Platform: macOS arm64 (Darwin 27.0.0, Apple Silicon)
- * - Runtime: Node.js v22.23.1
+ * Live A/B evaluation of record (2026-10-24):
+ * - Endpoint: https://opencode.ai/zen/go/v1/chat/completions (OpenCode Zen gateway)
+ * - Model: mimo-v2.6-flash, ZCode Engine harness via `npm run benchmark:live`
+ * - Platform: macOS arm64 (Darwin 27.0.0, Apple Silicon), Node.js v22.23.1
  */
 
 import assert from "node:assert/strict";

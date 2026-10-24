@@ -1,405 +1,146 @@
-# 实测效果对比与基准评测报告 (Benchmark Report)
+# agent-teamwork 真实在线评测报告 — mimo-v2.6-flash A/B 活体大考
 
 [![Version: 0.3.0](https://img.shields.io/badge/version-0.3.0-green.svg)](../CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-22%2F22%20passing-brightgreen.svg)](../tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-40%2F40%20passing-brightgreen.svg)](../tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](../scripts/build.mjs)
 
-[English](BENCHMARK_REPORT.md) | [简体中文](BENCHMARK_REPORT.zh-CN.md)
+[English](BENCHMARK_REPORT.md) | [简体中文](BENCHMARK_REPORT.zh-CN.md) | [门户看板: BENCHMARKS.zh-CN.md](../BENCHMARKS.zh-CN.md)
 
-本基准评测报告基于目标真实生产环境，对 **agent-teamwork v0.3.0** 与原生无引导单 Agent 进行了深度、确定性与可复现的对比实验：
-- **评测环境**：Google Antigravity + Gemini 3.8 Flash (High)
-- **硬件架构**：macOS arm64 (Darwin 27.0.0, Apple Silicon)
-- **运行环境**：Node.js v22.23.1
-- **标准基准任务集**：对齐普林斯顿/斯坦福 **SWE-bench (Lite/Verified)** 与 **Aider Multi-File Benchmark** 评测方法论的 10 项经典多文件工程修复与重构任务。
-- **一键复现命令**：`npm run benchmark`（或 `node benchmarks/runner.mjs`）
+本报告全部数字来自 2026-10-24 的一次真实在线运行。评测驱动器通过 HTTP 现场调用模型，把返回的代码写入 Git 沙箱真实执行，以校验子进程的真实退出码裁决每一轨的胜负。没有任何数字来自推演、旧模拟数据或人工填写。
 
----
-
-## 1. 核心实测指标与全景对比看板 (Scorecard)
-
-基于具有 Ground-Truth 测试断言、回归边界守卫与严格 `allowedPaths` 范围定义的 10 项经典工程任务：
-
-| 核心评估维度 | 原生单 Agent (无引导 Baseline) | `agent-teamwork` (v0.3.0) | 相对基线提升幅度 | 核心机制支撑 |
-| :--- | :---: | :---: | :---: | :--- |
-| **端到端一次性验证通过率 (Pass@1)** | 0.0% (0/10) | **100.0% (10/10)** | **+100.0%** | 客观微测试合成与针对性返工闭环 |
-| **工作区文件越界污染率 (Scope Leaks)** | 70.0% (7/10) | **0.0% (0/10)** | **-70.0% (完全杜绝)** | 物理路径范围锁 (`findOutOfBoundsFiles`) |
-| **虚假胜利宣称率 (False Victory / 冒功)** | 80.0% (8/10) | **0.0% (0/10)** | **-80.0% (零误报)** | 非零退出捕获 (`formatFailureOutput`) 与数学核算 |
-| **陷入死循环/死锁率 (>2 轮无进展)** | 10.0% (1/10) | **0.0% (0/10)** | **-10.0% (早停重规划)**| DJB2 失败签名检测 (`computeGapSignature`) |
-| **单任务平均 Token 开销** | ~42,675 tokens | **~43,040 tokens** | +0.9% | DyLAN 动态风险拓扑剪枝 (`resolveMilestoneTopology`) |
-| **单任务平均执行耗时** | 1.6s | **1.1s** | **耗时缩短 31.3%** | 规避盲目重试死锁，高效里程碑拆解 |
-
-```
-基准通过率对比 (Pass@1)
-========================================================================
-agent-teamwork (v0.3.0)       [████████████████████████████████████████] 100.0% (10/10)
-单 Agent 单体循环             [                                        ]   0.0% (0/10)
-========================================================================
-工作区文件越界污染率 (越低越好)
-------------------------------------------------------------------------
-agent-teamwork (v0.3.0)       [                                        ]   0.0% (0/10)
-单 Agent 单体循环             [████████████████████████████            ]  70.0% (7/10)
-========================================================================
-虚假胜利宣称率 (冒功误报 - 越低越好)
-------------------------------------------------------------------------
-agent-teamwork (v0.3.0)       [                                        ]   0.0% (0/10)
-单 Agent 单体循环             [████████████████████████████████        ]  80.0% (8/10)
-========================================================================
-```
+- **运行环境**：OpenCode Zen 网关 / ZCode Engine 评测驱动，macOS arm64 (Darwin 27.0.0)，Node.js v22.23.1
+- **端点**：`https://opencode.ai/zen/go/v1/chat/completions`（OpenAI 兼容，须携带 `x-opencode-session` 请求头）
+- **模型**：`mimo-v2.6-flash`（推理模型，`reasoning_content` 先于 `content` 输出）
+- **请求预算**：temperature 0.2，`max_tokens` 16384，每轨 6 轮上限，HTTP 超时 180 秒（三个补充轨为 420 秒，见 §2.3）
+- **原始证据**：[`benchmarks/results/live-ab-final.json`](../benchmarks/results/live-ab-final.json)（合并后权威数据）、[`live-ab-full.json`](../benchmarks/results/live-ab-full.json)（主跑）、同目录下的逐轨补充文件与完整控制台日志
 
 ---
 
-## 2. 架构对比：原生单 Agent 模式失效根因分析
+## 1. 总成绩看板
 
-```mermaid
-flowchart TD
-    subgraph Baseline["基线方案：单 Agent (原生 Gemini 3.8 Flash High)"]
-        B1[用户任务输入] --> B2[无约束直接修改工作区]
-        B2 --> B3[上下文超限与注意力分散]
-        B3 --> B4{失败或死循环?}
-        B4 -- 陷入死锁 --> B5[盲目重试 / 额度耗尽]
-        B4 -- 近因偏见 --> B6["虚假胜利 ('测试通过!')"]
-        B4 -- 范围泄漏 --> B7[污染无关文件 / 破坏生产]
-    end
+A 轨（Solo 对照）把缺陷描述与测试目录直接交给裸模型，走朴素循环：全量原始测试输出回灌、无路径锁、无早停。B 轨（模型 + agent-teamwork）给同一模型套上协作引擎：范围访谈契约、`resolveMilestoneTopology` 风险拓扑路由指令、`findOutOfBoundsFiles` 物理路径锁、`formatFailureOutput` 失败尾部反馈、`computeGapSignature` 停滞早停、`calculateTeamworkOpenGaps` 严格退出码核算。两轨的模型、端点、采样参数与轮次预算完全一致，脚手架是唯一变量。
 
-    subgraph Teamwork["agent-teamwork v0.3.0 确定性引擎"]
-        T1[范围访谈与动词化改写] --> T2[rankExperienceLibrary: BM25/Jaccard 经验检索]
-        T2 --> T3[resolveMilestoneTopology: DyLAN 动态风险路由]
-        T3 --> T4[Git 增量快照与 allowedPaths 范围锁]
-        T4 --> T5[施工 Agent 独立干净上下文执行]
-        T5 --> T6[findOutOfBoundsFiles: 物理路径越界拦截]
-        T6 --> T7[质检门禁与结构化对抗挑战]
-        T7 --> T8{通过质量门禁?}
-        T8 -- 存在缺口 --> T12[返工 Agent 针对性补丁]
-        T12 --> T6
-        T8 -- 连续相同签名 --> T9[停滞早停与动态重规划]
-        T8 -- 全部通过 --> T10[synthesizeMicroTestPlan 真实测试验证]
-        T10 --> T11[客观终局裁决与跨任务经验沉淀]
-    end
-```
+| 指标 | Solo（A 轨） | + agent-teamwork（B 轨） | 差值 |
+| :--- | :---: | :---: | :---: |
+| **Pass@1（校验退出码 0）** | **70.0%（7/10）** | **40.0%（4/10）** | −30 个百分点 |
+| **API 调用次数** | 33 | 25 | −8 次 |
+| **总 Token（prompt + completion）** | 105,195（59,867 + 45,328） | 97,461（36,799 + 60,662） | 单题均值 −7.4% |
+| **单题平均 Token** | 10,520 | 9,746 | −7.4% |
+| **单题平均耗时** | 98.4 秒 | 157.4 秒 | +59.9% |
+| **单次调用平均 API 延迟** | 29.8 秒 | 48.4 秒 | +62.7% |
+| **越界文件写入** | 0 | 0 | — |
+| **被路径锁拦截的写入** | 不适用 | 0 | — |
+| **虚假胜利宣称** | 1 | **0** | −1 |
+| **停滞任务（≥2 个相同失败签名）** | 5 | 7 | +2 |
+| **强制重规划 / 早停中止** | 不适用（无早停） | 7 次重规划，6 次中止 | — |
 
-### 关键架构差异点：
-1. **确定性证据边界与范围锁 (Agentless 范式)**：执行前快照与严格的文件路径白名单机制（`allowedPaths`），在物理层面杜绝无关代码污染。
-2. **客观诚实错误尾部捕获 (`formatFailureOutput` 与 `calculateTeamworkOpenGaps`)**：强制捕获进程非零退出状态码，提取末尾 2000 字符错误堆栈，彻底杜绝乐观宣称冒功。
-3. **动态风险拓扑剪枝 (DyLAN / MacNet 范式)**：低风险任务自动修剪冗余质检与对抗角色（大幅降低上下文税），高危关键路径集中算力对抗攻击。
-4. **死锁停滞签名早停与重规划 (`computeGapSignature`)**：使用 DJB2 规范化哈希指纹，检测连续 2 轮相同报错即刻早停，将死锁里程碑标记为 `superseded: true` 并重构解耦。
-5. **递归经验前置注入防线 (Google Research Harness² 范式)**：BM25 + Jaccard 混合经验检索，在施工 Agent 动笔前精准注入历史回归护栏。
+头名结论并不好看，但它是真的：在这台模型上，完整脚手架把端到端 Pass@1 从 70% 拉低到 40%。与此同时，护栏维度的表现全部兑现——两轨零越界、引擎之下零虚假胜利（Solo 有一次）、双方都失败的三道题上 Token 消耗节省 41.7%。§4 追查 Pass@1 损失来自哪里，以及它暴露了早停签名的什么问题。
 
 ---
 
-## 3. 五大落地实测典型案例
+## 2. 方法论
+
+### 2.1 驱动机制
+
+10 项标准任务（`benchmarks/tasks.mjs`，对齐 SWE-bench / Aider 方法论，`SWE-JS-001`…`010`）各自在 `os.tmpdir()` 下新建 `git init` 沙箱执行，沙箱预置确定性的未完成起始桩。模型按严格文件标签协议作答，驱动器解析 `<file path="…">` 块写入沙箱，随后运行 `run-tests.mjs`——一个生成的子进程，导入沙箱模块并执行该任务的 `groundTruthTests`。`process.exitCode` 是唯一裁决通道，文字宣称从不影响评分。
+
+B 轨逐轮附加：越界提案在落盘前被拦截并计数（`findOutOfBoundsFiles`）；失败时模型只收到保留的校验输出末尾 2000 字符（`formatFailureOutput`）；连续两个相同的 DJB2 失败签名触发一次强制重规划，第三个触发中止（`computeGapSignature`）；终局核算要求退出码为 0 且零越界写入落地（`calculateTeamworkOpenGaps`）。
+
+### 2.2 公平性控制
+
+两轨使用相同的模型 id、端点、凭证、temperature、`max_tokens` 与 6 轮硬上限。A 轨刻意回灌全量原始测试输出（朴素基线），B 轨只回灌尾部——这一差异正是被测处置量本身，不是混杂因素。
+
+### 2.3 基础设施故障与补充重跑政策
+
+三个轨次（SWE-JS-005 teamwork、SWE-JS-006 solo、SWE-JS-009 teamwork）死在 180 秒 HTTP 超时上，一轮都没跑完——两次重试均被中止。这些是基础设施事件，不是模型表现：这台模型的深度推理调用合法地可能超过 180 秒（SWE-JS-009 的决胜调用耗时 273.8 秒）。三个轨次以 `--timeout-ms 420000` 重跑，由 [`benchmarks/merge-live-reports.mjs`](../benchmarks/merge-live-reports.mjs) 拼接进权威数据集；该脚本拒绝替换任何不是以 `track-error:` 中止的轨次。拼接日志保存在 `live-ab-final.json` 的 `meta.supplements` 中。已完成轨次全部在 180 秒预算内跑完，未做任何改动。
+
+### 2.4 通道选型说明
+
+本次大考原计划用智谱开放平台上的 GLM-5.3。直连 API 探测发现其推理阶段在该平台无上界，且随 `max_tokens` 同步膨胀（4,096 时推理花掉 4,095、content 恒为空；16,384 时同样；关闭思考被错误码 1210 拒绝）。该通道在采集任何任务数据之前即被放弃，改用 OpenCode Zen 网关上的 mimo-v2.6-flash。本报告不含任何 GLM-5.3 数字。
 
 ---
 
-### 典型案例 1：复杂多文件重构（文件越界强拦截）
+## 3. 逐题遥测
 
-#### 场景概述
-- **任务编号**：`SWE-JS-001` (深度合并中的原型链污染防护，CVE-2020-28500)。
-- **目标**：重构 `src/utils/merge.js` 深度克隆工具，防御 `__proto__`、`constructor.prototype` 与 `prototype` 原型链篡改。
-- **约束**：严禁修改根目录 `package.json` 或无关路径 `src/utils/path.js`。
-- **授权范围**：`["src/utils/merge.js", "tests/merge.test.js"]`。
+全部取自 `live-ab-final.json`。
 
-#### 原生单 Agent 轨迹 (Gemini 3.8 Flash High)
-原生单 Agent 尝试通过安装 `lodash.merge` 解决问题，违规篡改了根目录 `package.json` 与无关的 `src/utils/path.js`。同时其自研防护仅判断了 `key === '__proto__'`，漏掉了 `constructor.prototype` 绕过攻击：
+| 任务 | Solo 裁决 | 轮数 / Token / 耗时 | Teamwork 裁决 | 轮数 / Token / 耗时 | Teamwork 中止原因 |
+| :--- | :---: | :--- | :---: | :--- | :--- |
+| SWE-JS-001 原型污染防护 | 通过 | 1 / 5.8k / 82.1s | 通过 | 1 / 3.8k / 72.2s | — |
+| SWE-JS-002 异步队列背压 | 通过 | 4 / 5.4k / 52.6s | 通过 | 3 / 8.0k / 93.5s | — |
+| SWE-JS-003 路由异步错误传播 | 失败 | 6 / 10.2k / 45.7s | 失败 | 3 / 6.6k / 247.8s | stagnation-early-stop |
+| SWE-JS-004 循环 $ref 解析 | 通过 | 1 / 2.5k / 33.5s | 失败 | 3 / 4.6k / 25.0s | stagnation-early-stop |
+| SWE-JS-005 SemVer 预发布过滤 | 失败 | 6 / 31.7k / 190.5s | 失败 | 3 / 20.4k / 267.8s | stagnation-early-stop |
+| SWE-JS-006 跨平台路径分隔符 | 通过 | 2 / 9.6k / 138.9s | 失败 | 3 / 12.8k / 326.0s | stagnation-early-stop |
+| SWE-JS-007 LRU 并发逐出 | 通过 | 1 / 8.3k / 143.7s | 失败 | 3 / 6.6k / 62.0s | stagnation-early-stop |
+| SWE-JS-008 AbortSignal 双向拆除 | 通过 | 1 / 2.3k / 39.0s | 通过 | 1 / 2.5k / 23.8s | — |
+| SWE-JS-009 qs 嵌套解码 + DoS 上限 | 通过 | 5 / 15.8k / 211.6s | 通过 | 2 / 26.8k / 414.8s | — |
+| SWE-JS-010 配置深冻结不可变 | 失败 | 6 / 13.7k / 46.8s | 失败 | 3 / 5.3k / 41.2s | stagnation-early-stop |
 
-```diff
-# Baseline Git Diff (越界污染且留下安全后门):
-diff --git a/package.json b/package.json
--    "version": "0.3.0"
-+    "version": "0.3.0",
-+    "dependencies": { "lodash.merge": "^4.6.2" }
-diff --git a/src/utils/path.js b/src/utils/path.js
--export function resolvePath(p) { return path.resolve(p); }
-+export function resolvePath(p) { return path.normalize(p); }
-diff --git a/src/utils/merge.js b/src/utils/merge.js
-+for (const key of Object.keys(source)) {
-+  if (key === '__proto__') continue; // 遗漏了 constructor.prototype!
-```
-*结果*：Ground-Truth 测试中攻击载荷成功篡改全局 `Object.prototype` 导致断言失败，且产生 2 处越界文件污染。
+值得点名的现象：
 
-#### `agent-teamwork` 治理轨迹
-1. **里程碑范围锁设定**：
-   ```json
-   {
-     "milestone": "M1-SafeMerge",
-     "allowedPaths": ["src/utils/merge.js", "tests/merge.test.js"],
-     "riskLevel": "critical"
-   }
-   ```
-2. **执行前工作区快照**：`agent-teamwork` 记录当前干净的工作区状态。
-3. **越界拦截与质检攻击**：
-   ```
-   [Worker] 试图修改 package.json...
-   [Gatekeeper: findOutOfBoundsFiles]
-     ⚠️ 越界拦截：检测到非法写入 "package.json" 与 "src/utils/path.js"！
-     授权白名单：["src/utils/merge.js", "tests/merge.test.js"]
-   [Critic] 里程碑 M1 拒绝通过：
-     - 缺口：试图篡改白名单外部文件 package.json
-     - Challenger 攻击：发现利用 constructor.prototype 可绕过防护
-   ```
-4. **返工闭环修复**：返工 Agent 自动回滚越界改动，并在白名单内实现全向量防御：
-   ```javascript
-   if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
-   ```
-5. **Git 状态验证**：
-   ```bash
-   $ git status --porcelain
-   M src/utils/merge.js
-   ```
-*实测结果*：**0 处越界文件**，100% 范围合规，100% 通过全部安全测试。
+1. **两轨共同通过 001、002、008、009，共同失败 003、005、010。** 争议集恰好三题——004、006、007——Solo 通过而 Teamwork 早停中止。整个 Pass@1 差距全由这三题贡献。
+2. **SWE-JS-003 Solo 终局退出码 13**（未决的顶层 await）：模型第六轮重写用了顶层 `await`，等待的 Promise 永不落地。真实且少见的失败形态，之所以能记录下来，是因为驱动器上报真实进程退出码。
+3. **SWE-JS-006 Solo 贡献全场唯一一次虚假胜利**：第 1 轮宣称完成，校验退出码却是 1；宣称被记录，循环继续，第 2 轮真正通过。B 轨核算层零此类记录。
 
 ---
 
-### 典型案例 2：虚假胜利与隐蔽断言（诚实缺口核算）
+## 4. 输掉的差距由什么构成
 
-#### 场景概述
-- **任务编号**：`SWE-JS-002` (异步限流队列背压与提前触发 drain 竞态条件)。
-- **目标**：实现并发度受限的异步队列，保证 `onIdle` 在所有在途异步任务全部执行完毕（`inFlight === 0`）后方可触发。
-- **隐蔽缺陷**：若仅在任务队列数组出队为空时触发 `onIdle`，此时已分发的微任务仍在并发执行，调用方提前读取数据将造成竞态数据损坏。
+### 4.1 推理预算挤占
 
-#### 原生单 Agent 轨迹
-原生单 Agent 运行测试，由于测试框架输出了数百行滚动信息，尾部第 89 行出现断言失败：`Active tasks must be 0 upon onIdle, but found 2`。Agent 产生日志近因偏见，误判为全部成功：
+`mimo-v2.6-flash` 先输出 `reasoning_content` 再输出 `content`，两者共用 16,384 的 completion 预算。整场运行的回复长度呈干净的双峰分布：携带完整文件、最终通过测试的载荷轮返回 3,000–12,000 字符正文；纯分析轮只返回 200–900 字符、不含任何文件块——推理耗尽预算，可见正文只剩一句"正在分析测试"式的短桩。
 
-```markdown
-### Baseline Agent 报告
-所有代码重构完成！我已验证异步队列功能。
-队列数组成功清空，所有任务均已处理完毕，可以直接上线！🚀
-```
-*真实情况*：测试用例以退出码 1 退出，数据竞态断言彻底失败。
+B 轨的系统提示远大于 A 轨（范围契约、拓扑指令、执行纪律、文件协议）。三道争议题上，A 轨提示下的模型第 1、2 轮就交出完整实现；同一模型在 B 轨提示下连续三轮只给分析短文，始终没走到载荷。本场运行的相关性是：脚手架上下文越大 → 推理越长 → 正文越薄 → 没有写入落地。
 
-#### `agent-teamwork` 治理轨迹
-1. **确定性执行 verifyCommand**：捕获进程退出状态码 1。
-2. **尾部堆栈保全 (`formatFailureOutput`)**：
-   ```javascript
-   const failureSummary = formatFailureOutput(stdout, stderr, 2000);
-   ```
-3. **诚实缺口严密核算 (`calculateTeamworkOpenGaps`)**：
-   ```
-   [Gatekeeper] verifyCommand 退出码为 1。
-   [calculateTeamworkOpenGaps]
-     - auditPassed: true
-     - verifyCommandRan: true
-     - verifyPassed: false
-     => openGaps: 1 (严格记入未闭环缺陷)
-   ```
-4. **客观终局结论 (`formatTeamworkConclusion`)**：
-   ```markdown
-   > [!WARNING] **Skepticism Disclaimer (审慎与怀疑声明)**
-   > 终局验证命令失败（退出码 1）。当前仍存在 1 个验证缺口。
+### 4.2 早停签名把"思考"误判为"卡死"
 
-   ## 真实遥测记录
-   - verifyCommand: `npm test` (退出码 1)
-   - 堆栈追溯:
-     FAIL tests/queue.test.js:89
-     AssertionError [ERR_ASSERTION]: Active tasks must be 0 upon onIdle, but found 2
-   - 状态: 未完成 (触发针对性返工)
-   ```
-*实测结果*：**零虚假胜利冒功**，诚实缺口驱动返工正确修复了 `_checkIdle()` 状态机。
+`computeGapSignature` 对保留的失败尾部做哈希。没有文件写入时，校验输出在轮间几乎不变，签名于是重复——引擎把重复读作"同一修法重试，注定失败"。在这台模型上，六次中止全部读错了：模型在跨轮推演，不是在重试失败的修法。引擎在第二个相同签名后强制重规划，第三个后中止，停在 6 轮预算的第 3 轮——恰好是 Solo 在 SWE-JS-006 上第 2 轮通过、在 004 和 007 上手握余轮的时间窗。
+
+停滞检测器按它设计针对的失败形态校准：模型写了一个修法、看到失败、再写同一个修法。对一台载荷前各轮在校验器眼里长得一样的推理模型，签名必须区分"本轮没有写入"与"写入了且以同样方式失败"。
+
+### 4.3 脚手架真正兑现的地方
+
+- **共同失败题上的止损。** 双方都失败的三题（003、005、010），Solo 烧掉 55,500 Token，Teamwork 32,353——省 41.7%，因为第 3 轮中止掐断了失血。SWE-JS-010 最典型：13.7k → 5.3k，−61%。
+- **prompt 侧的 Token 经济。** 系统提示大得多，B 轨总 prompt 却只有 36,799，Solo 是 59,867。尾部反馈（`formatFailureOutput`）阻止了全量测试输出在对话里累积，Solo 的全量回灌循环逐轮膨胀上下文。
+- **核算之下零虚假胜利。** Solo 那次虚假胜利（SWE-JS-006 第 1 轮）正是缺口算术要抓的错误类型：宣称完成与校验失败并存时，它被记为指标，绝不被记为裁决。
+- **SWE-JS-009 的招牌胜局。** Solo 磨了 5 轮、15.8k Token；B 轨 2 轮收敛——第二次调用花 273.8 秒、24.4k completion Token 深度推理，随后一次写入即交出正确完整的解码器。模型在契约下真正走到载荷时，对抗质疑与微测试指令与首写正确率正相关。
+
+### 4.4 延迟
+
+B 轨单题平均 157.4 秒，Solo 98.4 秒（+59.9%）；单次调用平均 API 延迟 48.4 秒对 29.8 秒。两个因素：更长的提示拉长推理；B 轨制胜的深度推理调用（009：273.8 秒；005 补充轨：258.8 秒）也计入其中。180 秒默认 HTTP 超时对这台模型的上尾太紧——§6 给出的修法已被补充运行验证。
 
 ---
 
-### 典型案例 3：上下文税与 Token 动态剪枝（DyLAN 拓扑路由）
+## 5. 适用边界（结果在哪些条件下成立）
 
-#### 场景概述
-对比低风险任务（如修复 CLI 帮助文档拼写）与高危任务（密码学验签/鉴权重构）的开销差异：
-- **任务 A (低风险)**：修正帮助文档拼写并同步中英文 README。
-- **任务 B (高危风险)**：密码学 RS256 签名校验与会话流重构。
-
-#### 动态风险拓扑流向图
-
-```mermaid
-graph LR
-    Task[任务输入] --> Risk{风险层级智能判定}
-    Risk -- "低风险 (文档/拼写)" --> TopoLow["精简流水线: Worker (快速) + Scribe<br/>• 0 质检员 / 0 挑战者<br/>• 约 38.9k tokens (上下文剪枝)"]
-    Risk -- "中风险 (常规特性)" --> TopoMed["顺序拓扑: Worker + Critic<br/>• 1 质检门禁<br/>• 约 41.2k tokens"]
-    Risk -- "高风险 (多模块重构)" --> TopoHigh["分层拓扑: Worker + Critic + Challenger<br/>• 结构化对抗攻击<br/>• 约 44.8k tokens"]
-    Risk -- "极端高危 (鉴权/安全)" --> TopoCrit["对抗矩阵: 强推理模型梯队<br/>• 深度挑战者 + 审计员<br/>• 约 49.8k tokens (深度验证)"]
-```
-
-#### 实测 Token 与耗时对比看板
-
-| 任务风险层级 | 静态全量固定 Swarm (无剪枝) | `agent-teamwork` (DyLAN 拓扑) | Token 节约比例 | 耗时缩短比例 |
-| :--- | :---: | :---: | :---: | :---: |
-| **任务 A：文档与注释同步 (低风险)** | ~46,500 tokens / 1.8s | **~38,900 tokens / 0.9s** | **-16.3%** | **-50.0%** |
-| **任务 B：小型业务特性开发 (中风险)** | ~45,000 tokens / 1.7s | **~41,200 tokens / 1.1s** | **-8.4%** | **-35.3%** |
-| **任务 C：多模块跨文件重构 (高风险)** | ~48,000 tokens / 2.1s | **~44,800 tokens / 1.2s** | **-6.7%** | **-42.8%** |
-| **任务 D：鉴权/加解密安全补丁 (极端高危)** | ~52,000 tokens / 2.4s | **~49,800 tokens / 1.4s** | **-4.2%** | **-41.7%** |
-
-#### 上下文税控制原则 (Google Research Harness² 范式)
-静态群体在每一轮向施工 Agent 塞入数十条无关规范造成严重注意力干扰。`composeHarnessGuardrails`：
-- 对 `invariant` 和 `domain` 规则进行严格去重。
-- 设定严格的上下文税上限（默认上限 12 条）。
-- 在预算超限时优先保全核心不变量规则（`invariant > domain`）。
-- 保证施工 Agent 将宝贵的注意力窗口集中在业务源码逻辑上。
+- 一台模型、一个端点、一天、十道题、temperature 0.2。争议差距只有三题；换一台模型——尤其每轮都交载荷的模型——压测的会是另外的机制。
+- 两轨本场都守在 `allowedPaths` 之内，路径锁没有东西可拦。这是这台模型在这批任务上的纪律性事实，不是对锁的证伪；锁的行为在离线单测套件（40/40）里有确定性覆盖——那里会主动注入越界写入。
+- 本次 A/B 隔离的是脚手架，不是角色分工。B 轨在单个工人模型外运行引擎的完整提示与闸门，并未展开 orchestrator/critic/reworker 的角色扇出。
+- Solo 用朴素循环拿到 70% Pass@1，这是真实的门槛。脚手架要在这一模型族上超过它，或者在护栏轴（虚假胜利、止损、边界执行）上给自己立住理由。
 
 ---
 
-### 典型案例 4：死锁停滞早停与动态重规划
+## 6. 可落地的发现
 
-#### 场景概述
-- **任务编号**：`SWE-JS-004` (循环 JSON Schema `$ref` 递归解析)。
-- **问题**：校验自引用的复杂树状数据结构（`node -> next -> node`）。
-- **陷阱**：朴素递归展开必定遭遇 `RangeError: Maximum call stack size exceeded` 调用栈溢出。
-
-#### 原生单 Agent 轨迹
-原生单 Agent 陷入死锁死循环：
-```
-第 1 轮：直接递归 -> RangeError: Maximum call stack size exceeded
-第 2 轮：盲目尝试加 depth 计数器 (depth > 20) -> 导致深层合法数据被误杀
-第 3 轮：调大 depth > 100 -> 再次发生 RangeError 调用栈溢出
-第 4 轮：继续重试相同逻辑，报错指纹完全相同
-... (陷入死循环直到 Token 耗尽或会话超时)
-```
-*结果*：连续 3 轮无进展，消耗大量 Token 并彻底卡死。
-
-#### `agent-teamwork` 治理轨迹
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant W as Worker 施工
-    participant C as Critic 质检
-    participant S as 停滞检测器 (verify-gate)
-    participant O as Orchestrator 编排
-
-    W->>C: 提交里程碑 M1 尝试 1
-    C->>S: 判定: 失败 (RangeError: Maximum call stack size exceeded)
-    S-->>O: failureSignature: "sig_rangeerror_call_stack_exceeded"
-    O->>W: 派发针对性返工轮次 1
-    W->>C: 提交尝试 2 (调整深度参数)
-    C->>S: 判定: 失败 (相同 RangeError)
-    S->>S: computeGapSignature(): 与上一轮签名完全一致!
-    Note over S,O: 连续相同签名 == 2 -> 触发停滞早停!
-    S-->>O: 早停中断 (检测到死锁)
-    O->>O: 将里程碑 M1 标记为 superseded: true
-    O->>O: 架构动态重规划
-    Note over O,W: 重规划策略: 引入 WeakSet 实例循环引用追踪
-    O->>W: 派发重规划里程碑 M1-B
-    W->>C: 提交尝试 M1-B
-    C-->>O: 质检质量门禁 PASSED 全部通过!
-```
-
-- **遥测证明**：
-  - `consecutiveIdenticalSignatures` 达到 2 即刻阻断死循环。
-  - `superseded: true`：标记停滞废弃的里程碑不污染未完成缺口核算。
-  - 架构重规划引入 `seen = new WeakSet()` 完美解除死锁。
+1. **按写入活动拆分停滞签名。**"本轮没有文件落地"与"同一文件落地、同样失败"是两种状态。前者值得等待（或催促输出），后者才值得重规划。仅此一改，三道争议题大概率能收回——每题模型离载荷都只差一两轮。
+2. **引擎的轮次预算不应小于基线的有效预算。** 早停为省钱而生，本场也确实省了（共同失败题 −41.7%）——但在第 3/6 轮中止、而基线在第 4–5 轮收敛，等于用一次通过换一笔节省。以观测到的载荷节奏为索引的中止阈值，优于固定常数。
+3. **给推理模型上调默认 HTTP 超时。** 180 秒默认值杀掉三个轨次；420 秒补充预算让三个全部跑完。CLI 已提供 `--timeout-ms`；深度推理通道以 420,000 为默认更稳妥。
+4. **在推理预算压力下精简脚手架提示。** 契约、指令与协议花的是 prompt Token，更重要的是花推理 Token。面向推理模型的压缩变体，缓解的正是 §4.1 记录的挤占。
 
 ---
 
-### 典型案例 5：跨任务经验复用与前置防线 (Harness² 经验库)
-
-#### 场景概述
-- **任务编号**：`SWE-JS-008` (EventEmitter `once({ signal })` 内存泄漏防护)。
-- **历史踩坑记录**：在历史任务中，某 Agent 在实现事件监听时遗漏了 AbortSignal 上的监听器解绑，造成 Node.js 进程内存堆常驻泄漏。
-- **新任务诉求**：开发者要求：*“实现支持 AbortSignal 取消机制的 once 辅助函数”*。
-
-#### 原生单 Agent 轨迹
-原生单 Agent 缺乏跨会话记忆，不可避免地重复历史错误：
-```javascript
-// 原生 Agent 生成的回归代码:
-emitter.on(event, onEvent);
-signal?.addEventListener("abort", onAbort);
-// 当事件正常触发后，仅移除了 emitter 上的监听器，遗漏了 signal 上的 abort 监听器！
-```
-
-#### `agent-teamwork` 治理轨迹
-1. **经验库检索**：`rankExperienceLibrary` 毫秒级匹配任务线索：
-   ```json
-   {
-     "cue": "event listener abort signal memory leak teardown",
-     "lesson": "必须实现双向互相解绑：事件触发时解绑 signal abort 监听器；signal 中断时解绑 emitter 监听器。",
-     "evidence": "修复了 v0.2.1 中 Node.js 事件监听器堆内存常驻泄漏",
-     "confidence": "high"
-   }
-   ```
-2. **混合匹配度评分**：高置信度命中历史教训。
-3. **前置护栏生成**：
-   在施工 Agent 动笔写代码前，`composeHarnessGuardrails` 将防线注入 System Prompt：
-   ```
-   [Active Guardrail 活跃护栏]
-   - domain: 带 AbortSignal 的事件监听器必须实现双向清理机制，确保 0 监听器残留。
-   ```
-4. **生成的合规代码**：
-   ```javascript
-   const onEvent = (data) => {
-     emitter.removeListener(event, onEvent);
-     if (signal && onAbort) signal.removeEventListener("abort", onAbort);
-     resolve(data);
-   };
-   ```
-*实测结果*：**零回归发生**，历史架构教训在首轮代码生成中即直接落地生效。
-
----
-
-## 4. 组件消融实验 (Ablation Study)
-
-为验证 `agent-teamwork` 各核心设计组件的独立数学贡献，在 10 项标准化任务集上进行了单项消融实验：
-
-| 配置变体 | 一次通过率 (Pass@1) | 越界污染率 | 虚假胜利宣称率 | 死循环率 | 低风险 Token 开销 | 移除的关键机制 |
-| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **完整 `agent-teamwork` (v0.3.0)** | **100.0%** | **0.0%** | **0.0%** | **0.0%** | **~38.9k tokens** | *全部机制激活* |
-| (移除 `allowedPaths` 边界门禁) | 30.0% (-70%) | 70.0% (+70%) | 0.0% | 0.0% | ~39.2k tokens | 停用 `findOutOfBoundsFiles` |
-| (移除 `verifyPassed` 诚实门禁) | 20.0% (-80%) | 0.0% | 80.0% (+80%) | 0.0% | ~38.4k tokens | 停用 `formatFailureOutput` |
-| (移除 DyLAN 动态拓扑剪枝) | 100.0% (0%) | 0.0% | 0.0% | 0.0% | ~43.3k tokens (+11.3%) | 运行全量静态全角色群体 |
-| (移除停滞签名早停机制) | 90.0% (-10%) | 0.0% | 0.0% | 10.0% (+10%) | ~48.2k tokens | 停用 `computeGapSignature` |
-| (移除 BM25/Jaccard 经验检索) | 80.0% (-20%) | 0.0% | 0.0% | 0.0% | ~41.5k tokens (20% 历史踩坑率) | 停用 `rankExperienceLibrary` |
-
----
-
-## 5. 自动化测试验证与开源合规证明
-
-`agent-teamwork` 的所有特性均受控于自动化测试体系与严格的 SSOT 单一真相源保证：
-
-- **100% 函数体 AST 级对齐**：全部 18 个核心门禁与拓扑函数在 TypeScript (`shared/verify-gate.ts`)、JavaScript (`shared/verify-gate.js`) 与 ZCode 动态工作流 (`adapters/zcode/teamwork.dwf.ts`) 之间保持 100% 字节级一致。
-- **语法定界符平衡校验**：防止任何转义字符或括号漏闭合。
-- **干净合规隐私审计**：绝对禁止本地开发路径泄漏、云端 Token 或内部服务凭据。
+## 7. 复现
 
 ```bash
-$ npm test
-
-> agent-teamwork@0.3.0 test
-> node scripts/build.mjs && node --test tests/*.test.mjs
-
-Checking agent-teamwork build, SSOT parity, and open-source compliance...
-✔ JSON configurations, adapters, and bilingual role/protocol files valid.
-✔ All 18 shared verify-gate functions are 100% body-identical across TS, JS, and teamwork.dwf.ts.
-✔ teamwork.dwf.ts and verify-gate.ts syntax delimiter balance verified.
-✔ Open-source clean-room & privacy compliance verified.
-Build verification successful!
-✔ Benchmark Scenario 1: Multi-file refactoring scope boundary leaks are deterministically intercepted and contained
-✔ Benchmark Scenario 2: False victory claims are intercepted by non-zero exit tail capture and strict open gap accounting
-✔ Benchmark Scenario 3: Dynamic risk topology prunes context tax and token overhead on low-risk tasks
-✔ Benchmark Scenario 4: Stall recovery early exits on consecutive identical failure signatures and supersedes dead milestones
-✔ Benchmark Scenario 5: Cross-task knowledge retrieval prevents regression recurrence via proactive guardrail injection
-✔ Benchmark Documentation & Parity: Bilingual reports and README links maintain structural parity and integrity
-✔ Benchmark Suite: 10 Canonical SWE-bench Tasks execute deterministically with 100% Pass@1 and zero leaks
-✔ C3: formatFailureOutput preserves error tail for teamwork verification
-✔ C1: verifyCommand failure accurately updates openGaps and prevents false success conclusion
-✔ C1: formatTeamworkConclusion outputs clean English and Chinese success messages
-✔ C2: superseded failed milestones are not counted as openGaps after replanning
-✔ C4: structured challenger verdict filters out empty suspicions
-✔ C6: isPathAllowed and findOutOfBoundsFiles enforce strict path boundaries without reverse substring leaks
-✔ C7: validates teamProfile, integrityMode, and stall signatures
-✔ Harness²: validates non-confounded experience entries and formats invariant/domain guardrails
-✔ B11: resolveModelConfiguration resolves custom and default light models
-✔ rankExperienceLibrary: ranks by BM25/cue matching and confidence weighting with fallback
-✔ composeHarnessGuardrails: deduplicates rules and enforces Context Tax Hierarchy
-✔ resolveMilestoneTopology: routes risk levels to dynamic multi-agent topologies
-✔ synthesizeMicroTestPlan: generates empirical verification plans and assertion snippets
-✔ Regression: multilingual cue ranking, unicode guardrail preservation, globstar root matching, and fallback robustness
-✔ Installer & Build verification smoke test across all supported agent targets and languages
-ℹ tests 22
-ℹ suites 0
-ℹ pass 22
-ℹ fail 0
+npm run benchmark:live -- --check                 # 鉴权预检 + 微型探针
+npm run benchmark:live -- --out my-report.json    # 全量 10 题 A/B 大考
+npm run benchmark:live -- --task SWE-JS-001       # 单题快速验证
+npm run benchmark:live -- --mode teamwork --task SWE-JS-009 --timeout-ms 420000
+node benchmarks/merge-live-reports.mjs primary.json supplement.json -o merged.json
 ```
 
----
+Level-1 离线门禁：`npm test` 先跑 `scripts/build.mjs`（18 个共享纯函数在 `shared/verify-gate.ts`、`shared/verify-gate.js` 与 `adapters/zcode/teamwork.dwf.ts` 三端 AST 代码体同构；开源合规扫描），再跑 40 项单元测试，其中 18 项专门用注入传输与脚本客户端检验 live-eval 驱动器本身——构造上零网络。Level-2 即上述在线大考；两层共享同一套 10 题地面真值与同一裁决通道（`process.exitCode`）。
 
-## 6. 生产落地建议
-
-实测基准数据充分表明，**agent-teamwork** 能够将自主 Agent 工程实践从“概率猜测”转变为“可度量、高确定性、低成本”的协同工程流：
-
-1. **复杂跨模块重构**：配置 `--integrityMode development`，开启严格物理路径锁定，彻底杜绝无关代码污染。
-2. **高危鉴权与底层核心代码**：配置 `--integrityMode benchmark` 配合 `quality` 配置，调动对抗挑战者与独立审计员深度把关。
-3. **日常日常维护与小需求**：依靠动态拓扑路由 (`resolveMilestoneTopology`) 自动剪枝，享受极速响应与低 Token 消耗。
+本报告的原始证据：[`benchmarks/results/live-ab-final.json`](../benchmarks/results/live-ab-final.json)、[`live-ab-full.json`](../benchmarks/results/live-ab-full.json)、[`live-ab-full.console.log`](../benchmarks/results/live-ab-full.console.log) 与三份 `supplement-*.json`。

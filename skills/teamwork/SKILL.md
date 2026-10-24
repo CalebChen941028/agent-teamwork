@@ -91,8 +91,8 @@ Before kicking off multi-agent execution, align with the user using `protocol/sc
 ### Supported Platforms
 Works seamlessly across **Claude Code (`adapters/claude-code/teamwork.md`), OpenAI Codex (`adapters/codex/protocol.md`), DeepSeek V3/R1 (`adapters/deepseek/teamwork.md`), OpenCode (`adapters/opencode/agents.json`), WorkBuddy (`adapters/workbuddy/teamwork.md`), ZCode (`adapters/zcode/teamwork.dwf.ts`), and Generic Agents (`adapters/generic/teamwork.md`)**.
 
-### Empirical Benchmark & Case Studies
-See [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) and [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (or root portal [`BENCHMARKS.md`](BENCHMARKS.md)) for 10-task SWE-bench/Aider aligned empirical evaluations executed under Google Antigravity + Gemini 3.8 Flash (High) via `npm run benchmark`, component ablation study, and 5 grounded case studies (boundary lock, honest failure tail capture, DyLAN token pruning, stall recovery, and Harness² experience recall).
+### Live Benchmark & Case Studies
+See [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) and [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (or root portal [`BENCHMARKS.md`](BENCHMARKS.md)) for the 10-task SWE-bench/Aider aligned live A/B exam (OpenCode Zen + `mimo-v2.6-flash`, run 2026-10-24) via `npm run benchmark:live` — real API calls, real subprocess exit-code verdicts, real token billing — plus failure-mode analysis (reasoning-budget squeeze, stagnation-signature misfire on pre-payload turns) and observed guardrail outcomes (zero false victories, 41.7% token cut on shared failures).
 
 ## Credits & Academic References
 

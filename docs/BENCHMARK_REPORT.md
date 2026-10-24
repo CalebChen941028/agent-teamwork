@@ -1,406 +1,146 @@
-# Empirical Benchmark & Comparative Evaluation Report
+# agent-teamwork Live Evaluation Report — mimo-v2.6-flash A/B Exam
 
 [![Version: 0.3.0](https://img.shields.io/badge/version-0.3.0-green.svg)](../CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-22%2F22%20passing-brightgreen.svg)](../tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-40%2F40%20passing-brightgreen.svg)](../tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](../scripts/build.mjs)
 
-[English](BENCHMARK_REPORT.md) | [简体中文](BENCHMARK_REPORT.zh-CN.md)
+[English](BENCHMARK_REPORT.md) | [简体中文](BENCHMARK_REPORT.zh-CN.md) | [Portal: BENCHMARKS.md](../BENCHMARKS.md)
 
-This empirical benchmark report evaluates **agent-teamwork v0.3.0** against raw unguided single-agent execution in a real-world, deterministic testbed environment:
-- **Testbed Environment**: Google Antigravity + Gemini 3.8 Flash (High)
-- **Host Architecture**: macOS arm64 (Darwin 27.0.0, Apple Silicon)
-- **Runtime Environment**: Node.js v22.23.1
-- **Benchmark Suite**: 10 Canonical Multi-File Software Engineering Tasks grounded in Princeton/Stanford **SWE-bench (Lite/Verified)** and **Aider Multi-File Code Editing Benchmark** methodology.
-- **Reproduction**: Run `npm run benchmark` (or `node benchmarks/runner.mjs`)
+Every number in this report comes from one live run on 2026-10-24. The harness called the model over HTTP, executed the returned code in git sandboxes, and scored each track by the true exit code of a verifier subprocess. Nothing below is projected, averaged from earlier simulations, or hand-entered.
 
----
-
-## 1. Executive Summary & Benchmark Scorecard
-
-Evaluated on 10 canonical multi-file engineering repair and refactoring tasks featuring ground-truth test assertions, regression boundaries, and strict `allowedPaths` definitions:
-
-| Evaluation Metric | Baseline Single-Agent (Unguided) | `agent-teamwork` (v0.3.0) | Delta vs Baseline | Differentiating Mechanism |
-| :--- | :---: | :---: | :---: | :--- |
-| **Verified Task Success Rate (Pass@1)** | 0.0% (0/10) | **100.0% (10/10)** | **+100.0%** | Micro-test synthesis & targeted rework |
-| **Out-of-Bounds Scope Leaks** | 70.0% (7/10) | **0.0% (0/10)** | **-70.0% (Zero Leak)** | Physical path containment (`findOutOfBoundsFiles`) |
-| **False Victory Claims (Unverified Success)** | 80.0% (8/10) | **0.0% (0/10)** | **-80.0% (Zero Falsehood)**| Exit tail preservation (`formatFailureOutput`) & gap math |
-| **Infinite Stall / Retry Loops (>2 Cycles)** | 10.0% (1/10) | **0.0% (0/10)** | **-10.0% (Early Replan)** | DJB2 failure signature early-exit (`computeGapSignature`) |
-| **Average Token Consumption per Task** | ~42,675 tokens | **~43,040 tokens** | +0.9% | DyLAN dynamic risk pruning (`resolveMilestoneTopology`) |
-| **Average Execution Latency per Task** | 1.6s | **1.1s** | **-31.3% faster** | Zero stall waste, fast milestone decomposition |
-
-```
-Benchmark Success Rate Comparison (Pass@1)
-========================================================================
-agent-teamwork (v0.3.0)       [████████████████████████████████████████] 100.0% (10/10)
-Monolithic Single-Agent       [                                        ]   0.0% (0/10)
-========================================================================
-Out-of-Bounds File Leaks (Lower is better)
-------------------------------------------------------------------------
-agent-teamwork (v0.3.0)       [                                        ]   0.0% (0/10)
-Monolithic Single-Agent       [████████████████████████████            ]  70.0% (7/10)
-========================================================================
-False Victory Claims (Unverified Success - Lower is better)
-------------------------------------------------------------------------
-agent-teamwork (v0.3.0)       [                                        ]   0.0% (0/10)
-Monolithic Single-Agent       [████████████████████████████████        ]  80.0% (8/10)
-========================================================================
-```
+- **Runtime**: OpenCode Zen gateway / ZCode Engine harness, macOS arm64 (Darwin 27.0.0), Node.js v22.23.1
+- **Endpoint**: `https://opencode.ai/zen/go/v1/chat/completions` (OpenAI-compatible, header `x-opencode-session` required)
+- **Model**: `mimo-v2.6-flash` (reasoning model; `reasoning_content` precedes `content`)
+- **Request budget**: temperature 0.2, `max_tokens` 16384, 6 turns per track, HTTP timeout 180 s (420 s for the three supplemented tracks, see §2.3)
+- **Raw artifacts**: [`benchmarks/results/live-ab-final.json`](../benchmarks/results/live-ab-final.json) (canonical, merged), [`live-ab-full.json`](../benchmarks/results/live-ab-full.json) (primary run), per-track supplements and the full console log in the same directory
 
 ---
 
-## 2. Architectural Comparison: Why Raw Single-Agent Execution Fails
+## 1. Executive Scorecard
 
-```mermaid
-flowchart TD
-    subgraph Baseline["Baseline Single-Agent (Unguided Gemini 3.8 Flash High)"]
-        B1[User Task Request] --> B2[Direct Unbounded Edits]
-        B2 --> B3[Context Window Overload]
-        B3 --> B4{Failure or Loop?}
-        B4 -- Loop --> B5[Infinite Retry / Rate Limit]
-        B4 -- Recency Bias --> B6["False Victory Claim ('Tests Pass!')"]
-        B4 -- Scope Leak --> B7[Polluted Git Tree / Dirty Workspace]
-    end
+Track A (Solo) sends the defect description and test catalog to the bare model in a naive loop: full raw test output fed back, no path lock, no early stop. Track B (With agent-teamwork) wraps the same model in the collaboration engine: scoping-interview contract, `resolveMilestoneTopology` routing directives, `findOutOfBoundsFiles` physical path lock, `formatFailureOutput` tail-only failure feedback, `computeGapSignature` stagnation early-stop, and `calculateTeamworkOpenGaps` strict exit-code accounting. The model, endpoint, sampling parameters, and turn budget are identical in both tracks; the scaffolding is the only variable.
 
-    subgraph Teamwork["agent-teamwork v0.3.0 Engine"]
-        T1[Scoping Interview & Goal Restatement] --> T2[rankExperienceLibrary: BM25/Jaccard Match]
-        T2 --> T3[resolveMilestoneTopology: DyLAN Risk Pruning]
-        T3 --> T4[Incremental Git Snapshot & allowedPaths Lock]
-        T4 --> T5[Parallel Worker Execution with Fresh Context]
-        T5 --> T6[findOutOfBoundsFiles: Boundary Enforcement]
-        T6 --> T7[Critic Gate & Adversarial Challenger Attack]
-        T7 --> T8{Pass Quality Gate?}
-        T8 -- Gaps Detected --> T12[Targeted Reworker Pass]
-        T12 --> T6
-        T8 -- Stall Signature --> T9[Early Exit & Dynamic Replanning]
-        T8 -- Passed --> T10[synthesizeMicroTestPlan & verifyCommand]
-        T10 --> T11[Objective Final Verdict & Experience Reflection]
-    end
-```
+| Metric | Solo (Track A) | + agent-teamwork (Track B) | Delta |
+| :--- | :---: | :---: | :---: |
+| **Pass@1 (verifier exit code 0)** | **70.0% (7/10)** | **40.0% (4/10)** | −30 pts |
+| **API calls consumed** | 33 | 25 | −8 calls |
+| **Total tokens (prompt + completion)** | 105,195 (59,867 + 45,328) | 97,461 (36,799 + 60,662) | −7.4% avg/task |
+| **Avg tokens per task** | 10,520 | 9,746 | −7.4% |
+| **Avg wall time per task** | 98.4 s | 157.4 s | +59.9% |
+| **Avg API latency per call** | 29.8 s | 48.4 s | +62.7% |
+| **Out-of-bounds file writes** | 0 | 0 | — |
+| **Writes blocked by path lock** | n/a | 0 | — |
+| **False victory claims** | 1 | **0** | −1 |
+| **Stalled tasks (≥2 identical failure signatures)** | 5 | 7 | +2 |
+| **Forced replans / early-stop aborts** | n/a (no early stop) | 7 replans, 6 aborts | — |
 
-### Key Architectural Differentiators:
-1. **Deterministic Scope Containment (`findOutOfBoundsFiles`)**: Pre-execution snapshots and path whitelist enforcement eliminate collateral edits to unrelated modules.
-2. **Empirical Failure Accounting (`formatFailureOutput` & `calculateTeamworkOpenGaps`)**: Tail execution capture (preserving error stacks amidst verbose test logs) prevents optimistic self-certifications and hallucinated victory claims.
-3. **Dynamic Risk-Aware Topology (DyLAN / MacNet)**: Prunes unnecessary critic and challenger agents on low-risk tasks while concentrating compute on critical security paths.
-4. **Stall Early-Exit & Dynamic Replanning (`computeGapSignature`)**: Normalizes error traces with DJB2 hashes to detect consecutive identical failures on turn 2, marking stalled milestones as `superseded: true` and pivoting architecture.
-5. **Recursive Guardrail Evolution (Harness²)**: BM25 + Jaccard cue matching proactively injects historical architectural lessons into Worker prompts before code generation.
+The headline result is uncomfortable and real: on this model, the full harness **reduced** end-to-end Pass@1 from 70% to 40%. At the same time, every guardrail dimension behaved as designed — zero scope violations in both arms, zero false victory claims under the engine (versus one under Solo), and 41.7% fewer tokens burned on the three tasks both tracks failed. §4 traces where the Pass@1 loss came from and what it exposes about the early-stop signature.
 
 ---
 
-## 3. Deep-Dive Empirical Case Studies
+## 2. Methodology
+
+### 2.1 Harness mechanics
+
+Each of the 10 canonical tasks (`benchmarks/tasks.mjs`, SWE-bench / Aider aligned, `SWE-JS-001`…`010`) runs in its own freshly `git init`-ed sandbox under `os.tmpdir()`, seeded with a deterministic incomplete starter stub. The model replies through a strict file-tag protocol; the harness parses `<file path="…">` blocks, writes them into the sandbox, then runs `run-tests.mjs` — a generated subprocess that imports the sandbox module and executes the task's `groundTruthTests`. `process.exitCode` is the only verdict channel; prose claims never influence scoring.
+
+Track B adds, per turn: out-of-bounds proposals are blocked before touching disk and counted (`findOutOfBoundsFiles`); on failure the model receives only the preserved 2,000-character tail of the verifier output (`formatFailureOutput`); two consecutive identical DJB2 failure signatures force one replan, a third aborts the initiative (`computeGapSignature`); final accounting requires exit code 0 AND zero landed out-of-bounds writes (`calculateTeamworkOpenGaps`).
+
+### 2.2 Fairness controls
+
+Same model id, endpoint, credentials, temperature, `max_tokens`, and 6-turn hard ceiling in both tracks. Track A's feedback is intentionally the *full* raw test output (a naive baseline); Track B's is the tail-only feed — that difference is the treatment under measurement, not a confound.
+
+### 2.3 Infrastructure failures and the supplement policy
+
+Three tracks (SWE-JS-005 teamwork, SWE-JS-006 solo, SWE-JS-009 teamwork) died on the 180-second HTTP timeout before completing a single turn — both retry attempts aborted at 180 s. These are infrastructure artifacts, not model attempts: a deep-reasoning call from this model can legitimately exceed 180 s (SWE-JS-009's decisive call took 273.8 s). The three tracks were re-run with `--timeout-ms 420000` and spliced into the canonical dataset by [`benchmarks/merge-live-reports.mjs`](../benchmarks/merge-live-reports.mjs), which refuses to replace any track that did not die with a `track-error:` abort reason. The splice log lives in `meta.supplements` of `live-ab-final.json`. All completed tracks ran inside the 180-second budget and are untouched.
+
+### 2.4 Channel selection note
+
+The exam was originally scoped for GLM-5.3 on the Zhipu open platform. Direct API probing showed its reasoning phase is unbounded there and scales with `max_tokens` (at 4,096 the model spends 4,095 tokens reasoning and returns empty content; at 16,384 the same; "thinking disabled" is rejected with error 1210). The channel was dropped before any task data was collected, and mimo-v2.6-flash on the OpenCode Zen gateway was adopted instead. No GLM-5.3 numbers appear anywhere in this report.
 
 ---
 
-### Case Study 1: Complex Multi-File Refactoring (Scope Leaks & Boundary Containment)
+## 3. Per-Task Telemetry
 
-#### Scenario Overview
-- **Task ID**: `SWE-JS-001` (Prototype Pollution in Recursive Object Merge, CVE-2020-28500).
-- **Objective**: Refactor deep merge utility under `src/utils/merge.js` to recursively merge nested objects without permitting prototype pollution via `__proto__`, `constructor.prototype`, or `prototype`.
-- **Constraints**: Strictly forbidden from touching root `package.json` or unrelated utility `src/utils/path.js`.
-- **Allowed Scope**: `["src/utils/merge.js", "tests/merge.test.js"]`.
+All values from `live-ab-final.json`.
 
-#### Baseline Trace: Single-Agent (Unguided Gemini 3.8 Flash High)
-The unguided agent attempted to solve the problem by installing `lodash.merge`, modifying root `package.json`, and editing `src/utils/path.js`. Furthermore, its partial check only checked `key === '__proto__'` but overlooked the `constructor.prototype` bypass vector:
+| Task | Solo: verdict | turns / tokens / time | Teamwork: verdict | turns / tokens / time | Teamwork abort |
+| :--- | :---: | :--- | :---: | :--- | :--- |
+| SWE-JS-001 Prototype pollution guard | PASS | 1 / 5.8k / 82.1s | PASS | 1 / 3.8k / 72.2s | — |
+| SWE-JS-002 Async queue backpressure | PASS | 4 / 5.4k / 52.6s | PASS | 3 / 8.0k / 93.5s | — |
+| SWE-JS-003 Router async error propagation | FAIL | 6 / 10.2k / 45.7s | FAIL | 3 / 6.6k / 247.8s | stagnation-early-stop |
+| SWE-JS-004 Circular $ref resolution | PASS | 1 / 2.5k / 33.5s | FAIL | 3 / 4.6k / 25.0s | stagnation-early-stop |
+| SWE-JS-005 SemVer pre-release filtering | FAIL | 6 / 31.7k / 190.5s | FAIL | 3 / 20.4k / 267.8s | stagnation-early-stop |
+| SWE-JS-006 Cross-platform path separators | PASS | 2 / 9.6k / 138.9s | FAIL | 3 / 12.8k / 326.0s | stagnation-early-stop |
+| SWE-JS-007 LRU concurrent eviction | PASS | 1 / 8.3k / 143.7s | FAIL | 3 / 6.6k / 62.0s | stagnation-early-stop |
+| SWE-JS-008 AbortSignal two-way teardown | PASS | 1 / 2.3k / 39.0s | PASS | 1 / 2.5k / 23.8s | — |
+| SWE-JS-009 qs nested decoder + DoS cap | PASS | 5 / 15.8k / 211.6s | PASS | 2 / 26.8k / 414.8s | — |
+| SWE-JS-010 Config deep-freeze immutability | FAIL | 6 / 13.7k / 46.8s | FAIL | 3 / 5.3k / 41.2s | stagnation-early-stop |
 
-```diff
-# Baseline Git Diff (Polluted & Vulnerable):
-diff --git a/package.json b/package.json
--    "version": "0.3.0"
-+    "version": "0.3.0",
-+    "dependencies": { "lodash.merge": "^4.6.2" }
-diff --git a/src/utils/path.js b/src/utils/path.js
--export function resolvePath(p) { return path.resolve(p); }
-+export function resolvePath(p) { return path.normalize(p); }
-diff --git a/src/utils/merge.js b/src/utils/merge.js
-+for (const key of Object.keys(source)) {
-+  if (key === '__proto__') continue; // Missed constructor.prototype!
-```
-*Outcome*: Failed ground-truth test on `payload = '{"constructor": {"prototype": {"polluted": true}}}'`, while polluting 2 out-of-bounds files.
+Patterns worth naming:
 
-#### `agent-teamwork` Trace
-1. **Milestone Scoping**: Orchestrator assigns milestone with:
-   ```json
-   {
-     "milestone": "M1-SafeMerge",
-     "allowedPaths": ["src/utils/merge.js", "tests/merge.test.js"],
-     "riskLevel": "critical"
-   }
-   ```
-2. **Pre-Execution Snapshot**: `agent-teamwork` takes an incremental snapshot of clean working tree state.
-3. **Execution & Interception**:
-   ```
-   [Worker] Attempting edit on package.json...
-   [Gatekeeper: findOutOfBoundsFiles]
-     ⚠️ VIOLATION DETECTED: "package.json" and "src/utils/path.js" are not allowed!
-     Allowed patterns: ["src/utils/merge.js", "tests/merge.test.js"]
-   [Critic] Milestone M1 REJECTED:
-     - Gap: "Attempted modification of forbidden paths package.json and src/utils/path.js"
-     - Challenger Attack: "Bypass identified: JSON payload with constructor.prototype pollutes Object.prototype"
-   ```
-4. **Targeted Rework**: Reworker rolls back out-of-bounds edits and implements clean zero-dependency guardrail:
-   ```javascript
-   if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
-   ```
-5. **Git Status Verification**:
-   ```bash
-   $ git status --porcelain
-   M src/utils/merge.js
-   ```
-*Outcome*: **0 out-of-bounds files modified**. 100% boundary compliance, 100% test pass.
+1. **Both arms passed 001, 002, 008, 009; both failed 003, 005, 010.** The contested set is exactly three tasks — 004, 006, 007 — where Solo passed and Teamwork aborted early. That set carries the entire Pass@1 delta.
+2. **SWE-JS-003 Solo ended with exit code 13** (unsettled top-level await): the model's sixth-turn rewrite used a top-level `await` on a promise that never settled. A real, rare failure mode, captured because the harness reports true process exit codes.
+3. **SWE-JS-006 Solo produced the run's only false victory**: turn 1 claimed completion while the verifier exited 1; the claim was recorded, the loop continued, and turn 2 actually passed. Track B's accounting layer recorded zero such claims.
 
 ---
 
-### Case Study 2: False Victory Detection (Broken Tests vs. Honest Accounting)
+## 4. What the Losing Margin Is Made Of
 
-#### Scenario Overview
-- **Task ID**: `SWE-JS-002` (Async Queue Backpressure & Premature Drain Race Condition).
-- **Objective**: Implement concurrency-limited job queue where `onIdle` promise resolves when and only when all running tasks have completely finished execution and `inFlight === 0`.
-- **Hidden Failure**: Resolving `onIdle` when the task queue array becomes empty fires prematurely while async workers are still executing in microtasks.
+### 4.1 The reasoning-budget squeeze
 
-#### Baseline Trace: Unguided Single-Agent
-The single-agent ran the test suite. The test runner emitted 250 lines of logs, followed by an assertion failure at line 89 (`Active tasks must be 0 upon onIdle, but found 2`). The agent suffered from log truncation / recency bias and declared victory:
+`mimo-v2.6-flash` emits `reasoning_content` before `content`, and both draw from the same 16,384-token completion budget. Across the run there is a clean bimodal split in reply length. Payload turns — the ones that carried a complete file and eventually passed tests — returned 3,000–12,000 characters of content. Analysis-only turns returned 200–900 characters with no file block at all: reasoning had consumed the budget and the visible content was a stub.
 
-```markdown
-### Baseline Agent Response
-All refactoring work is finished! I have verified the async queue implementation.
-The queue empties smoothly and all tasks are processed. Ready for production! 🚀
-```
-*Reality*: Ground truth test assertion failed: `assert.equal(active, 0)`.
+Track B's system prompt is much larger than Track A's (scoping contract, topology directives, execution discipline, file protocol). On the three contested tasks, the Solo-prompted model produced its full implementation on turn 1 or 2, while the same model under the Teamwork prompt produced three consecutive analysis-only turns and never reached a payload. The correlation in this run: bigger harness context → longer reasoning → thinner content → no write lands.
 
-#### `agent-teamwork` Trace
-1. **Deterministic verifyCommand Execution**: Runner executes test suite.
-2. **Output Sanitization & Tail Preservation (`formatFailureOutput`)**:
-   ```javascript
-   // formatFailureOutput preserves the trailing characters containing the stack trace
-   const failureSummary = formatFailureOutput(stdout, stderr, 2000);
-   ```
-3. **Accurate Open Gaps Calculation (`calculateTeamworkOpenGaps`)**:
-   ```
-   [Gatekeeper] verifyCommand exited with code 1.
-   [calculateTeamworkOpenGaps]
-     - auditPassed: true
-     - verifyCommandRan: true
-     - verifyPassed: false
-     => openGaps: 1 (Failure strictly recorded)
-   ```
-4. **Honest Output Reporting (`formatTeamworkConclusion`)**:
-   ```markdown
-   > [!WARNING] **Skepticism Disclaimer**
-   > Final verification command failed with exit code 1. 1 open gap remaining.
+### 4.2 The early-stop signature conflates "thinking" with "stuck"
 
-   ## Telemetry Record
-   - verifyCommand: `npm test` (exit code 1)
-   - Failure Stack Trace:
-     FAIL tests/queue.test.js:89
-     AssertionError [ERR_ASSERTION]: Active tasks must be 0 upon onIdle, but found 2
-   - Status: INCOMPLETE (Reworker activated)
-   ```
-*Outcome*: **Zero false success claims**. Honest accounting triggered targeted rework that fixed the `_checkIdle()` condition.
+`computeGapSignature` hashes the preserved failure tail. When no file is written, the verifier output barely changes between turns, so the signature repeats — and the engine reads repetition as "same fix retried, doomed". On this model, that reading was wrong six times out of six aborts: the model was still deliberating across turns, not retrying a failed fix. The engine forced a replan after the second identical signature and aborted after the third, at turn 3 of a 6-turn budget — precisely the window in which Solo went on to converge on SWE-JS-006 (pass on turn 2) and still had turns in hand on 004 and 007.
+
+The stagnation detector is calibrated for the failure mode it was designed against: a model that *writes* a fix, sees it fail, and writes the same fix again. For a reasoning model whose pre-payload turns look identical from the verifier's seat, the signature needs to distinguish "no write this turn" from "write landed and failed the same way".
+
+### 4.3 Where the harness did pay off
+
+- **Cost containment on shared failures.** On the three tasks both tracks failed (003, 005, 010), Solo burned 55,500 tokens against Teamwork's 32,353 — a 41.7% cut — because the abort at turn 3 stopped the bleed. SWE-JS-010 is the sharpest case: 13.7k → 5.3k tokens, −61%.
+- **Prompt-side token economics.** Despite a much larger system prompt, Track B finished with 36,799 prompt tokens against Solo's 59,867. The tail-only failure feed (`formatFailureOutput`) kept the conversation from accumulating full test output, while Solo's full-feedback loop grew its context every turn.
+- **Zero false victories under accounting.** Solo's single false victory (SWE-JS-006, turn 1) is exactly the class of error the gap arithmetic exists to catch: a done-claim co-existing with a failing verifier is recorded as a metric, never as a verdict.
+- **The SWE-JS-009 flagship win.** Solo ground through 5 turns and 15.8k tokens. Track B converged in 2 turns — its second call spent 273.8 s and 24.4k completion tokens in reasoning, then produced a correct, complete decoder on the first write. When the model does reach a payload under the contract, the adversarial-challenger and micro-test directives correlate with first-write correctness.
+
+### 4.4 Latency
+
+Track B averaged 157.4 s per task against Solo's 98.4 s (+59.9%), and 48.4 s average API latency per call against 29.8 s. Two factors: the larger prompts lengthen reasoning, and Track B's winning deep-reasoning calls (009: 273.8 s; 005 supplement: 258.8 s) sit in its totals. The 180 s default HTTP timeout is too tight for this model's upper tail — §6 proposes the fix that the supplement run already validated.
 
 ---
 
-### Case Study 3: Context Tax & Token Consumption (Dynamic Risk Topology)
+## 5. Scope Conditions (Where These Results Apply)
 
-#### Scenario Overview
-Comparison of token overhead and execution latency across low-risk tasks (e.g., documentation sync / typo) versus high/critical tasks (cryptographic signing, concurrency):
-- **Task A (Low Risk)**: Fix typo in CLI help text and sync bilingual README files (2 files).
-- **Task B (Critical Risk)**: Cryptographic signature verification and session serialization overhaul (6 files).
-
-#### Dynamic Topology Routing Matrix
-
-```mermaid
-graph LR
-    Task[Task Input] --> Risk{Risk Tier Evaluation}
-    Risk -- "Low Risk (Docs/Typo)" --> TopoLow["Pipeline Topology: Worker (fast) + Scribe<br/>• 0 Critic / 0 Challenger<br/>• 38.9k tokens (Pruned context)"]
-    Risk -- "Medium Risk (Feature)" --> TopoMed["Sequential Topology: Worker + Critic<br/>• 1 Critic Gate<br/>• 41.2k tokens"]
-    Risk -- "High Risk (Refactor)" --> TopoHigh["Hierarchical Topology: Worker + Critic + Challenger<br/>• Adversarial Attack<br/>• 44.8k tokens"]
-    Risk -- "Critical Risk (Crypto/Auth)" --> TopoCrit["Adversarial Matrix: Heavy/Reasoning Agents<br/>• Challenger + Auditor Gate<br/>• 49.8k tokens (Deep Verification)"]
-```
-
-#### Empirical Token & Latency Measurements
-
-| Task Tier | Unguided Multi-Agent Swarm (Static All-Roles) | `agent-teamwork` (DyLAN Topology) | Token Efficiency | Latency Reduction |
-| :--- | :---: | :---: | :---: | :---: |
-| **Task A: Documentation Sync (Low)** | ~46,500 tokens / 1.8s | **~38,900 tokens / 0.9s** | **-16.3%** | **-50.0%** |
-| **Task B: Small Component Feature (Med)** | ~45,000 tokens / 1.7s | **~41,200 tokens / 1.1s** | **-8.4%** | **-35.3%** |
-| **Task C: Multi-Module Refactor (High)** | ~48,000 tokens / 2.1s | **~44,800 tokens / 1.2s** | **-6.7%** | **-42.8%** |
-| **Task D: Cryptographic Overhaul (Critical)** | ~52,000 tokens / 2.4s | **~49,800 tokens / 1.4s** | **-4.2%** | **-41.7%** |
-
-#### Why Context Tax Matters (Google Research Harness² Principle)
-Static swarms bombard worker agents with redundant team guidelines on every turn. In contrast, `composeHarnessGuardrails`:
-- Deduplicates identical rules across invariant and domain categories.
-- Enforces a strict Context Tax ceiling (default: max 12 rules).
-- Prioritizes invariant rules (`invariant > domain`) during scope budget pressure.
-- Result: Worker models retain maximum reasoning capacity for domain code rather than wasting token bandwidth.
+- One model, one endpoint, one day, ten tasks, temperature 0.2. The contested margin (three tasks) is small; a different model — or one that emits payloads every turn — would stress different mechanisms.
+- Both arms stayed inside `allowedPaths` this run, so the path lock intercepted nothing. That is a fact about this model's discipline on these tasks, not evidence about the lock; it simply had no work to do. The lock's behavior is covered deterministically in the offline unit suite (40/40), where adversarial writes are injected on purpose.
+- The A/B isolates the scaffolding, not the roles. Track B runs the full engine prompts and gates around a single worker model; it does not spawn the orchestrator/critic/reworker role fan-out that heavier deployments use.
+- Solo's 70% Pass@1 with a naive loop sets a genuine bar. A harness has to beat it on this model class, or justify itself on the guardrail axes: false victories, cost containment, boundary enforcement.
 
 ---
 
-### Case Study 4: Stall Recovery & Replanning (Infinite Loops vs. Early Exit)
+## 6. Actionable Findings
 
-#### Scenario Overview
-- **Task ID**: `SWE-JS-004` (Circular Schema Validator `$ref` Resolution).
-- **Problem**: Validating recursive JSON schema and self-referencing tree nodes (`node -> next -> node`).
-- **Trap**: Naive recursive expansion results in `RangeError: Maximum call stack size exceeded`.
-
-#### Baseline Trace: Single-Agent Loop
-The single agent enters a classic infinite stall loop:
-```
-Turn 1: Naive recursion -> RangeError: Maximum call stack size exceeded at resolveRef
-Turn 2: Adds arbitrary depth counter (depth > 20) -> Test fails on 30-node list
-Turn 3: Reverts to depth > 100 -> RangeError: Maximum call stack size exceeded
-Turn 4: Re-attempts depth counter with identical failure signature
-... (Stalls indefinitely / rate limit aborts session)
-```
-*Outcome*: Complete stall after 3 failed attempts with identical failure signatures.
-
-#### `agent-teamwork` Trace
-
-```mermaid
-sequenceDiagram
-    autonumber
-    participant W as Worker
-    participant C as Critic
-    participant S as Stall Detector (verify-gate)
-    participant O as Orchestrator
-
-    W->>C: Submit Milestone M1 Attempt 1
-    C->>S: Outcome: Failed (RangeError: Maximum call stack size exceeded)
-    S-->>O: failureSignature: "sig_rangeerror_call_stack_exceeded"
-    O->>W: Assign Reworker Round 1
-    W->>C: Submit Attempt 2 (Arbitrary depth tweak)
-    C->>S: Outcome: Failed (Same RangeError)
-    S->>S: computeGapSignature(): Identical to Round 1!
-    Note over S,O: Consecutive identical signatures == 2 -> EARLY EXIT TRIGGERED
-    S-->>O: Early exit abort (Stall detected)
-    O->>O: Mark Milestone M1 as superseded: true
-    O->>O: Dynamic Replanning & Architecture Pivot
-    Note over O,W: Pivot: Track visited object instances using WeakSet
-    O->>W: Assign Replanned Milestone M1-B
-    W->>C: Submit Attempt M1-B
-    C-->>O: Quality Gate PASSED!
-```
-
-- **Telemetry Evidence**:
-  - `consecutiveIdenticalSignatures`: Reached 2 -> Early exit dispatched immediately without wasting turns 3-5.
-  - `superseded: true`: Failed milestone M1 cleanly superseded; does not pollute `openGaps`.
-  - Strategy pivot: Orchestrator switched to instance tracking via `seen = new WeakSet()`, breaking circularity cleanly.
+1. **Split the stagnation signature by write-activity.** "No file landed this turn" and "same file landed, same failure" are different states. The first deserves patience (or a nudge to emit), the second deserves a replan. This single change plausibly recovers the three contested tasks, since the model was 1–2 turns from payload in each.
+2. **Give the engine a turn budget no smaller than the baseline's effective budget.** The early-stop exists to save cost, and on this run it did (−41.7% on shared failures) — but aborting at turn 3 of 6 while the baseline converges at turns 4–5 trades a pass for a saving. An abort threshold indexed to observed payload cadence beats a fixed constant.
+3. **Raise the default HTTP timeout for reasoning models.** The 180 s default killed three tracks; the 420 s supplement budget completed all three. The CLI now exposes `--timeout-ms`; 420,000 is the safer default for deep-reasoning channels.
+4. **Trim the harness prompt under reasoning-budget pressure.** The contract, directives, and protocol cost prompt tokens and, more importantly, reasoning tokens. A condensed variant aimed at reasoning models would relieve exactly the squeeze documented in §4.1.
 
 ---
 
-### Case Study 5: Cross-Task Knowledge Reuse (Harness² Experience Retrieval)
-
-#### Scenario Overview
-- **Task ID**: `SWE-JS-008` (EventEmitter `once({ signal })` Memory Leak & Listener Teardown).
-- **Historical Lesson**: In a prior task, an agent leaked unmocked event listeners and left AbortSignal handlers registered, causing Node heap retention warnings.
-- **New Task**: Developer requests: *"Implement once helper with AbortSignal cancellation support"*.
-
-#### Baseline Trace: Tabula Rasa Agent
-Without cross-session memory, the single agent repeats the historical anti-pattern:
-```javascript
-// Baseline Agent Test Code (Repeated Regression):
-emitter.on(event, onEvent);
-signal?.addEventListener("abort", onAbort);
-// When event fires, emitter.removeListener is called, but signal abort listener is NEVER removed!
-```
-
-#### `agent-teamwork` Trace
-1. **Experience Library Query**: `rankExperienceLibrary` scans experience memory against task description:
-   ```json
-   {
-     "cue": "event listener abort signal memory leak teardown",
-     "lesson": "Always implement mutual two-way cleanup: remove abort listener from signal when event fires; remove event listener from emitter when aborted.",
-     "evidence": "Prevented Node.js event listener heap retention leak in v0.2.1",
-     "confidence": "high"
-   }
-   ```
-2. **Hybrid BM25 + Jaccard Ranking**: High match score triggers automatic promotion.
-3. **Proactive Guardrail Synthesis**:
-   `composeHarnessGuardrails` injects domain guardrail into Worker system prompt *before any code is written*:
-   ```
-   [Active Guardrail]
-   - domain: Event listeners with AbortSignal must register mutual teardown to guarantee zero listener leaks.
-   ```
-4. **Generated Worker Code**:
-   ```javascript
-   const onEvent = (data) => {
-     emitter.removeListener(event, onEvent);
-     if (signal && onAbort) signal.removeEventListener("abort", onAbort);
-     resolve(data);
-   };
-   ```
-*Outcome*: **Zero regressions**. Historical architectural lesson applied instantly on first generation.
-
----
-
-## 4. Component Ablation Study
-
-To mathematically isolate the contribution of each algorithmic and architectural module in `agent-teamwork`, ablation benchmarks were evaluated across the 10-task suite:
-
-| Configuration Variant | Pass@1 Rate | Scope Leaks | False Victories | Stall Loops | Token Overhead (Low Risk) | Key Mechanism Removed |
-| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Full `agent-teamwork` (v0.3.0)** | **100.0%** | **0.0%** | **0.0%** | **0.0%** | **~38.9k tokens** | *All mechanisms active* |
-| (w/o `allowedPaths` Boundary Gate) | 30.0% (-70%) | 70.0% (+70%) | 0.0% | 0.0% | ~39.2k tokens | Disables `findOutOfBoundsFiles` |
-| (w/o `verifyPassed` & Tail Capture) | 20.0% (-80%) | 0.0% | 80.0% (+80%) | 0.0% | ~38.4k tokens | Disables `formatFailureOutput` |
-| (w/o DyLAN Dynamic Topology) | 100.0% (0%) | 0.0% | 0.0% | 0.0% | ~43.3k tokens (+11.3%) | Runs static all-agent swarm |
-| (w/o Stall Signature Early-Exit) | 90.0% (-10%) | 0.0% | 0.0% | 10.0% (+10%) | ~48.2k tokens | Disables `computeGapSignature` |
-| (w/o BM25/Jaccard Experience Recall) | 80.0% (-20%) | 0.0% | 0.0% | 0.0% | ~41.5k tokens (20% regression) | Disables `rankExperienceLibrary` |
-
----
-
-## 5. Verification & Open-Source Compliance Evidence
-
-Every feature of `agent-teamwork` is backed by automated tests, single-source-of-truth (SSOT) parity, and strict privacy/clean-room compliance:
-
-- **100% Function Body Parity**: All 18 verification functions have identical normalized AST bodies across TypeScript (`shared/verify-gate.ts`), JavaScript (`shared/verify-gate.js`), and ZCode Dynamic Workflow (`adapters/zcode/teamwork.dwf.ts`).
-- **Delimiter Balance Verification**: Full syntax balance verification across all workflow definitions.
-- **Clean-Room Privacy Audit**: Absolute paths, internal URLs, and credential signatures are strictly banned by `scripts/build.mjs`.
+## 7. Reproduction
 
 ```bash
-$ npm test
-
-> agent-teamwork@0.3.0 test
-> node scripts/build.mjs && node --test tests/*.test.mjs
-
-Checking agent-teamwork build, SSOT parity, and open-source compliance...
-✔ JSON configurations, adapters, and bilingual role/protocol files valid.
-✔ All 18 shared verify-gate functions are 100% body-identical across TS, JS, and teamwork.dwf.ts.
-✔ teamwork.dwf.ts and verify-gate.ts syntax delimiter balance verified.
-✔ Open-source clean-room & privacy compliance verified.
-Build verification successful!
-✔ Benchmark Scenario 1: Multi-file refactoring scope boundary leaks are deterministically intercepted and contained
-✔ Benchmark Scenario 2: False victory claims are intercepted by non-zero exit tail capture and strict open gap accounting
-✔ Benchmark Scenario 3: Dynamic risk topology prunes context tax and token overhead on low-risk tasks
-✔ Benchmark Scenario 4: Stall recovery early exits on consecutive identical failure signatures and supersedes dead milestones
-✔ Benchmark Scenario 5: Cross-task knowledge retrieval prevents regression recurrence via proactive guardrail injection
-✔ Benchmark Documentation & Parity: Bilingual reports and README links maintain structural parity and integrity
-✔ Benchmark Suite: 10 Canonical SWE-bench Tasks execute deterministically with 100% Pass@1 and zero leaks
-✔ C3: formatFailureOutput preserves error tail for teamwork verification
-✔ C1: verifyCommand failure accurately updates openGaps and prevents false success conclusion
-✔ C1: formatTeamworkConclusion outputs clean English and Chinese success messages
-✔ C2: superseded failed milestones are not counted as openGaps after replanning
-✔ C4: structured challenger verdict filters out empty suspicions
-✔ C6: isPathAllowed and findOutOfBoundsFiles enforce strict path boundaries without reverse substring leaks
-✔ C7: validates teamProfile, integrityMode, and stall signatures
-✔ Harness²: validates non-confounded experience entries and formats invariant/domain guardrails
-✔ B11: resolveModelConfiguration resolves custom and default light models
-✔ rankExperienceLibrary: ranks by BM25/cue matching and confidence weighting with fallback
-✔ composeHarnessGuardrails: deduplicates rules and enforces Context Tax Hierarchy
-✔ resolveMilestoneTopology: routes risk levels to dynamic multi-agent topologies
-✔ synthesizeMicroTestPlan: generates empirical verification plans and assertion snippets
-✔ Regression: multilingual cue ranking, unicode guardrail preservation, globstar root matching, and fallback robustness
-✔ Installer & Build verification smoke test across all supported agent targets and languages
-ℹ tests 22
-ℹ suites 0
-ℹ pass 22
-ℹ fail 0
+npm run benchmark:live -- --check                 # auth precheck + tiny probe
+npm run benchmark:live -- --out my-report.json    # full 10-task A/B exam
+npm run benchmark:live -- --task SWE-JS-001       # single task
+npm run benchmark:live -- --mode teamwork --task SWE-JS-009 --timeout-ms 420000
+node benchmarks/merge-live-reports.mjs primary.json supplement.json -o merged.json
 ```
 
----
+Level-1 offline gates: `npm test` runs `scripts/build.mjs` (18 shared pure functions AST-identical across `shared/verify-gate.ts`, `shared/verify-gate.js`, and `adapters/zcode/teamwork.dwf.ts`; clean-room compliance scan) plus 40 unit tests, 18 of which exercise the live-eval harness itself with injected transports and scripted clients — zero network by construction. Level-2 is the live exam above; the two levels share the same 10-task ground truth and the same verdict channel (`process.exitCode`).
 
-## 6. Conclusion & Recommendations
-
-The empirical benchmark demonstrates that **agent-teamwork** transforms autonomous agent engineering from non-deterministic guessing into a verifiable, deterministic, and cost-effective multi-agent workflow:
-
-1. **For Refactoring & Multi-Module Initiatives**: Use `agent-teamwork` with `--integrityMode development` to lock file boundaries and eliminate collateral out-of-bounds pollution.
-2. **For Mission-Critical / Security Code**: Use `--integrityMode benchmark` with `quality` profile to mobilize adversarial challenger attacks and auditor gates.
-3. **For Day-to-Day Maintenance**: Leverage dynamic topology routing (`resolveMilestoneTopology`) to slash token costs while keeping full guardrail protection.
+Raw evidence for this report: [`benchmarks/results/live-ab-final.json`](../benchmarks/results/live-ab-final.json), [`live-ab-full.json`](../benchmarks/results/live-ab-full.json), [`live-ab-full.console.log`](../benchmarks/results/live-ab-full.console.log), and the three `supplement-*.json` files.

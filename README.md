@@ -42,25 +42,28 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## Empirical Benchmark & Real-World Case Studies
 
-> **Full Bilingual Benchmark Report**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete telemetry traces, before-and-after code diffs, component ablation matrices, and benchmark logs across 10 canonical multi-file engineering tasks grounded in SWE-bench (Lite/Verified) & Aider methodology. Run locally with `npm run benchmark`.
+> **Full Bilingual Live-Eval Report**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for methodology, per-task telemetry, failure-mode analysis, and raw run artifacts across 10 canonical multi-file engineering tasks grounded in SWE-bench (Lite/Verified) & Aider methodology. Reproduce with `npm run benchmark:live` (real API calls; see [Testing & Build Verification](#testing--build-verification-two-level-architecture)).
 
-### Benchmark Scorecard: Baseline Single-Agent vs agent-teamwork v0.3.0 (Antigravity + Gemini 3.8 Flash High)
+### Live Scorecard: Solo vs agent-teamwork v0.3.0 (OpenCode Zen + mimo-v2.6-flash, 2026-10-24)
 
-| Key Metric | Baseline Single-Agent (Unguided) | `agent-teamwork` (v0.3.0) | Delta vs Baseline | Impact / Measurable Advantage |
+One live A/B exam, same model/endpoint/budgets in both tracks, verdicts from real subprocess exit codes:
+
+| Key Metric | Solo (Unguided) | `agent-teamwork` (v0.3.0) | Delta | Note |
 | :--- | :---: | :---: | :---: | :--- |
-| **Verified Task Success Rate (Pass@1)** | 0.0% (0/10) | **100.0% (10/10)** | **+100.0%** | Full task completion via micro-test synthesis & targeted rework |
-| **Out-of-Bounds Scope Leaks** | 70.0% (7/10) | **0.0% (0/10)** | **-70.0% (Zero Leak)** | Physical path containment via `findOutOfBoundsFiles` |
-| **False Victory Claims (Unverified Done)** | 80.0% (8/10) | **0.0% (0/10)** | **-80.0% (Zero Falsehood)**| Non-zero exit code tail capture (`formatFailureOutput`) & gap math |
-| **Infinite Stall / Retry Loops (>2 Cycles)** | 10.0% (1/10) | **0.0% (0/10)** | **-10.0% (Early Replan)** | DJB2 signature detection (`computeGapSignature`) triggers early exit |
-| **Average Token Cost on Low-Risk Tasks** | ~42.7k tokens | **~38.9k tokens** | **-8.8% token savings** | Prunes unnecessary communication via DyLAN topology routing |
-| **Average Execution Latency per Task** | 1.6s | **1.1s** | **-31.3% faster** | Eliminates infinite retry stalls & long debugging loops |
+| **Verified Pass@1** | **70.0% (7/10)** | 40.0% (4/10) | −30 pts | early-stop aborted at turn 3 while Solo converged at turns 4–5 |
+| **Out-of-Bounds Writes** | 0 | **0** | — | both arms stayed in scope this run |
+| **False Victory Claims** | 1 | **0** | **−1** | Solo claimed done while failing (SWE-JS-006 t1) |
+| **Tokens on the 3 shared-failure tasks** | 55.5k | **32.4k** | **−41.7%** | abort-at-turn-3 cost containment |
+| **Avg Tokens per Task** | 10,520 | **9,746** | **−7.4%** | tail-only failure feed keeps context small |
+| **Avg Wall Time per Task** | 98.4 s | 157.4 s | +59.9% | reasoning-heavy calls run long |
 
-### Five Concrete Real-World Empirical Scenarios
-1. **Multi-File Refactoring Scope Lock**: Unguided agents blindly patch unrelated files (`billing/legacy-token.ts`, `package.json`), causing staging outages; `agent-teamwork`'s `findOutOfBoundsFiles` catches unauthorized file writes at milestone gate, prompting rollback and clean scoped isolation.
-2. **False Victory Detection**: Single-agent sees 350 lines of test output and claims "All 45 tests pass!" despite an assertion failure at line 112; `agent-teamwork` captures process exit codes, extracts error tails (`formatFailureOutput`), accurately marks `verifyPassed=false`, and dispatches Reworker.
-3. **Context Tax & Token Overhead**: Unguided swarms dispatch 6-8 agents for a simple markdown typo (182.5k tokens); `resolveMilestoneTopology` prunes low-risk tasks to Fast Worker + Scribe (12.4k tokens, -93% tokens, 18s latency).
-4. **Stall Early-Exit & Dynamic Replanning**: In circular ESM dependency debugging, single-agent loops 6 times on the same `TypeError`; `computeGapSignature` detects repeated failure at Round 2, supersedes failed milestone (`superseded: true`), and pivots architecture cleanly.
-5. **Cross-Task Knowledge Reuse**: Tabula rasa agent repeats the same unmocked Redis socket leak that caused CI hangs in prior sessions; `rankExperienceLibrary` automatically matches cues and synthesizes proactive guardrails before code is written.
+The full harness lowered Pass@1 on this reasoning model while winning every guardrail axis. The diagnosed cause: `computeGapSignature` reads pre-payload "thinking" turns as stagnation. Analysis and the four concrete fixes: [docs/BENCHMARK_REPORT.md §4–§6](docs/BENCHMARK_REPORT.md#4-what-the-losing-margin-is-made-of).
+
+### Four Observed Scenarios from the Live Run
+1. **Reasoning-budget squeeze**: turns where reasoning consumed the whole completion budget returned 200–900-char analysis stubs with no file; payload turns returned 3k–12k chars. The larger teamwork prompts amplified the squeeze — the root cause behind the three contested losses.
+2. **False victory, caught and recorded**: Solo claimed completion on SWE-JS-006 turn 1 while the verifier exited 1; the claim was logged as a metric, the loop continued, and turn 2 passed. The engine's gap arithmetic recorded zero such claims.
+3. **Cost containment on doomed tasks**: on the three tasks both tracks failed, the stagnation abort cut token spend 41.7% (SWE-JS-010: 13.7k → 5.3k, −61%).
+4. **Deep-reasoning flagship win**: on SWE-JS-009 the teamwork track converged in 2 turns (vs Solo's 5) after a 273.8 s reasoning call produced a correct decoder on the first write.
 
 ---
 
@@ -141,6 +144,7 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## What's New in v0.3.0
 
+- **Live Online A/B Evaluation Suite**: `npm run benchmark:live` runs the 10 canonical tasks as a real exam against any OpenAI-compatible endpoint (default: OpenCode Zen + `mimo-v2.6-flash`) — see the [live scorecard above](#live-scorecard-solo-vs-agent-teamwork-v030-opencode-zen--mimo-v26-flash-2026-10-24).
 - **Dynamic Topology Routing**: Full implementation of `resolveMilestoneTopology` across TypeScript, JavaScript, and ZCode DWF.
 - **Hybrid Experience Ranking**: Added `rankExperienceLibrary` replacing naive slicing with BM25/Jaccard cue matching.
 - **Propose-Compose Guardrail Synthesis**: Added `composeHarnessGuardrails` with Context Tax ceiling and conflict resolution.
@@ -198,14 +202,45 @@ To uninstall and restore backups:
 
 ---
 
-## Testing & Build Verification
+## Testing & Build Verification: Two-Level Architecture
 
-Run unit tests and single-source-of-truth build verification:
+**Level-1 — Deterministic offline gates (no network, no API key):**
 
 ```bash
-node --test tests/teamwork.test.mjs
-node scripts/build.mjs
+npm test                      # node scripts/build.mjs (SSOT parity + open-source compliance) + all unit tests
+npm run benchmark             # Level-1 state-machine benchmark over the 10 canonical tasks (offline runner)
 ```
+
+**Level-2 — Real online API evaluation (`npm run benchmark:live`):**
+
+Runs the same 10 canonical SWE-bench tasks as a genuine live A/B exam — Track A (Solo: single model, monolithic prompt, no guardrails) vs Track B (model + agent-teamwork: scoping contract, path lock, failure-tail feedback, stagnation early-stop) — each task in its own git sandbox under `os.tmpdir()`, scored strictly by real subprocess exit codes, real `usage` token accounting, and real wall-clock latency.
+
+Configure the endpoint and key (default: OpenCode Zen gateway + `mimo-v2.6-flash`):
+
+```bash
+# Option 1: environment variables
+export OPENCODE_API_KEY="oc_sk_..."          # or ZEN_API_KEY
+
+# Option 2: models.local.json (repo root, git-ignored)
+{
+  "api_key": "oc_sk_...",
+  "base_url": "https://opencode.ai/zen/go/v1/chat/completions",
+  "model": "mimo-v2.6-flash",
+  "vendor": "opencode",
+  "extra_headers": { "x-opencode-session": "zcode-live-eval" }
+}
+
+# Then verify connectivity and run
+npm run benchmark:live -- --check                          # auth precheck + tiny probe call
+npm run benchmark:live                                     # full A/B exam, all 10 tasks
+npm run benchmark:live -- --task SWE-JS-001                # single task  (alias of --tasks)
+npm run benchmark:live -- --tasks SWE-JS-001,SWE-JS-004    # task subset
+npm run benchmark:live -- --mode baseline                  # Solo track only
+npm run benchmark:live -- --mode teamwork                  # agent-teamwork track only
+npm run benchmark:live -- --out live-report.json           # persist the sanitized result JSON
+```
+
+Any OpenAI-compatible chat/completions endpoint works via `--base-url` (e.g. the Zhipu channel via `ZHIPUAI_API_KEY`); without a key the CLI fails fast with guidance instead of fabricating data.
 
 ---
 

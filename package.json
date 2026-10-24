@@ -7,6 +7,7 @@
   "types": "shared/verify-gate.d.ts",
   "scripts": {
     "benchmark": "node benchmarks/runner.mjs",
+    "benchmark:live": "node benchmarks/live-eval.mjs",
     "build": "node scripts/build.mjs",
     "test": "node scripts/build.mjs && node --test tests/*.test.mjs"
   },

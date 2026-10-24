@@ -234,7 +234,7 @@ test("Benchmark Scenario 5: Cross-task knowledge retrieval prevents regression r
   assert.ok(formattedForWorker.includes("mock in-memory Redis adapter"));
 });
 
-test("Benchmark Documentation & Parity: Bilingual reports and README links maintain structural parity and integrity", () => {
+test("Benchmark Documentation & Parity: Bilingual live reports and README links carry the real run's environment and results", () => {
   const enReportPath = path.join(rootDir, "docs", "BENCHMARK_REPORT.md");
   const zhReportPath = path.join(rootDir, "docs", "BENCHMARK_REPORT.zh-CN.md");
   const enRootPath = path.join(rootDir, "BENCHMARKS.md");
@@ -247,37 +247,60 @@ test("Benchmark Documentation & Parity: Bilingual reports and README links maint
 
   const enReport = fs.readFileSync(enReportPath, "utf8");
   const zhReport = fs.readFileSync(zhReportPath, "utf8");
+  const enRoot = fs.readFileSync(enRootPath, "utf8");
+  const zhRoot = fs.readFileSync(zhRootPath, "utf8");
 
-  // All 5 core benchmark scenarios must be documented in both reports
-  const enScenarios = [
-    "Multi-File Refactoring",
-    "False Victory Detection",
-    "Context Tax",
-    "Stall Recovery",
-    "Cross-Task Knowledge Reuse",
-  ];
-  for (const s of enScenarios) {
-    assert.ok(enReport.includes(s), `English report missing scenario: ${s}`);
+  // The real run environment is stamped identically in all four documents
+  for (const doc of [enReport, zhReport, enRoot, zhRoot]) {
+    assert.ok(doc.includes("https://opencode.ai/zen/go/v1/chat/completions"), "must name the real endpoint");
+    assert.ok(doc.includes("mimo-v2.6-flash"), "must name the real model");
+    assert.ok(doc.includes("2026-10-24"), "must stamp the real run date");
+    assert.ok(doc.includes("npm run benchmark:live"), "must show the live reproduction command");
   }
 
-  const zhScenarios = [
-    "复杂多文件重构",
-    "虚假胜利",
-    "上下文税",
-    "死锁停滞早停",
-    "跨任务经验复用",
-  ];
-  for (const s of zhScenarios) {
-    assert.ok(zhReport.includes(s), `Chinese report missing scenario: ${s}`);
+  // The real headline numbers (Solo 7/10 vs Teamwork 4/10) appear in both languages
+  // (Chinese typography uses full-width parentheses; both forms are accepted)
+  for (const doc of [enReport, zhReport, enRoot, zhRoot]) {
+    assert.ok(
+      doc.includes("70.0% (7/10)") || doc.includes("70.0%（7/10）"),
+      "must carry the real Solo Pass@1"
+    );
+    assert.ok(
+      doc.includes("40.0% (4/10)") || doc.includes("40.0%（4/10）"),
+      "must carry the real Teamwork Pass@1"
+    );
   }
 
-  // Both reports must include the Mermaid diagrams
-  assert.ok(enReport.includes("```mermaid\nflowchart TD"), "English report must contain Mermaid flowchart");
-  assert.ok(zhReport.includes("```mermaid\nflowchart TD"), "Chinese report must contain Mermaid flowchart");
-  assert.ok(enReport.includes("```mermaid\ngraph LR"), "English report must contain Mermaid risk graph");
-  assert.ok(zhReport.includes("```mermaid\ngraph LR"), "Chinese report must contain Mermaid risk graph");
-  assert.ok(enReport.includes("```mermaid\nsequenceDiagram"), "English report must contain Mermaid sequence diagram");
-  assert.ok(zhReport.includes("```mermaid\nsequenceDiagram"), "Chinese report must contain Mermaid sequence diagram");
+  // The guardrail deltas from the same run
+  for (const doc of [enReport, zhReport, enRoot, zhRoot]) {
+    assert.ok(doc.includes("41.7%"), "must carry the real shared-failure token saving");
+  }
+
+  // All 10 canonical task ids are listed in both root portals
+  const taskIds = Array.from({ length: 10 }, (_, i) => `SWE-JS-${String(i + 1).padStart(3, "0")}`);
+  for (const id of taskIds) {
+    assert.ok(enRoot.includes(id), `English portal missing task ${id}`);
+    assert.ok(zhRoot.includes(id), `Chinese portal missing task ${id}`);
+  }
+
+  // The diagnosed failure mode and the raw evidence pointer are documented
+  for (const [doc, anchor] of [[enReport, "computeGapSignature"], [zhReport, "computeGapSignature"]]) {
+    assert.ok(doc.includes(anchor), "report must reference the stagnation-signature mechanism");
+    assert.ok(doc.includes("live-ab-final.json"), "report must point at the canonical raw artifact");
+  }
+
+  // The retired simulated testbed must not be presented as the evaluation environment anymore
+  for (const doc of [enReport, zhReport, enRoot, zhRoot]) {
+    assert.ok(!doc.includes("Antigravity + Gemini 3.8 Flash (High)"), "stale simulated testbed label must be gone");
+  }
+
+  // Raw run artifacts are committed as evidence
+  for (const artifact of ["live-ab-final.json", "live-ab-full.json"]) {
+    assert.ok(
+      fs.existsSync(path.join(rootDir, "benchmarks", "results", artifact)),
+      `raw artifact benchmarks/results/${artifact} must be committed`
+    );
+  }
 
   // READMEs must link to reports
   const readmeEn = fs.readFileSync(path.join(rootDir, "README.md"), "utf8");

@@ -1,0 +1,161 @@
+{
+  "meta": {
+    "generatedAt": "2026-10-24T13:53:19.740Z",
+    "suite": "live-eval (mimo-v2.6-flash Solo vs mimo-v2.6-flash + agent-teamwork)",
+    "mode": "ab",
+    "model": "mimo-v2.6-flash",
+    "maxTurns": 6,
+    "node": "v22.23.1",
+    "platform": "darwin/arm64",
+    "api": "https://opencode.ai/zen/go/v1/chat/completions",
+    "tasksSelected": [
+      "SWE-JS-001"
+    ],
+    "keepSandboxes": false,
+    "injectionSource": "live-http (opencode.ai)"
+  },
+  "tasks": [
+    {
+      "id": "SWE-JS-001",
+      "name": "Prototype Pollution Guardrail in Recursive Object Merge",
+      "category": "Security & Vulnerability Repair",
+      "baseline": {
+        "track": "baseline",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "falseVictoryCount": 0,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "tokens": {
+          "prompt": 676,
+          "completion": 2097,
+          "total": 2773,
+          "calls": 1
+        },
+        "timeMs": 48267.027458000004,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 4468,
+            "filesWritten": [
+              "src/utils/merge.js"
+            ],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": false,
+            "signature": null,
+            "latencyMs": 48198
+          }
+        ],
+        "keptSandboxDir": null
+      },
+      "teamwork": {
+        "track": "teamwork",
+        "pass": true,
+        "passTurn": 1,
+        "turnsUsed": 1,
+        "exitCode": 0,
+        "outOfBoundsCount": 0,
+        "outOfBoundsFiles": [],
+        "interceptedCount": 0,
+        "interceptedFiles": [],
+        "falseVictoryCount": 0,
+        "strictFalseVictory": false,
+        "stagnationRounds": 0,
+        "stalled": false,
+        "maxConsecutiveSameSignature": 0,
+        "abortReason": null,
+        "replansUsed": 0,
+        "openGaps": 0,
+        "conclusion": "Initiative completed: all milestones passed acceptance, final verification command passed, audit passed.",
+        "topology": {
+          "risk": "critical",
+          "parallelism": "sequential",
+          "adversarialChallenger": true,
+          "criticStrictness": "exhaustive",
+          "workerTier": "heavy",
+          "requireMicroTest": true
+        },
+        "tokens": {
+          "prompt": 1256,
+          "completion": 2782,
+          "total": 4038,
+          "calls": 1
+        },
+        "timeMs": 248558.197292,
+        "failureTail": "",
+        "gapSignatureTrail": [
+          null
+        ],
+        "turns": [
+          {
+            "turn": 1,
+            "modelChars": 5336,
+            "filesWritten": [
+              "src/utils/merge.js"
+            ],
+            "blockedFiles": [],
+            "escapedWrites": [],
+            "exitCode": 0,
+            "claimedDone": true,
+            "signature": null,
+            "latencyMs": 68190
+          }
+        ],
+        "keptSandboxDir": null
+      }
+    }
+  ],
+  "summary": {
+    "tracks": [
+      {
+        "track": "baseline",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 2773,
+        "avgTimeMs": 48267
+      },
+      {
+        "track": "teamwork",
+        "total": 1,
+        "passes": 1,
+        "passRate": 1,
+        "outOfBoundsTasks": 0,
+        "outOfBoundsFiles": 0,
+        "interceptedCount": 0,
+        "falseVictories": 0,
+        "stalledTasks": 0,
+        "stagnationRounds": 0,
+        "replansUsed": 0,
+        "avgTokens": 4038,
+        "avgTimeMs": 248558
+      }
+    ],
+    "delta": {
+      "passRatePts": 0,
+      "outOfBoundsFiles": 0,
+      "falseVictories": 0,
+      "tokenDeltaPct": 45.6,
+      "timeDeltaPct": 415
+    }
+  }
+}
