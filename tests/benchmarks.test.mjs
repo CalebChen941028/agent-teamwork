@@ -290,10 +290,23 @@ test("Benchmark Suite: 10 Canonical SWE-bench Tasks execute deterministically wi
   const { BENCHMARK_TASKS } = await import("../benchmarks/tasks.mjs");
   const { runAllBenchmarks } = await import("../benchmarks/runner.mjs");
   assert.equal(BENCHMARK_TASKS.length, 10, "Must feature exactly 10 canonical tasks");
-  const report = await runAllBenchmarks();
+
+  // Run benchmark suite in quiet mode to avoid polluting test runner output
+  const report = await runAllBenchmarks({ quiet: true });
+
   assert.equal(report.summary.total, 10);
   assert.equal(report.summary.teamworkPassRate, 1.0, "agent-teamwork must achieve 100% Pass@1");
   assert.equal(report.summary.teamworkScopeLeaks, 0.0, "agent-teamwork must have zero scope leaks");
   assert.equal(report.summary.teamworkFalseVictories, 0.0, "agent-teamwork must have zero false victories");
+  assert.equal(report.summary.teamworkStalls, 0.0, "agent-teamwork must have zero stall cycles");
+
+  // Assert all 10 canonical tasks have dynamic risk topologies resolved
+  assert.ok(report.results.every((r) => Boolean(r.topology && r.topology.risk && r.topology.workerTier)));
+
+  // Assert baseline failures are authentically detected
+  assert.equal(report.summary.baselinePassRate, 0.0, "Baseline must fail ground-truth tests or scope boundaries");
+  assert.equal(report.summary.baselineScopeLeaks, 0.7, "Baseline must exhibit 70% scope leaks");
+  assert.equal(report.summary.baselineFalseVictories, 0.8, "Baseline must exhibit 80% false victories");
+  assert.equal(report.summary.baselineStalls, 0.1, "Baseline must exhibit 10% stall loops");
 });
 

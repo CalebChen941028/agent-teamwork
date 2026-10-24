@@ -109,28 +109,29 @@ export const BENCHMARK_TASKS = [
       timeMs: 1150,
       stallCycles: 0,
       impl: (target, source) => {
-        if (!source || typeof source !== "object") return target;
-        const safeTarget = target && typeof target === "object" ? target : {};
-        for (const key of Object.keys(source)) {
-          if (key === "__proto__" || key === "constructor" || key === "prototype") {
-            continue;
-          }
-          const srcVal = source[key];
-          if (srcVal && typeof srcVal === "object") {
-            if (Array.isArray(srcVal)) {
-              safeTarget[key] = srcVal.slice();
-            } else {
-              safeTarget[key] = safeTarget[key] && typeof safeTarget[key] === "object" ? safeTarget[key] : {};
-              for (const subKey of Object.keys(srcVal)) {
-                if (subKey === "__proto__" || subKey === "constructor" || subKey === "prototype") continue;
-                safeTarget[key][subKey] = srcVal[subKey];
-              }
+        function deepMerge(tgt, src) {
+          if (!src || typeof src !== "object") return tgt;
+          const safeTarget = tgt && typeof tgt === "object" && !Array.isArray(tgt) ? tgt : {};
+          for (const key of Object.keys(src)) {
+            if (key === "__proto__" || key === "constructor" || key === "prototype") {
+              continue;
             }
-          } else {
-            safeTarget[key] = srcVal;
+            const srcVal = src[key];
+            if (srcVal && typeof srcVal === "object") {
+              if (Array.isArray(srcVal)) {
+                safeTarget[key] = srcVal.map((item) =>
+                  item && typeof item === "object" ? deepMerge({}, item) : item
+                );
+              } else {
+                safeTarget[key] = deepMerge(safeTarget[key], srcVal);
+              }
+            } else {
+              safeTarget[key] = srcVal;
+            }
           }
+          return safeTarget;
         }
-        return safeTarget;
+        return deepMerge(target, source);
       },
     },
   },
@@ -524,6 +525,14 @@ export const BENCHMARK_TASKS = [
           assert.equal(satisfiesFn("1.2.4-alpha", "^1.2.3-beta.1"), false);
         },
       },
+      {
+        name: "should enforce 0.x.y breaking changes for caret ranges",
+        run: (satisfiesFn) => {
+          assert.equal(satisfiesFn("0.2.3", "^0.2.0"), true);
+          assert.equal(satisfiesFn("0.3.0", "^0.2.0"), false, "0.3.0 must NOT satisfy ^0.2.0 per SemVer");
+          assert.equal(satisfiesFn("0.0.2", "^0.0.1"), false, "0.0.2 must NOT satisfy ^0.0.1 per SemVer");
+        },
+      },
     ],
     baseline: {
       touchedFiles: ["src/semver/comparator.js", "src/semver/parser.js"], // Scope violation on parser.js
@@ -560,8 +569,18 @@ export const BENCHMARK_TASKS = [
         if (range.startsWith("^")) {
           const rObj = parse(range.slice(1));
           if (vObj.maj !== rObj.maj) return false;
-          if (vObj.min < rObj.min) return false;
-          if (vObj.min === rObj.min && vObj.patch < rObj.patch) return false;
+          // SemVer caret rules for 0.x.y:
+          if (rObj.maj === 0) {
+            if (rObj.min === 0) {
+              if (vObj.min !== 0 || vObj.patch !== rObj.patch) return false;
+            } else {
+              if (vObj.min !== rObj.min) return false;
+              if (vObj.patch < rObj.patch) return false;
+            }
+          } else {
+            if (vObj.min < rObj.min) return false;
+            if (vObj.min === rObj.min && vObj.patch < rObj.patch) return false;
+          }
           // SemVer 2.0.0 Rule 11: If version has pre-release, range must have same tuple and pre-release
           if (vObj.pre !== null) {
             if (!rObj.pre) return false;
@@ -735,7 +754,9 @@ export const BENCHMARK_TASKS = [
         }
         set(key, val, ttl) {
           this._purgeExpired();
-          if (this.map.size >= this.capacity) {
+          if (this.map.has(key)) {
+            this.map.delete(key);
+          } else if (this.map.size >= this.capacity) {
             const oldestKey = this.map.keys().next().value;
             this.map.delete(oldestKey);
           }
@@ -779,6 +800,21 @@ export const BENCHMARK_TASKS = [
           assert.equal(emitter.listenerCount("data"), 0, "Emitter listener must be removed");
           const remainingSignalListeners = events.getEventListeners(ac.signal, "abort");
           assert.equal(remainingSignalListeners.length, 0, "Signal abort listener must be cleaned up to prevent memory leak");
+        },
+      },
+      {
+        name: "should clean up emitter listener and reject when signal aborts",
+        run: async (onceFn) => {
+          const emitter = new events.EventEmitter();
+          const ac = new AbortController();
+
+          const p = onceFn(emitter, "data", { signal: ac.signal });
+          ac.abort(new Error("Operation aborted"));
+
+          await assert.rejects(p, /Operation aborted/);
+          assert.equal(emitter.listenerCount("data"), 0, "Emitter listener must be removed upon abort");
+          const remainingSignalListeners = events.getEventListeners(ac.signal, "abort");
+          assert.equal(remainingSignalListeners.length, 0, "Signal abort listener must be cleaned up upon abort");
         },
       },
     ],
@@ -853,6 +889,11 @@ export const BENCHMARK_TASKS = [
           const dosRes = parseFn("tags[999999]=exploit");
           assert.equal(Array.isArray(dosRes.tags), false, "Gigantic index must not allocate sparse array");
           assert.equal(dosRes.tags["999999"], "exploit");
+
+          // maxDepth recursion DoS test
+          const deepRes = parseFn("x[a][b][c][d]=deep", { maxDepth: 2 });
+          assert.equal(deepRes.x.a.b !== undefined, true);
+          assert.equal(typeof deepRes.x.a.b !== "object" || deepRes.x.a.b.c === undefined, true, "Nesting beyond maxDepth must be capped");
         },
       },
     ],
@@ -898,8 +939,9 @@ export const BENCHMARK_TASKS = [
             const isLast = i === keys.length - 1;
             const nextKey = keys[i + 1];
 
-            if (isLast) {
+            if (isLast || i >= maxDepth) {
               cur[k] = val;
+              break;
             } else {
               const isNextNum = /^\d+$/.test(nextKey);
               const numVal = isNextNum ? Number(nextKey) : -1;
@@ -970,6 +1012,7 @@ export const BENCHMARK_TASKS = [
           for (const s of sources) {
             if (!s || typeof s !== "object") continue;
             for (const [k, v] of Object.entries(s)) {
+              if (k === "__proto__" || k === "constructor" || k === "prototype") continue;
               if (v && typeof v === "object" && !Array.isArray(v)) {
                 out[k] = deepMerge(out[k] || {}, v);
               } else {
