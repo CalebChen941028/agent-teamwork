@@ -78,6 +78,11 @@ const requiredFiles = [
   "roles/scribe.en.md",
   "docs/BENCHMARK_REPORT.md",
   "docs/BENCHMARK_REPORT.zh-CN.md",
+  "docs/SWEBENCH_GUIDE.md",
+  "docs/SWEBENCH_GUIDE.zh-CN.md",
+  "benchmarks/swebench/loader.py",
+  "benchmarks/swebench/runner.mjs",
+  "benchmarks/swebench/eval.py",
   "BENCHMARKS.md",
   "BENCHMARKS.zh-CN.md",
 ];

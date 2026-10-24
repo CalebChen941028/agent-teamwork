@@ -8,6 +8,7 @@
   "scripts": {
     "benchmark": "node benchmarks/runner.mjs",
     "benchmark:live": "node benchmarks/live-eval.mjs",
+    "benchmark:swebench": "node benchmarks/swebench/runner.mjs",
     "build": "node scripts/build.mjs",
     "test": "node scripts/build.mjs && node --test tests/*.test.mjs"
   },

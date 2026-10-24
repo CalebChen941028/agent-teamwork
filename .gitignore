@@ -12,3 +12,4 @@ models.local.json
 .serena/
 .video_agent/
 .zcode/
+benchmarks/swebench/cache/
