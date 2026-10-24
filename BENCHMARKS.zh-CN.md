@@ -2,11 +2,13 @@
 
 [![Version: 0.4.0](https://img.shields.io/badge/version-0.4.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-40%2F40%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-41%2F41%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
 
+> 🚀 **最新 15 题大考**：2026-10-25 完成的 `deepseek-v4.1-flash` 全量 15 题大考（Pass@1 100% 顶格持平，越界落地 18 对 0，调用数 −24%，写入感知 0 误杀中止），详见 [docs/BENCHMARK_REPORT.zh-CN.md](docs/BENCHMARK_REPORT.zh-CN.md)。下文为 v0.3.x `mimo-v2.6-flash` 历史基准与促成 v0.4.0 写入感知修复的归因记录。
+>
 > 📖 **完整报告**：方法论、逐题遥测、失败形态分析与可落地发现见 [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)。原始运行证据：[`benchmarks/results/`](benchmarks/results/)。
 
 本页全部数字来自 2026-10-24 的一次真实 A/B 活体大考——真实 HTTP 调用、真实子进程退出码、真实 `usage` Token 账单。

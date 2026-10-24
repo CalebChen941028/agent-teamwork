@@ -2,11 +2,13 @@
 
 [![Version: 0.4.0](https://img.shields.io/badge/version-0.4.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-40%2F40%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-41%2F41%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
 
+> 🚀 **Latest 15-Task Benchmark**: The full 15-task live eval on `deepseek-v4.1-flash` (100% Pass@1 ceiling, 18 vs 0 out-of-bounds writes, −24% calls, 0 stagnation aborts with write-awareness) is documented in [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md). Below is the baseline `mimo-v2.6-flash` historical run that motivated the v0.4.0 write-aware engine fix.
+>
 > 📖 **Full report**: methodology, per-task telemetry, failure-mode analysis, and actionable findings live in [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md). Raw run artifacts: [`benchmarks/results/`](benchmarks/results/).
 
 All figures on this page come from one live A/B exam run on 2026-10-24 — real HTTP calls, real subprocess exit codes, real `usage` token billing.
