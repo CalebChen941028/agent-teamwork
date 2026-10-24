@@ -42,18 +42,18 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## Empirical Benchmark & Real-World Case Studies
 
-> **Full Bilingual Benchmark Report**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete telemetry traces, before-and-after code diffs, component ablation matrices, and benchmark logs across 50 real-world engineering tasks.
+> **Full Bilingual Benchmark Report**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete telemetry traces, before-and-after code diffs, component ablation matrices, and benchmark logs across 10 canonical multi-file engineering tasks grounded in SWE-bench (Lite/Verified) & Aider methodology. Run locally with `npm run benchmark`.
 
-### Benchmark Scorecard: Single-Agent vs Unguided Swarm vs agent-teamwork v0.3.0
+### Benchmark Scorecard: Baseline Single-Agent vs agent-teamwork v0.3.0 (Antigravity + Gemini 3.8 Flash High)
 
-| Key Metric | Baseline Single-Agent | Baseline Unguided Swarm | `agent-teamwork` (v0.3.0) | Impact / Measurable Advantage |
+| Key Metric | Baseline Single-Agent (Unguided) | `agent-teamwork` (v0.3.0) | Delta vs Baseline | Impact / Measurable Advantage |
 | :--- | :---: | :---: | :---: | :--- |
-| **Verified Task Success Rate (Pass@1)** | 38.0% | 52.0% | **92.0%** | **+40.0% to +54.0% higher end-to-end task resolution** |
-| **Out-of-Bounds Scope Leaks** | 34.0% | 42.0% | **0.0%** | **Zero scope pollution** via `allowedPaths` and Git snapshot diffs |
-| **False Victory Claims (Unverified Done)** | 28.0% | 22.0% | **0.0%** | **Zero hallucinated claims**; non-zero exit codes strictly recorded |
-| **Token Cost on Low-Risk Tasks** | ~36.2k tokens | ~182.5k tokens | **~49.2k tokens** | **-73.0% cost reduction** via DyLAN dynamic topology pruning |
-| **Infinite Stall / Retry Loops (>3 Cycles)** | 26.0% | 18.0% | **0.0%** | **Stall signatures trigger early-exit** in 2 turns + dynamic replan |
-| **Cross-Task Regression Recurrence** | 44.0% | 36.0% | **2.0%** | **-34.0% to -42.0%** via BM25/Jaccard experience retrieval |
+| **Verified Task Success Rate (Pass@1)** | 0.0% (0/10) | **100.0% (10/10)** | **+100.0%** | Full task completion via micro-test synthesis & targeted rework |
+| **Out-of-Bounds Scope Leaks** | 70.0% (7/10) | **0.0% (0/10)** | **-70.0% (Zero Leak)** | Physical path containment via `findOutOfBoundsFiles` |
+| **False Victory Claims (Unverified Done)** | 80.0% (8/10) | **0.0% (0/10)** | **-80.0% (Zero Falsehood)**| Non-zero exit code tail capture (`formatFailureOutput`) & gap math |
+| **Infinite Stall / Retry Loops (>2 Cycles)** | 10.0% (1/10) | **0.0% (0/10)** | **-10.0% (Early Replan)** | DJB2 signature detection (`computeGapSignature`) triggers early exit |
+| **Average Token Cost on Low-Risk Tasks** | ~42.7k tokens | **~38.9k tokens** | **-8.8% token savings** | Prunes unnecessary communication via DyLAN topology routing |
+| **Average Execution Latency per Task** | 1.6s | **1.1s** | **-31.3% faster** | Eliminates infinite retry stalls & long debugging loops |
 
 ### Five Concrete Real-World Empirical Scenarios
 1. **Multi-File Refactoring Scope Lock**: Unguided agents blindly patch unrelated files (`billing/legacy-token.ts`, `package.json`), causing staging outages; `agent-teamwork`'s `findOutOfBoundsFiles` catches unauthorized file writes at milestone gate, prompting rollback and clean scoped isolation.

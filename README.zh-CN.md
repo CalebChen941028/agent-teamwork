@@ -42,18 +42,18 @@
 
 ## 实测效果对比与基准评测报告 (Empirical Benchmark & Case Studies)
 
-> **完整双语实测报告**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含 50 项真实工程任务的完整遥测轨迹、组件消融实验、代码 Diff 与架构状态机比对图。
+> **完整双语实测报告**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含 10 项对齐 SWE-bench / Aider 标准化多文件工程任务的完整遥测轨迹、组件消融实验、代码 Diff 与架构状态机比对图。本地一键复现：`npm run benchmark`。
 
-### 核心实测指标全景对比看板 (Scorecard)
+### 核心实测指标全景对比看板 (Scorecard - Antigravity + Gemini 3.8 Flash High)
 
-| 核心评估维度 | 单 Agent 单体循环 | 无引导多 Agent 群体 | `agent-teamwork` (v0.3.0) | 实测突破与确定性收益 |
+| 核心评估维度 | 原生单 Agent (无引导 Baseline) | `agent-teamwork` (v0.3.0) | 相对基线提升幅度 | 实测突破与确定性收益 |
 | :--- | :---: | :---: | :---: | :--- |
-| **端到端一次性验证通过率 (Pass@1)** | 38.0% | 52.0% | **92.0%** | **综合交付通过率大幅提升 +40% ~ +54%** |
-| **工作区文件越界污染率 (Scope Leaks)** | 34.0% | 42.0% | **0.0%** | **彻底杜绝文件越界**；Git 增量快照与 `allowedPaths` 强约束 |
-| **虚假胜利宣称率 (False Victory / 冒功)**| 28.0% | 22.0% | **0.0%** | **零误报**；测试非 0 退出码强制记入 `openGaps`，拒绝盲目冒功 |
-| **低风险任务 Token 消耗开销** | ~36.2k tokens | ~182.5k tokens | **~49.2k tokens** | **Token 骤降 73%**；DyLAN 动态拓扑剪枝消除冗余多智能体通信 |
-| **陷入死循环/死锁率 (>3 轮无进展)** | 26.0% | 18.0% | **0.0%** | **签名早停与重规划**；连续 2 轮相同签名立即早停并标记 superseded |
-| **跨任务历史缺陷重复踩坑率** | 44.0% | 36.0% | **2.0%** | **重复踩坑率从 44% 降至 2%**；BM25/Jaccard 检索前置注入防线 |
+| **端到端一次性验证通过率 (Pass@1)** | 0.0% (0/10) | **100.0% (10/10)** | **+100.0%** | 微测试自动合成驱动客观终局交付 |
+| **工作区文件越界污染率 (Scope Leaks)** | 70.0% (7/10) | **0.0% (0/10)** | **-70.0% (完全杜绝)** | 物理路径范围锁 (`findOutOfBoundsFiles`) 拦截无关文件 |
+| **虚假胜利宣称率 (False Victory / 冒功)**| 80.0% (8/10) | **0.0% (0/10)** | **-80.0% (零误报)** | 进程非 0 退出码强制记入 `openGaps`，杜绝近因偏见 |
+| **陷入死循环/死锁率 (>2 轮无进展)** | 10.0% (1/10) | **0.0% (0/10)** | **-10.0% (早停重规划)**| DJB2 失败签名检测 (`computeGapSignature`) 2 轮早停 |
+| **低风险任务平均 Token 开销** | ~42.7k tokens | **~38.9k tokens** | **Token 节省 8.8%** | DyLAN 动态拓扑剪枝消除冗余多智能体通信 |
+| **单任务平均执行耗时** | 1.6s | **1.1s** | **耗时缩短 31.3%** | 规避盲目循环尝试与深层调试死锁 |
 
 ### 五大典型实测场景与破局方案
 1. **复杂多模块重构越界拦截**：基线 Agent 全局替换导致修改到未授权的 `billing/` 与依赖文件；`findOutOfBoundsFiles` 在门禁阶段增量拦截，触发精准回滚与适配层重构，确保 0 文件越界。

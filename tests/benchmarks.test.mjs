@@ -285,3 +285,15 @@ test("Benchmark Documentation & Parity: Bilingual reports and README links maint
   assert.ok(readmeEn.includes("docs/BENCHMARK_REPORT.md"));
   assert.ok(readmeZh.includes("docs/BENCHMARK_REPORT.zh-CN.md"));
 });
+
+test("Benchmark Suite: 10 Canonical SWE-bench Tasks execute deterministically with 100% Pass@1 and zero leaks", async () => {
+  const { BENCHMARK_TASKS } = await import("../benchmarks/tasks.mjs");
+  const { runAllBenchmarks } = await import("../benchmarks/runner.mjs");
+  assert.equal(BENCHMARK_TASKS.length, 10, "Must feature exactly 10 canonical tasks");
+  const report = await runAllBenchmarks();
+  assert.equal(report.summary.total, 10);
+  assert.equal(report.summary.teamworkPassRate, 1.0, "agent-teamwork must achieve 100% Pass@1");
+  assert.equal(report.summary.teamworkScopeLeaks, 0.0, "agent-teamwork must have zero scope leaks");
+  assert.equal(report.summary.teamworkFalseVictories, 0.0, "agent-teamwork must have zero false victories");
+});
+

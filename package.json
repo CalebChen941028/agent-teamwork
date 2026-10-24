@@ -6,6 +6,7 @@
   "main": "shared/verify-gate.js",
   "types": "shared/verify-gate.d.ts",
   "scripts": {
+    "benchmark": "node benchmarks/runner.mjs",
     "build": "node scripts/build.mjs",
     "test": "node scripts/build.mjs && node --test tests/*.test.mjs"
   },
