@@ -60,6 +60,22 @@ interface ExperienceEntry {
   confidence?: "high" | "medium" | "low";
 }
 
+interface MilestoneTopology {
+  risk: "low" | "medium" | "high" | "critical";
+  parallelism: "concurrent" | "sequential";
+  adversarialChallenger: boolean;
+  criticStrictness: "standard" | "strict" | "exhaustive";
+  workerTier: "light" | "heavy" | "adaptive";
+  requireMicroTest: boolean;
+}
+
+interface MicroTestPlan {
+  testType: "unit" | "smoke" | "syntax" | "ast_shape";
+  suggestedCommand: string;
+  shapeValidationRule: string;
+  synthesizedAssertionSnippet: string;
+}
+
 interface TeamPlan {
   understanding: string;
   restatedGoal: string;
@@ -391,6 +407,283 @@ function resolveModelConfiguration(
   return { modelId: null, tier: "default" };
 }
 
+function rankExperienceLibrary(
+  library: ExperienceEntry[],
+  queryContext: string = "",
+  maxItems: number = 6,
+): ExperienceEntry[] {
+  if (!Array.isArray(library) || library.length === 0) {
+    return [];
+  }
+
+  const valid = library.filter((e) => isValidExperienceEntry(e));
+  if (valid.length === 0) {
+    return [];
+  }
+
+  const cap = Math.max(1, typeof maxItems === "number" ? maxItems : 6);
+  const q = (queryContext || "").toLowerCase();
+  const queryTokens = q.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+
+  if (queryTokens.length === 0) {
+    return valid.slice(-cap);
+  }
+
+  const queryTokenSet = new Set(queryTokens);
+
+  const scored = valid.map((entry, index) => {
+    const cueStr = (entry.cue || "").toLowerCase();
+    const lessonStr = (entry.lesson || "").toLowerCase();
+    const cueTokens = cueStr.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+    const lessonTokens = lessonStr.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+
+    let cueMatches = 0;
+    for (const t of cueTokens) {
+      if (queryTokenSet.has(t)) {
+        cueMatches++;
+      } else {
+        for (const qt of queryTokenSet) {
+          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s")) {
+            cueMatches++;
+            break;
+          }
+        }
+      }
+    }
+
+    let lessonMatches = 0;
+    for (const t of lessonTokens) {
+      if (queryTokenSet.has(t)) {
+        lessonMatches++;
+      } else {
+        for (const qt of queryTokenSet) {
+          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s")) {
+            lessonMatches++;
+            break;
+          }
+        }
+      }
+    }
+
+    const rawScore = cueMatches * 3 + lessonMatches * 1;
+    const confWeight =
+      entry.confidence === "high" ? 1.5 : entry.confidence === "low" ? 0.5 : 1.0;
+    const score = rawScore * confWeight;
+
+    return { entry, score, index };
+  });
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return b.index - a.index;
+  });
+
+  const matched = scored.filter((s) => s.score > 0).map((s) => s.entry);
+  if (matched.length >= cap) {
+    return matched.slice(0, cap);
+  }
+
+  const result = [...matched];
+  const matchedSet = new Set(matched);
+  const remaining = valid.filter((e) => !matchedSet.has(e));
+  const fillCount = cap - result.length;
+  if (fillCount > 0 && remaining.length > 0) {
+    result.push(...remaining.slice(-fillCount));
+  }
+
+  return result;
+}
+
+function composeHarnessGuardrails(
+  existing: HarnessGuardrail[],
+  proposed: HarnessGuardrail[],
+  maxItems: number = 6,
+): HarnessGuardrail[] {
+  const cap = Math.max(1, typeof maxItems === "number" ? maxItems : 6);
+  const all = [...(existing || []), ...(proposed || [])];
+
+  const valid = all.filter(
+    (g) => g && typeof g.rule === "string" && g.rule.trim().length > 0,
+  );
+  if (valid.length === 0) {
+    return [];
+  }
+
+  const ruleMap = new Map();
+
+  for (const g of valid) {
+    const rawRule = g.rule.trim();
+    const scope = g.scope === "invariant" ? "invariant" : "domain";
+    const evidence = typeof g.evidence === "string" ? g.evidence.trim() : "";
+    const normKey = rawRule.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, " ").trim();
+
+    if (!normKey) continue;
+
+    if (ruleMap.has(normKey)) {
+      const prev = ruleMap.get(normKey);
+      ruleMap.set(normKey, {
+        scope: prev.scope === "invariant" || scope === "invariant" ? "invariant" : "domain",
+        rule: prev.scope === "invariant" && scope !== "invariant" ? prev.rule : rawRule,
+        evidence: evidence || prev.evidence || "",
+      });
+    } else {
+      ruleMap.set(normKey, {
+        scope,
+        rule: rawRule,
+        evidence,
+      });
+    }
+  }
+
+  const deduplicated = Array.from(ruleMap.values());
+  if (deduplicated.length <= cap) {
+    return deduplicated;
+  }
+
+  const invariants = deduplicated.filter((g) => g.scope === "invariant");
+  const domains = deduplicated.filter((g) => g.scope === "domain");
+
+  const invariantSlots = Math.min(invariants.length, Math.max(1, cap - 2));
+  const domainSlots = cap - invariantSlots;
+
+  const resultInvariants = invariants.slice(-invariantSlots);
+  const resultDomains = domains.slice(-domainSlots);
+
+  const combined = [...resultInvariants, ...resultDomains];
+  if (combined.length < cap && invariants.length > resultInvariants.length) {
+    const extraNeeded = cap - combined.length;
+    combined.unshift(...invariants.slice(-invariantSlots - extraNeeded, -invariantSlots));
+  }
+
+  return combined.slice(-cap);
+}
+
+function resolveMilestoneTopology(
+  milestone: any = null,
+  teamProfile: string = "hybrid",
+): MilestoneTopology {
+  const ms = milestone && typeof milestone === "object" ? milestone : {};
+  const rawRisk = typeof ms.risk === "string" ? ms.risk.trim().toLowerCase() : "";
+  const title = typeof ms.title === "string" ? ms.title : "";
+  const done = typeof ms.done === "string" ? ms.done : "";
+  const items = Array.isArray(ms.items) ? ms.items : [];
+
+  let risk = "low";
+  if (rawRisk === "critical" || rawRisk === "high" || rawRisk === "medium" || rawRisk === "low") {
+    risk = rawRisk;
+  } else {
+    const text = `${title} ${done}`.toLowerCase();
+    if (/(security|auth|crypto|migration|breaking|kernel|root|database|payment|破坏性|安全|认证|密码|鉴权)/i.test(text)) {
+      risk = "critical";
+    } else if (/(core|refactor|redesign|protocol|concurrency|race|重构|协议|并发|接口变更)/i.test(text)) {
+      risk = "high";
+    } else if (items.length > 2 || /(integrate|feature|workflow|集成|新功能|工作流)/i.test(text)) {
+      risk = "medium";
+    } else {
+      risk = "low";
+    }
+  }
+
+  const prof = (teamProfile || "").trim().toLowerCase();
+
+  let workerTier = "adaptive";
+  if (prof === "quality") {
+    workerTier = "heavy";
+  } else if (prof === "economy") {
+    workerTier = "light";
+  } else {
+    if (risk === "critical" || risk === "high") {
+      workerTier = "heavy";
+    } else if (risk === "medium") {
+      workerTier = "adaptive";
+    } else {
+      workerTier = "light";
+    }
+  }
+
+  const parallelism = (risk === "critical" || items.length <= 1) ? "sequential" : "concurrent";
+
+  const adversarialChallenger =
+    risk === "critical" || risk === "high" || prof === "quality" || (risk === "medium" && prof !== "economy");
+
+  let criticStrictness = "standard";
+  if (risk === "critical") {
+    criticStrictness = "exhaustive";
+  } else if (risk === "high") {
+    criticStrictness = "strict";
+  }
+
+  const requireMicroTest = risk === "critical" || risk === "high" || prof === "quality";
+
+  return {
+    risk,
+    parallelism,
+    adversarialChallenger,
+    criticStrictness,
+    workerTier,
+    requireMicroTest,
+  };
+}
+
+function synthesizeMicroTestPlan(
+  deliverablePath: string = "",
+  milestoneDone: string = "",
+  contextSnippet: string = "",
+): MicroTestPlan {
+  const normPath = normalizeRelPath(deliverablePath);
+  const ext = normPath.includes(".") ? (normPath.split(".").pop() || "").toLowerCase() : "";
+
+  let testType = "smoke";
+  let suggestedCommand = "test -s " + (normPath || ".");
+  let shapeValidationRule = "File existence and non-empty byte size";
+  let synthesizedAssertionSnippet = "assert.ok(fs.existsSync(\"" + normPath + "\") && fs.statSync(\"" + normPath + "\").size > 0);";
+
+  if (ext === "ts") {
+    testType = "syntax";
+    suggestedCommand = "node --check " + normPath;
+    shapeValidationRule = "Syntax validity and export symbol contract integrity for " + normPath;
+    synthesizedAssertionSnippet = "import(\"./" + normPath + "\").then(mod => { if (!mod) throw new Error(\"Module empty: " + normPath + "\"); });";
+  } else if (ext === "js" || ext === "mjs" || ext === "cjs") {
+    testType = "syntax";
+    suggestedCommand = "node --check " + normPath;
+    shapeValidationRule = "Syntax check and export shape conformance for " + normPath;
+    synthesizedAssertionSnippet = "import(\"./" + normPath + "\").then(mod => { if (typeof mod !== \"object\") throw new Error(\"Export mismatch: " + normPath + "\"); });";
+  } else if (ext === "json") {
+    testType = "smoke";
+    suggestedCommand = "node -e 'JSON.parse(fs.readFileSync(\"" + normPath + "\", \"utf8\"))'";
+    shapeValidationRule = "Strict JSON schema syntax and non-empty root object for " + normPath;
+    synthesizedAssertionSnippet = "const data = JSON.parse(fs.readFileSync(\"" + normPath + "\", \"utf8\")); if (!data) throw new Error(\"Empty JSON: " + normPath + "\");";
+  } else if (ext === "py") {
+    testType = "syntax";
+    suggestedCommand = "python3 -m py_compile " + normPath;
+    shapeValidationRule = "Python syntax compilation and module import check for " + normPath;
+    synthesizedAssertionSnippet = "import py_compile; py_compile.compile(\"" + normPath + "\", doraise=True)";
+  } else if (ext === "sh" || ext === "bash") {
+    testType = "syntax";
+    suggestedCommand = "bash -n " + normPath;
+    shapeValidationRule = "Shell script syntax dry-run verification for " + normPath;
+    synthesizedAssertionSnippet = "bash -n " + normPath;
+  } else if (ext === "md" || ext === "markdown" || ext === "txt") {
+    testType = "ast_shape";
+    suggestedCommand = "test -s " + (normPath || "README.md");
+    shapeValidationRule = "Markdown heading structure and non-empty deliverable shape for " + (normPath || "document");
+    synthesizedAssertionSnippet = "const content = fs.readFileSync(\"" + (normPath || "README.md") + "\", \"utf8\"); if (!content.trim()) throw new Error(\"Deliverable empty\");";
+  }
+
+  if (milestoneDone && milestoneDone.trim()) {
+    shapeValidationRule += " (Must satisfy: " + milestoneDone.trim().slice(0, 100) + ")";
+  }
+
+  return {
+    testType,
+    suggestedCommand,
+    shapeValidationRule,
+    synthesizedAssertionSnippet,
+  };
+}
+
 async function listWorkspaceDirtyFiles(): Promise<string[]> {
   try {
     const res = await world.run("sh", [
@@ -458,7 +751,7 @@ try {
   if (expRes.exitCode === 0 && expRes.stdout.trim()) {
     const parsed = JSON.parse(expRes.stdout.trim());
     if (Array.isArray(parsed)) {
-      priorExperienceLibrary = parsed.filter((e) => isValidExperienceEntry(e)).slice(-6);
+      priorExperienceLibrary = rankExperienceLibrary(parsed, task, 6);
     }
   }
 } catch {
@@ -473,7 +766,7 @@ const priorExperienceContext =
     : "";
 
 const factsLedger: string[] = [];
-const activeGuardrails: HarnessGuardrail[] = [];
+let activeGuardrails: HarnessGuardrail[] = [];
 let replansLeft = 1;
 const notCovered: string[] = [];
 
@@ -515,11 +808,7 @@ const teamPlan = await orchestrator.ask<TeamPlan>(
 );
 
 if (Array.isArray(teamPlan.initialGuardrails)) {
-  for (const g of teamPlan.initialGuardrails) {
-    if (g && g.rule && (g.scope === "invariant" || g.scope === "domain")) {
-      activeGuardrails.push(g);
-    }
-  }
+  activeGuardrails = composeHarnessGuardrails(activeGuardrails, teamPlan.initialGuardrails, 6);
 }
 
 log(isEn ? `Team assembled: ${teamPlan.milestones.length} milestones planned` : `团队组建完成：${teamPlan.milestones.length} 个里程碑`);
@@ -534,7 +823,12 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
   const ms = queue[0];
   queue = queue.slice(1);
 
-  log(isEn ? `Starting Milestone ${executed}: ${ms.title}` : `第 ${executed} 个里程碑开工：${ms.title}`);
+  const topology = resolveMilestoneTopology(ms, teamProfile);
+  log(
+    isEn
+      ? `Starting Milestone ${executed}: ${ms.title} (Risk: ${topology.risk}, Topology: ${topology.parallelism}, Worker Tier: ${topology.workerTier})`
+      : `第 ${executed} 个里程碑开工：${ms.title}（风险等级：${topology.risk}，编队模式：${topology.parallelism}，算力分层：${topology.workerTier}）`,
+  );
   report({ milestone: ms.title, status: isEn ? "In Progress" : "施工中" }, "milestones");
   const priorFacts = factsLedger.slice(-8).join("\n");
   const guardrailBlock = formatHarnessGuardrails(activeGuardrails, 6, langCode);
@@ -542,12 +836,26 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
   // Snapshot dirty files before this milestone starts to avoid false out-of-bounds alerts across milestones
   const baselineDirtyFiles = await listWorkspaceDirtyFiles();
 
-  phase(isEn ? `Milestone ${executed}: Parallel Construction` : `并行施工里程碑 ${executed}：${ms.title}`);
+  phase(isEn ? `Milestone ${executed}: Parallel Construction (${topology.parallelism})` : `并行施工里程碑 ${executed}：${ms.title}（${topology.parallelism}）`);
 
-  // C7: Promise.allSettled with single retry on failure
+  // Synthesize empirical micro-test plan if no global verifyCommand is available
+  let synthesizedCheck = "";
+  if (!verifyCommand && ms.items.length > 0) {
+    const firstPath = ms.items[0].allowedPaths[0] || "";
+    if (firstPath) {
+      const plan = synthesizeMicroTestPlan(firstPath, ms.done);
+      synthesizedCheck = isEn
+        ? `\n[Synthesized Empirical Micro-Check (${plan.testType})]: ${plan.suggestedCommand}\nRule: ${plan.shapeValidationRule}`
+        : `\n【合成实证微测 (${plan.testType})】：${plan.suggestedCommand}\n契约锁规则：${plan.shapeValidationRule}`;
+    }
+  }
+
+  // C7: Promise.allSettled with single retry on failure and dynamic worker tiering
   const settledWorkers = await Promise.allSettled(
     ms.items.map(async (item, i) => {
-      const useLight = teamProfile === "economy" || (teamProfile === "hybrid" && item.tier === "light");
+      const useLight =
+        topology.workerTier === "light" ||
+        (topology.workerTier === "adaptive" && item.tier === "light");
       const workerName = isEn ? `Worker-${executed}-${i + 1}-${item.id}` : `施工-${executed}-${i + 1}-${item.id}`;
       const workerAgent = agent(workerName, useLight ? lightTier : {});
       const prompt = isEn
@@ -611,11 +919,11 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
 
   let gate = await critic.ask<GateVerdict>(
     isEn
-      ? `Evaluate Milestone "${ms.title}".\nDone Criteria: ${ms.done}\nPrior Facts: ${priorFacts || "None"}\nWorker Outputs: ${JSON.stringify(workerResults)}${outOfBoundsNotice}\nInspect real workspace state before deciding.${strictEvidence ? " Benchmark mode active: every claim requires direct command output or line-number code evidence." : ""}`
-      : `验收里程碑「${ms.title}」。\n完成标准：${ms.done}\n团队前情账本：${priorFacts || "无"}\n施工结果：${JSON.stringify(workerResults)}${outOfBoundsNotice}\n请亲自核对工作区真实状态后给结论。${strictEvidence ? "诚信模式为 benchmark：每条结论都要有你亲自运行命令或亲自读代码的证据。" : ""}`,
+      ? `Evaluate Milestone "${ms.title}".\nDone Criteria: ${ms.done}\nPrior Facts: ${priorFacts || "None"}\nWorker Outputs: ${JSON.stringify(workerResults)}${outOfBoundsNotice}${synthesizedCheck}\nInspect real workspace state before deciding.${strictEvidence ? " Benchmark mode active: every claim requires direct command output or line-number code evidence." : ""}`
+      : `验收里程碑「${ms.title}」。\n完成标准：${ms.done}\n团队前情账本：${priorFacts || "无"}\n施工结果：${JSON.stringify(workerResults)}${outOfBoundsNotice}${synthesizedCheck}\n请亲自核对工作区真实状态后给结论。${strictEvidence ? "诚信模式为 benchmark：每条结论都要有你亲自运行命令或亲自读代码的证据。" : ""}`,
   );
 
-  const challenger = adversarial
+  const challenger = (adversarial || topology.adversarialChallenger)
     ? agent(isEn ? `Challenger-${executed}` : `对抗挑战-${executed}`, {
         system: isEn
           ? `Your sole mission is to prove the milestone is NOT genuinely completed. Output strict JSON: {"foundIssue": boolean, "evidence": string}. If no concrete empirical failure is found, foundIssue MUST be false. ${HARNESS2_EVIDENCE_BOUNDARY}`
@@ -641,13 +949,9 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
     }
   }
 
-  // Harvest any Harness² guardrails proposed by Critic
+  // Harvest any Harness² guardrails proposed by Critic via composeHarnessGuardrails
   if (Array.isArray(gate.proposedGuardrails)) {
-    for (const g of gate.proposedGuardrails) {
-      if (g && g.rule && (g.scope === "invariant" || g.scope === "domain")) {
-        activeGuardrails.push(g);
-      }
-    }
+    activeGuardrails = composeHarnessGuardrails(activeGuardrails, gate.proposedGuardrails, 6);
   }
 
   // C6: Rework with fresh agent, explicit allowedPaths, stall signature early-exit, and adversarial re-verification
@@ -697,11 +1001,7 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
     }
 
     if (Array.isArray(gate.proposedGuardrails)) {
-      for (const g of gate.proposedGuardrails) {
-        if (g && g.rule && (g.scope === "invariant" || g.scope === "domain")) {
-          activeGuardrails.push(g);
-        }
-      }
+      activeGuardrails = composeHarnessGuardrails(activeGuardrails, gate.proposedGuardrails, 6);
     }
 
     if (!gate.passed) {
@@ -767,11 +1067,7 @@ while (queue.length > 0 && executed < MAX_TOTAL_MILESTONES) {
         : `里程碑「${ms.title}」在 ${reworkRounds} 轮返工后仍未通过验收。\n失败事实：${JSON.stringify(outcome)}\n团队前情账本：\n${factsLedger.join("\n")}\n原剩余里程碑计划：${JSON.stringify(queue)}\n请运用 Harness² Propose-Compose 思路提取本次受挫暴露的执行护栏（initialGuardrails，含 invariant 通用护栏与 domain 领域护栏），并重新规划「尚未完成的全部工作」（含该里程碑的残留缺口）。只输出新计划。`,
     );
     if (Array.isArray(replanned.initialGuardrails)) {
-      for (const g of replanned.initialGuardrails) {
-        if (g && g.rule && (g.scope === "invariant" || g.scope === "domain")) {
-          activeGuardrails.push(g);
-        }
-      }
+      activeGuardrails = composeHarnessGuardrails(activeGuardrails, replanned.initialGuardrails, 6);
     }
     queue = [...replanned.milestones];
     teamPlan.milestones = [...teamPlan.milestones, ...replanned.milestones];

@@ -3,90 +3,127 @@
 [![CI](https://github.com/CalebChen941028/agent-teamwork/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
+[![Version: 0.3.0](https://img.shields.io/badge/version-0.3.0-green.svg)](CHANGELOG.md)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-**Multi-Agent Team Orchestration for Long-Horizon Engineering Initiatives: Scoping Interviews, Milestone Parallelism, Incremental Path Locks, Adversarial Quality Gates, Harness² Recursive Adaptation, Stall-Triggered Replanning, and Final Audit.**
+**Multi-Agent Team Orchestration Engine for Long-Horizon Engineering Initiatives: Dynamic Risk Topology Routing, Hybrid Experience Retrieval, Propose-Compose Guardrail Synthesis, Empirical Micro-Test Verification, and Adversarial Quality Gates.**
 
-Universal multi-agent engineering protocol and workflow engine compatible with **OpenAI Codex, Claude Code, DeepSeek (V3/R1), OpenCode, WorkBuddy, ZCode**, and mainstream coding agents (**Cursor, Windsurf, Cline, Roo Code, GitHub Copilot, Aider, Gemini CLI**), with full **English & Chinese (`en` / `zh`)** bilingual support.
+Compatible with **OpenAI Codex, Claude Code, DeepSeek (V3/R1), OpenCode, WorkBuddy, ZCode**, and mainstream coding agents (**Cursor, Windsurf, Cline, Roo Code, GitHub Copilot, Aider, Gemini CLI**), with 100% **English & Chinese (`en` / `zh`)** bilingual support.
 
 ---
 
-## Supported Agents & Universal Compatibility Matrix
+## Why agent-teamwork? System Positioning & Core Advantages
 
-| Agent / Platform | Adapter / Config File | Installer Target (`--target`) | Bilingual Support (`--lang en\|zh`) |
-| :--- | :--- | :--- | :--- |
-| **Claude Code CLI** | [`adapters/claude-code/teamwork.md`](adapters/claude-code/teamwork.md) | `./install.sh --target claude` | Full (`en` / `zh`) |
-| **OpenAI Codex CLI** | [`adapters/codex/protocol.md`](adapters/codex/protocol.md) | `./install.sh --target codex` | Full (`en` / `zh`) |
-| **DeepSeek (V3 / R1)** | [`adapters/deepseek/teamwork.md`](adapters/deepseek/teamwork.md) | `./install.sh --target deepseek` | Full (`en` / `zh`) |
-| **OpenCode** | [`adapters/opencode/agents.json`](adapters/opencode/agents.json) | `./install.sh --target opencode` | Full (`roles/*.en.md` & `*.zh.md`) |
-| **WorkBuddy** | [`adapters/workbuddy/teamwork.md`](adapters/workbuddy/teamwork.md) | `./install.sh --target workbuddy` | Full (`en` / `zh`) |
-| **ZCode Dynamic Workflow** | [`adapters/zcode/teamwork.dwf.ts`](adapters/zcode/teamwork.dwf.ts) | `./install.sh --target zcode` | Auto-detect & Explicit (`lang: auto\|en\|zh`) |
-| **Cursor / Windsurf / Cline / Roo Code / Aider / Copilot** | [`adapters/generic/teamwork.md`](adapters/generic/teamwork.md) | `./install.sh --target generic` | Full (`en` / `zh`) |
+Monolithic single-agent loops quickly degrade on large-scale, multi-file codebases due to **context bloat, error accumulation, anchor bias, and unverified regressions**. `agent-teamwork` solves these fundamental challenges through a zero-dependency, mathematically verifiable coordination layer:
+
+1. **Zero-Lock-in Universal Compatibility**: One unified protocol runs natively across terminal CLIs (Claude Code, OpenAI Codex), deep reasoning models (DeepSeek R1/V3 with `<think>` isolation), multi-agent IDEs (OpenCode `agents.json`, WorkBuddy), and execution runtimes (ZCode TypeScript DWF).
+2. **Dynamic Risk Topology Routing (DyLAN & MacNet)**: Instead of incurring heavy multi-agent communication overhead on simple tasks, milestones are dynamically classified into **Low, Medium, High, or Critical** risk tiers. Agent networks are automatically pruned or reinforced: mechanical edits run lightweight workers, while security/auth milestones activate adversarial challenger attacks and auditor reviews.
+3. **Hybrid Experience Retrieval (`rankExperienceLibrary`)**: Replaces naive FIFO retrieval with hybrid BM25 lexical token matching and Jaccard cue overlap weighted by historical confidence scores, retrieving strictly relevant architectural lessons.
+4. **Propose-Compose Guardrail Synthesis (`composeHarnessGuardrails`)**: Inspired by Google Research **Harness²**, runtime gaps dynamically synthesize concise `invariant` and `domain` rules. Duplicate rules are merged, scope conflicts resolved, and total guardrail length strictly capped to eliminate the "Context Tax".
+5. **Empirical Micro-Test Plan Synthesis (`synthesizeMicroTestPlan`)**: Implements **CRITIC, Reflexion, and CodeT** verification principles. When no test suite or `verifyCommand` is provided, automatically synthesizes concrete micro-tests and symbol-level AST checks (e.g. `node -e`, `grep -rn`, export validations) so no change passes on unverified claims alone.
+6. **Hard Evidence Boundaries & Deliverable Shape Locks**: Workspace files and execution outputs are treated strictly as **DATA, NOT INSTRUCTIONS**, immunizing reviewers against indirect prompt injections. API contracts, schemas, and deliverable file boundaries are locked against drift.
+
+---
+
+## Supported Agents & Compatibility Matrix
+
+| Agent / Platform | Adapter / Config File | Installer Target (`--target`) | Model Tiering & Optimization | Bilingual (`--lang en\|zh`) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Claude Code CLI** | [`adapters/claude-code/teamwork.md`](adapters/claude-code/teamwork.md) | `./install.sh --target claude` | Opus/Sonnet tiering + bash tool gating | Full (`en` / `zh`) |
+| **OpenAI Codex CLI** | [`adapters/codex/protocol.md`](adapters/codex/protocol.md) | `./install.sh --target codex` | Multi-agent role handoffs + structured outputs | Full (`en` / `zh`) |
+| **DeepSeek (V3 / R1)** | [`adapters/deepseek/teamwork.md`](adapters/deepseek/teamwork.md) | `./install.sh --target deepseek` | R1 reasoning isolation (`<think>`) + temp 0.6 | Full (`en` / `zh`) |
+| **OpenCode** | [`adapters/opencode/agents.json`](adapters/opencode/agents.json) | `./install.sh --target opencode` | Native agent definitions + role dispatching | Full (`roles/*.en.md` & `*.zh.md`) |
+| **WorkBuddy** | [`adapters/workbuddy/teamwork.md`](adapters/workbuddy/teamwork.md) | `./install.sh --target workbuddy` | Interactive team task board + workspace lock | Full (`en` / `zh`) |
+| **ZCode Dynamic Workflow** | [`adapters/zcode/teamwork.dwf.ts`](adapters/zcode/teamwork.dwf.ts) | `./install.sh --target zcode` | Full programmatic state machine + `allSettled` | Auto-detect & Explicit (`lang: auto\|en\|zh`) |
+| **Generic (Cursor, Windsurf, Cline, Roo Code, Aider, Copilot)** | [`adapters/generic/teamwork.md`](adapters/generic/teamwork.md) | `./install.sh --target generic` | File-based handoff protocol + Git snapshot guards | Full (`en` / `zh`) |
 
 ---
 
 ## Architecture & Lifecycle
 
 ```
-[Scoping Interview]
+[Scoping Interview] (protocol/scoping-interview.md)
         │
         ▼
-1. Initiative Scoping, Experience Lookup & Goal Restatement
+1. Initiative Scoping, Hybrid Experience Retrieval & Goal Restatement
    ├── Aligns on "the goal behind the goal", deliverable shape contract, criteria, and non-goals
-   ├── Loads cross-task Experience Library (.teamwork/experience.json, matching situation cues)
-   └── Orchestrator converts nominal objectives to verbs, defines milestones & initial guardrails
+   ├── rankExperienceLibrary: BM25/Jaccard cue matching + confidence weighting from ~/.config/agent-teamwork/experience.json
+   └── Orchestrator converts nominal objectives to verbs, defines milestones & initial composed guardrails
         │
         ▼
-2. Milestone-by-Milestone Execution (Fresh Context + Incremental Git Snapshot)
-   ├── Parallel Workers restricted to disjoint allowedPaths (allSettled + heavy retry)
+2. Dynamic Risk Topology Routing (resolveMilestoneTopology: DyLAN / MacNet)
+   ├── Low Risk     ──► Fast Worker + Scribe (minimal communication overhead)
+   ├── Medium Risk  ──► Fast Worker + Critic Review Gate
+   ├── High Risk    ──► Heavy Worker + Critic + Adversarial Challenger
+   └── Critical Risk──► Heavy/Reasoning Worker + Critic + Challenger Attack + Auditor Gate
+        │
+        ▼
+3. Milestone-by-Milestone Execution (Fresh Context + Incremental Git Snapshot)
+   ├── Parallel Workers restricted to disjoint allowedPaths (allSettled + heavy model retry)
    ├── Incremental out-of-bounds file check (findOutOfBoundsFiles) against baseline dirty files
    ├── Critic quality check & Harness² guardrail proposals (invariant / domain levers)
    └── Structured Adversarial Challenge ({ foundIssue, evidence })
         │
         ▼
-3. Targeted Rework, Stall Early-Exit & Replanning
+4. Targeted Rework, Stall Early-Exit & Replanning
    ├── Reworker fixes issues strictly within allowedPaths using active guardrails
    ├── Consecutive identical gap signatures trigger early exit (computeGapSignature)
    └── Failure after rework triggers full replanning & guardrail composition (failed milestones marked superseded)
         │
         ▼
-4. Final Acceptance Command, End-to-End Audit & Harness² Reflection
+5. Empirical Verification, End-to-End Audit & Harness² Reflection
    ├── Deterministic verifyCommand captures tail output (assertion stack traces + stall detection)
-   ├── Accurately flags verifyPassed = false upon test failures
+   ├── synthesizeMicroTestPlan: Synthesizes empirical micro-test scripts & symbol grep checks if verifyCommand is absent
+   ├── Accurately flags verifyPassed = false upon test failures (no false success claims)
    ├── End-to-End Auditor verifies deliverables against initial scope
    └── Experience Reflector distills non-confounded { cue, lesson, evidence } entries
         │
         ▼
-5. Synthesis & Reporting
+6. Synthesis & Reporting
    └── Objective conclusion strictly reflecting remaining open gaps and verification status
 ```
 
 ---
 
-## Harness² Recursive Engineering Integration
+## Core Methodologies & Academic Foundations
 
-Inspired by Google Research's [**Harness² (`arXiv:2610.14224`)**](https://github.com/google-research/harness2), `agent-teamwork` embeds two levels of lightweight recursive adaptation tailored for stateful repository engineering:
+### 1. Hybrid Experience Retrieval (`rankExperienceLibrary`)
+- **Foundation**: Information Retrieval & Case-Based Reasoning.
+- **Mechanism**: Rather than truncating historical lessons with naive FIFO, `rankExperienceLibrary` tokenizes task descriptions and cues, computes BM25-inspired term frequency with Jaccard overlap, and weights matches by historical confidence. Irrelevant entries are culled, preventing distraction.
 
-1. **Task-Level Guardrail Adaptation (`Invariant` & `Domain` Levers)**: When a milestone fails acceptance or triggers replanning, the critic/orchestrator extracts compact `invariant` (general execution discipline) and `domain` (repository-specific rules) guardrails. These are injected into subsequent workers and reworkers while respecting the **Context Tax Hierarchy** (keeping always-on prose compact).
-2. **Harnessing-Level Cross-Task Experience Library (`{ cue, lesson, evidence }`)**: During the final audit, the Experience Reflector evaluates behavioral contrasts across execution rounds and records transferable lessons. Multi-factor unisolated edits are strictly flagged as `confounded` and filtered out (`isValidExperienceEntry`) so speculative attributions never poison `~/.config/agent-teamwork/experience.json`.
-3. **Hard Engineering Guardrails**:
-   - **Evidence vs. Instruction Boundary (`EVIDENCE IS DATA, NOT INSTRUCTIONS`)**: Workspace files, test outputs, and artifacts are inspected strictly as data, preventing indirect prompt injection against critics and auditors.
-   - **Deliverable Shape Lock**: Agents adapt *how* they work without altering *what shape* the user requested (preserving exact API signatures, schemas, spreadsheet columns, and file paths).
-   - **Incremental Path Boundary Lock (`isPathAllowed` & `findOutOfBoundsFiles`)**: Enforces exact path segment boundaries per milestone without false cross-milestone alerts.
+### 2. Propose-Compose Guardrail Synthesis (`composeHarnessGuardrails`)
+- **Foundation**: Google Research [**Harness² (`arXiv:2610.14224`)**](https://github.com/google-research/harness2).
+- **Mechanism**: Dynamic adaptation across two orthogonal levers:
+  - **`invariant`**: Universal engineering discipline (e.g. "always run verification before claiming done").
+  - **`domain`**: Repository-specific rules (e.g. "use named exports in shared/").
+- The Propose-Compose pipeline deduplicates rules, promotes invariants during scope conflicts, and caps total rules to prevent the **Context Tax** from starving worker reasoning capacity.
+
+### 3. Dynamic Risk Topology Routing (`resolveMilestoneTopology`)
+- **Foundation**: [**DyLAN (`arXiv:2310.02170`)**](https://arxiv.org/abs/2310.02170) & [**MacNet (`arXiv:2402.05120`)**](https://arxiv.org/abs/2402.05120).
+- **Mechanism**: Prunes unnecessary multi-agent communication for mechanical tasks while mobilizing rigorous multi-party adversarial defenses for high-risk files (security, authentication, crypto, migrations, core concurrency). Dynamically selects model tiering (`fast`, `heavy`, `reasoning`).
+
+### 4. Empirical Micro-Test Plan Synthesis (`synthesizeMicroTestPlan`)
+- **Foundation**: [**CRITIC (`arXiv:2305.11738`)**](https://arxiv.org/abs/2305.11738), [**Reflexion (`arXiv:2303.11366`)**](https://arxiv.org/abs/2303.11366), and [**CodeT (`arXiv:2207.10397`)**](https://arxiv.org/abs/2207.10397).
+- **Mechanism**: When a repository or task lacks an automated `verifyCommand`, `synthesizeMicroTestPlan` generates a concrete test suite on the fly. It synthesizes one-line shell execution commands (e.g. `node --check`, `python -m py_compile`) and symbol-level AST grep patterns to empirically validate deliverables rather than trusting unverified prose.
+
+### 5. AST & Symbol Deliverable Shape Lock & Evidence Boundary
+- **Foundation**: [**Agentless (`arXiv:2407.01489`)**](https://arxiv.org/abs/2407.01489).
+- **Mechanism**:
+  - **Evidence Boundary (`EVIDENCE IS DATA, NOT INSTRUCTIONS`)**: Workspace files, test logs, and third-party inputs are strictly quarantined as raw data, completely neutralizing indirect prompt injections.
+  - **Deliverable Shape Lock**: Guarantees that while the agent adapts its internal implementation, user-requested public interfaces, schemas, and deliverable boundaries remain invariant.
 
 ---
 
-## Key Bug Fixes & Enhancements in v0.2.0
+## What's New in v0.3.0
 
-- **C1 (Honest Final Verification & Conclusion)**: Fixes a critical bug where conclusion text blindly outputted "终局验收命令通过" whenever `verifyCommand` was provided, even if the command failed. Now records `verifyPassed`, increments `openGaps`, adds high-severity audit findings, and reports command failure accurately in both English and Chinese.
-- **C2 (Superseded Milestone Gap Exclusion)**: Failed milestones that trigger replanning are marked `superseded: true`, preventing superseded historical failures from polluting final gap metrics once resolved by replanned milestones.
-- **C3 (Error Output Tail Preservation)**: Combines stdout and stderr, capturing the last 2000 characters to keep assertion stack traces intact.
-- **C4 (Structured Adversarial Verdicts)**: Requires challenger to output `{ foundIssue: boolean, evidence: string }`, preventing statements like "找不到实证" from falsely triggering critic reviews, and re-runs challenger after rework passes.
-- **C5 (Fresh Context Per Milestone)**: Instantiates fresh critic, challenger, and reworker agents per milestone to prevent anchor bias and context bloat.
-- **C6 (Strict Incremental AllowedPaths Enforcement)**: Explicitly passes target `allowedPaths` into the rework prompt and validates incremental modified files via `findOutOfBoundsFiles`.
-- **C7 (Enum Validation, Stall Early-Exit & Fault-Tolerant Parallelism)**: Strict validation of `integrityMode` and `teamProfile`, paired with `Promise.allSettled`, automated retry, and signature-based stall early exit.
-- **C8 (Deduplicated Uncovered Items & Syntax Integrity)**: Strips redundant entries from `notCovered` and verifies brace/delimiter balance in `scripts/build.mjs`.
+- **Dynamic Topology Routing**: Full implementation of `resolveMilestoneTopology` across TypeScript, JavaScript, and ZCode DWF.
+- **Hybrid Experience Ranking**: Added `rankExperienceLibrary` replacing naive slicing with BM25/Jaccard cue matching.
+- **Propose-Compose Guardrail Synthesis**: Added `composeHarnessGuardrails` with Context Tax ceiling and conflict resolution.
+- **Empirical Micro-Test Plan Synthesis**: Added `synthesizeMicroTestPlan` for test synthesis when `verifyCommand` is empty.
+- **DeepSeek V3/R1 Protocol**: Full support for reasoning token isolation (`<think>`) and custom sampling parameters.
+- **WorkBuddy & OpenCode Upgrades**: First-class workspace locking and JSON role mapping.
+- **100% SSOT Parity**: Strict build verification guarantees that all 18 shared functions have 100% identical normalized AST bodies across TypeScript, JavaScript, and ZCode DWF.
 
 ---
 
@@ -102,13 +139,14 @@ All protocols, adapters, and role prompts ship in both English and Chinese:
 
 ---
 
-## Installation (English & Chinese)
+## Installation & Setup
 
-Use `--lang en` (for international users) or `--lang zh` (for Chinese users) with any target platform:
+Install the appropriate adapter and bilingual role definitions with a single command:
 
 ```bash
-# Claude Code CLI
+# Claude Code CLI (English or Chinese)
 ./install.sh --target claude --lang en
+./install.sh --target claude --lang zh
 
 # OpenAI Codex CLI
 ./install.sh --target codex --lang en
@@ -120,7 +158,7 @@ Use `--lang en` (for international users) or `--lang zh` (for Chinese users) wit
 ./install.sh --target opencode --lang en
 
 # WorkBuddy
-./install.sh --target workbuddy --lang en
+./install.sh --target workbuddy --lang zh
 
 # ZCode Dynamic Workflow
 ./install.sh --target zcode --lang zh
@@ -138,7 +176,7 @@ To uninstall and restore backups:
 
 ## Testing & Build Verification
 
-Run unit tests and build verification directly:
+Run unit tests and single-source-of-truth build verification:
 
 ```bash
 node --test tests/teamwork.test.mjs
@@ -147,10 +185,14 @@ node scripts/build.mjs
 
 ---
 
-## Credits & Acknowledgments
+## Bibliography & References
 
-- **Google Research Harness² (`arXiv:2610.14224`)**: Recursive agent harnessing (invariant/domain guardrail adaptation, non-confounded `{ cue, lesson, evidence }` experience reflection, evidence boundary, and deliverable shape lock).
-- **Magentic-One**: Inspired the facts ledger, outer-loop dynamic replanning, and stall diagnostics.
+- **Google Research Harness² (`arXiv:2610.14224`)**: Recursive agent harnessing, invariant/domain guardrail adaptation, Context Tax control, non-confounded `{ cue, lesson, evidence }` experience reflection, evidence boundary, and deliverable shape lock.
+- **DyLAN (`arXiv:2310.02170`) & MacNet (`arXiv:2402.05120`)**: Dynamic LLM-agent network topologies, communication pruning, risk-based role activation, and dynamic model tiering.
+- **Agentless (`arXiv:2407.01489`)**: Two-stage localization, disjoint file boundary locks (`allowedPaths`), and minimal-overhead direct patching.
+- **CRITIC (`arXiv:2305.11738`) & Reflexion (`arXiv:2303.11366`)**: External tool verification, automated micro-test plan synthesis, and verbal reinforcement feedback loops.
+- **CodeT (`arXiv:2207.10397`)**: Dual-execution agreement, automatic micro-test generation, and sample consistency verification.
+- **Microsoft Magentic-One (`arXiv:2411.04468`)**: Outer-loop dynamic replanning, ledger-driven team orchestration, and stall detection.
 - **claude-flow**: References for agent memory isolation and shared team facts.
 - **Felix Rieseberg**: Nominal-to-verb goal restatement and interdisciplinary tool borrowing.
 

@@ -4,6 +4,10 @@
   "harness2_features": {
     "task_level_guardrails": ["invariant", "domain"],
     "cross_task_experience_library": "~/.config/agent-teamwork/experience.json",
+    "hybrid_experience_retrieval": true,
+    "dynamic_topology_routing": true,
+    "propose_compose_guardrails": true,
+    "micro_test_plan_synthesis": true,
     "evidence_boundary_enforced": true,
     "deliverable_shape_lock": true
   },

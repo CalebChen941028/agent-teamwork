@@ -94,3 +94,42 @@ export function resolveModelConfiguration(
   requestedName: string,
   localConfig?: any,
 ): { modelId: string | null; tier: "light" | "heavy" | "default" };
+
+export interface MilestoneTopology {
+  risk: "low" | "medium" | "high" | "critical";
+  parallelism: "concurrent" | "sequential";
+  adversarialChallenger: boolean;
+  criticStrictness: "standard" | "strict" | "exhaustive";
+  workerTier: "light" | "heavy" | "adaptive";
+  requireMicroTest: boolean;
+}
+
+export interface MicroTestPlan {
+  testType: "unit" | "smoke" | "syntax" | "ast_shape";
+  suggestedCommand: string;
+  shapeValidationRule: string;
+  synthesizedAssertionSnippet: string;
+}
+
+export function rankExperienceLibrary(
+  library: ExperienceEntry[],
+  queryContext?: string,
+  maxItems?: number,
+): ExperienceEntry[];
+
+export function composeHarnessGuardrails(
+  existing: HarnessGuardrail[],
+  proposed: HarnessGuardrail[],
+  maxItems?: number,
+): HarnessGuardrail[];
+
+export function resolveMilestoneTopology(
+  milestone?: any,
+  teamProfile?: string,
+): MilestoneTopology;
+
+export function synthesizeMicroTestPlan(
+  deliverablePath?: string,
+  milestoneDone?: string,
+  contextSnippet?: string,
+): MicroTestPlan;

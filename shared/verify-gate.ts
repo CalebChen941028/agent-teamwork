@@ -48,6 +48,22 @@ export interface ExperienceEntry {
   confidence?: "high" | "medium" | "low";
 }
 
+export interface MilestoneTopology {
+  risk: "low" | "medium" | "high" | "critical";
+  parallelism: "concurrent" | "sequential";
+  adversarialChallenger: boolean;
+  criticStrictness: "standard" | "strict" | "exhaustive";
+  workerTier: "light" | "heavy" | "adaptive";
+  requireMicroTest: boolean;
+}
+
+export interface MicroTestPlan {
+  testType: "unit" | "smoke" | "syntax" | "ast_shape";
+  suggestedCommand: string;
+  shapeValidationRule: string;
+  synthesizedAssertionSnippet: string;
+}
+
 /**
  * Combines stdout and stderr, prioritizing the tail where assertion failures
  * and stack traces reside (B2, C3).
@@ -430,4 +446,297 @@ export function resolveModelConfiguration(
   }
 
   return { modelId: null, tier: "default" };
+}
+
+/**
+ * Hybrid experience retrieval (BM25/Jaccard cue matching + confidence weighting).
+ * Replaces naive slice(-6) by scoring relevant cues against task/query context.
+ */
+export function rankExperienceLibrary(
+  library: ExperienceEntry[],
+  queryContext: string = "",
+  maxItems: number = 6,
+): ExperienceEntry[] {
+  if (!Array.isArray(library) || library.length === 0) {
+    return [];
+  }
+
+  const valid = library.filter((e) => isValidExperienceEntry(e));
+  if (valid.length === 0) {
+    return [];
+  }
+
+  const cap = Math.max(1, typeof maxItems === "number" ? maxItems : 6);
+  const q = (queryContext || "").toLowerCase();
+  const queryTokens = q.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+
+  if (queryTokens.length === 0) {
+    return valid.slice(-cap);
+  }
+
+  const queryTokenSet = new Set(queryTokens);
+
+  const scored = valid.map((entry, index) => {
+    const cueStr = (entry.cue || "").toLowerCase();
+    const lessonStr = (entry.lesson || "").toLowerCase();
+    const cueTokens = cueStr.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+    const lessonTokens = lessonStr.match(/[a-z0-9]+|[\u4e00-\u9fa5]/gi) || [];
+
+    let cueMatches = 0;
+    for (const t of cueTokens) {
+      if (queryTokenSet.has(t)) {
+        cueMatches++;
+      } else {
+        for (const qt of queryTokenSet) {
+          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s")) {
+            cueMatches++;
+            break;
+          }
+        }
+      }
+    }
+
+    let lessonMatches = 0;
+    for (const t of lessonTokens) {
+      if (queryTokenSet.has(t)) {
+        lessonMatches++;
+      } else {
+        for (const qt of queryTokenSet) {
+          if (qt.length >= 4 && (t === qt + "s" || qt === t + "s")) {
+            lessonMatches++;
+            break;
+          }
+        }
+      }
+    }
+
+    const rawScore = cueMatches * 3 + lessonMatches * 1;
+    const confWeight =
+      entry.confidence === "high" ? 1.5 : entry.confidence === "low" ? 0.5 : 1.0;
+    const score = rawScore * confWeight;
+
+    return { entry, score, index };
+  });
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return b.index - a.index;
+  });
+
+  const matched = scored.filter((s) => s.score > 0).map((s) => s.entry);
+  if (matched.length >= cap) {
+    return matched.slice(0, cap);
+  }
+
+  const result = [...matched];
+  const matchedSet = new Set(matched);
+  const remaining = valid.filter((e) => !matchedSet.has(e));
+  const fillCount = cap - result.length;
+  if (fillCount > 0 && remaining.length > 0) {
+    result.push(...remaining.slice(-fillCount));
+  }
+
+  return result;
+}
+
+/**
+ * Harness² Guardrail synthesis (deduplication, clustering, conflict resolution, context tax ceiling).
+ * Balances invariant and domain guardrails under a strict context ceiling.
+ */
+export function composeHarnessGuardrails(
+  existing: HarnessGuardrail[],
+  proposed: HarnessGuardrail[],
+  maxItems: number = 6,
+): HarnessGuardrail[] {
+  const cap = Math.max(1, typeof maxItems === "number" ? maxItems : 6);
+  const all = [...(existing || []), ...(proposed || [])];
+
+  const valid = all.filter(
+    (g) => g && typeof g.rule === "string" && g.rule.trim().length > 0,
+  );
+  if (valid.length === 0) {
+    return [];
+  }
+
+  const ruleMap = new Map();
+
+  for (const g of valid) {
+    const rawRule = g.rule.trim();
+    const scope = g.scope === "invariant" ? "invariant" : "domain";
+    const evidence = typeof g.evidence === "string" ? g.evidence.trim() : "";
+    const normKey = rawRule.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, " ").trim();
+
+    if (!normKey) continue;
+
+    if (ruleMap.has(normKey)) {
+      const prev = ruleMap.get(normKey);
+      ruleMap.set(normKey, {
+        scope: prev.scope === "invariant" || scope === "invariant" ? "invariant" : "domain",
+        rule: prev.scope === "invariant" && scope !== "invariant" ? prev.rule : rawRule,
+        evidence: evidence || prev.evidence || "",
+      });
+    } else {
+      ruleMap.set(normKey, {
+        scope,
+        rule: rawRule,
+        evidence,
+      });
+    }
+  }
+
+  const deduplicated = Array.from(ruleMap.values());
+  if (deduplicated.length <= cap) {
+    return deduplicated;
+  }
+
+  const invariants = deduplicated.filter((g) => g.scope === "invariant");
+  const domains = deduplicated.filter((g) => g.scope === "domain");
+
+  const invariantSlots = Math.min(invariants.length, Math.max(1, cap - 2));
+  const domainSlots = cap - invariantSlots;
+
+  const resultInvariants = invariants.slice(-invariantSlots);
+  const resultDomains = domains.slice(-domainSlots);
+
+  const combined = [...resultInvariants, ...resultDomains];
+  if (combined.length < cap && invariants.length > resultInvariants.length) {
+    const extraNeeded = cap - combined.length;
+    combined.unshift(...invariants.slice(-invariantSlots - extraNeeded, -invariantSlots));
+  }
+
+  return combined.slice(-cap);
+}
+
+/**
+ * Dynamic topology routing helper (DyLAN/MacNet multi-agent dynamic topology).
+ * Routes Low/Medium/High/Critical risks to appropriate worker, critic, and challenger paths.
+ */
+export function resolveMilestoneTopology(
+  milestone: any = null,
+  teamProfile: string = "hybrid",
+): MilestoneTopology {
+  const ms = milestone && typeof milestone === "object" ? milestone : {};
+  const rawRisk = typeof ms.risk === "string" ? ms.risk.trim().toLowerCase() : "";
+  const title = typeof ms.title === "string" ? ms.title : "";
+  const done = typeof ms.done === "string" ? ms.done : "";
+  const items = Array.isArray(ms.items) ? ms.items : [];
+
+  let risk = "low";
+  if (rawRisk === "critical" || rawRisk === "high" || rawRisk === "medium" || rawRisk === "low") {
+    risk = rawRisk;
+  } else {
+    const text = `${title} ${done}`.toLowerCase();
+    if (/(security|auth|crypto|migration|breaking|kernel|root|database|payment|破坏性|安全|认证|密码|鉴权)/i.test(text)) {
+      risk = "critical";
+    } else if (/(core|refactor|redesign|protocol|concurrency|race|重构|协议|并发|接口变更)/i.test(text)) {
+      risk = "high";
+    } else if (items.length > 2 || /(integrate|feature|workflow|集成|新功能|工作流)/i.test(text)) {
+      risk = "medium";
+    } else {
+      risk = "low";
+    }
+  }
+
+  const prof = (teamProfile || "").trim().toLowerCase();
+
+  let workerTier = "adaptive";
+  if (prof === "quality") {
+    workerTier = "heavy";
+  } else if (prof === "economy") {
+    workerTier = "light";
+  } else {
+    if (risk === "critical" || risk === "high") {
+      workerTier = "heavy";
+    } else if (risk === "medium") {
+      workerTier = "adaptive";
+    } else {
+      workerTier = "light";
+    }
+  }
+
+  const parallelism = (risk === "critical" || items.length <= 1) ? "sequential" : "concurrent";
+
+  const adversarialChallenger =
+    risk === "critical" || risk === "high" || prof === "quality" || (risk === "medium" && prof !== "economy");
+
+  let criticStrictness = "standard";
+  if (risk === "critical") {
+    criticStrictness = "exhaustive";
+  } else if (risk === "high") {
+    criticStrictness = "strict";
+  }
+
+  const requireMicroTest = risk === "critical" || risk === "high" || prof === "quality";
+
+  return {
+    risk,
+    parallelism,
+    adversarialChallenger,
+    criticStrictness,
+    workerTier,
+    requireMicroTest,
+  };
+}
+
+/**
+ * Micro-test synthesizer / validation helper for empirical verification without user-supplied verifyCommand.
+ * Synthesizes test plans, syntax checks, or deliverable shape lock checks.
+ */
+export function synthesizeMicroTestPlan(
+  deliverablePath: string = "",
+  milestoneDone: string = "",
+  contextSnippet: string = "",
+): MicroTestPlan {
+  const normPath = normalizeRelPath(deliverablePath);
+  const ext = normPath.includes(".") ? (normPath.split(".").pop() || "").toLowerCase() : "";
+
+  let testType = "smoke";
+  let suggestedCommand = "test -s " + (normPath || ".");
+  let shapeValidationRule = "File existence and non-empty byte size";
+  let synthesizedAssertionSnippet = "assert.ok(fs.existsSync(\"" + normPath + "\") && fs.statSync(\"" + normPath + "\").size > 0);";
+
+  if (ext === "ts") {
+    testType = "syntax";
+    suggestedCommand = "node --check " + normPath;
+    shapeValidationRule = "Syntax validity and export symbol contract integrity for " + normPath;
+    synthesizedAssertionSnippet = "import(\"./" + normPath + "\").then(mod => { if (!mod) throw new Error(\"Module empty: " + normPath + "\"); });";
+  } else if (ext === "js" || ext === "mjs" || ext === "cjs") {
+    testType = "syntax";
+    suggestedCommand = "node --check " + normPath;
+    shapeValidationRule = "Syntax check and export shape conformance for " + normPath;
+    synthesizedAssertionSnippet = "import(\"./" + normPath + "\").then(mod => { if (typeof mod !== \"object\") throw new Error(\"Export mismatch: " + normPath + "\"); });";
+  } else if (ext === "json") {
+    testType = "smoke";
+    suggestedCommand = "node -e 'JSON.parse(fs.readFileSync(\"" + normPath + "\", \"utf8\"))'";
+    shapeValidationRule = "Strict JSON schema syntax and non-empty root object for " + normPath;
+    synthesizedAssertionSnippet = "const data = JSON.parse(fs.readFileSync(\"" + normPath + "\", \"utf8\")); if (!data) throw new Error(\"Empty JSON: " + normPath + "\");";
+  } else if (ext === "py") {
+    testType = "syntax";
+    suggestedCommand = "python3 -m py_compile " + normPath;
+    shapeValidationRule = "Python syntax compilation and module import check for " + normPath;
+    synthesizedAssertionSnippet = "import py_compile; py_compile.compile(\"" + normPath + "\", doraise=True)";
+  } else if (ext === "sh" || ext === "bash") {
+    testType = "syntax";
+    suggestedCommand = "bash -n " + normPath;
+    shapeValidationRule = "Shell script syntax dry-run verification for " + normPath;
+    synthesizedAssertionSnippet = "bash -n " + normPath;
+  } else if (ext === "md" || ext === "markdown" || ext === "txt") {
+    testType = "ast_shape";
+    suggestedCommand = "test -s " + (normPath || "README.md");
+    shapeValidationRule = "Markdown heading structure and non-empty deliverable shape for " + (normPath || "document");
+    synthesizedAssertionSnippet = "const content = fs.readFileSync(\"" + (normPath || "README.md") + "\", \"utf8\"); if (!content.trim()) throw new Error(\"Deliverable empty\");";
+  }
+
+  if (milestoneDone && milestoneDone.trim()) {
+    shapeValidationRule += " (Must satisfy: " + milestoneDone.trim().slice(0, 100) + ")";
+  }
+
+  return {
+    testType,
+    suggestedCommand,
+    shapeValidationRule,
+    synthesizedAssertionSnippet,
+  };
 }

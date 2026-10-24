@@ -109,6 +109,10 @@ const requiredExports = [
   "calculateTeamworkOpenGaps",
   "formatTeamworkConclusion",
   "resolveModelConfiguration",
+  "rankExperienceLibrary",
+  "composeHarnessGuardrails",
+  "resolveMilestoneTopology",
+  "synthesizeMicroTestPlan",
 ];
 
 function extractNormalizedFunction(source, fnName) {
@@ -196,7 +200,7 @@ function extractNormalizedFunction(source, fnName) {
   return rawBody
     .replace(/\/\/[^\n]*/g, "")
     .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/:\s*(?:string|number|boolean|any|FindingLike|MilestoneOutcomeLike|MilestoneOutcome|ChallengeLike|ChallengeResult|HarnessGuardrail|ExperienceEntry)(?:\[\])?/g, "")
+    .replace(/:\s*(?:string|number|boolean|any|FindingLike|MilestoneOutcomeLike|MilestoneOutcome|ChallengeLike|ChallengeResult|HarnessGuardrail|ExperienceEntry|MilestoneTopology|MicroTestPlan)(?:\[\])?/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
