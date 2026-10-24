@@ -78,6 +78,8 @@ const requiredFiles = [
   "roles/scribe.en.md",
   "docs/BENCHMARK_REPORT.md",
   "docs/BENCHMARK_REPORT.zh-CN.md",
+  "BENCHMARKS.md",
+  "BENCHMARKS.zh-CN.md",
 ];
 
 for (const rel of requiredFiles) {

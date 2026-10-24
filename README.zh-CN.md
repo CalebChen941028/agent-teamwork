@@ -42,7 +42,7 @@
 
 ## 实测效果对比与基准评测报告 (Empirical Benchmark & Case Studies)
 
-> **完整双语实测报告**：详见 [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含 50 项真实工程任务的完整遥测轨迹、代码 Diff 与架构状态机比对图。
+> **完整双语实测报告**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含 50 项真实工程任务的完整遥测轨迹、组件消融实验、代码 Diff 与架构状态机比对图。
 
 ### 核心实测指标全景对比看板 (Scorecard)
 

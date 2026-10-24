@@ -66,6 +66,7 @@ description: >-
 - **严格增量路径隔离 (`allowedPaths`)**：各工作项分配互不重叠的文件路径；里程碑前后通过快照做增量 Git 越界校验，并将越界告警直接送入质检上下文。
 - **停滞签名早停与重规划 (Stall Early-Exit & Replanning)**：连续两轮返工缺口签名不变时立即早停；返工未过时将原记录标记为 `superseded: true`，触发全局重规划与护栏升级。
 - **终局统一命令验收**：统一运行 `verifyCommand`（保留末尾 2000 字符堆栈）；失败时准确记录 `verifyPassed = false` 并计入未解决缺口。
+- **实测效果对比与基准报告 (Empirical Benchmark)**：详见 `docs/BENCHMARK_REPORT.zh-CN.md` 与 `docs/BENCHMARK_REPORT.md`（或根目录快捷入口 `BENCHMARKS.md` 与 `BENCHMARKS.zh-CN.md`），基于 50 项真实工程任务实测、消融实验与 5 大典型场景（越界拦截、防冒功虚假胜利、Token 动态剪枝、死循环早停、经验复用）。
 
 ## English Guide
 
@@ -89,6 +90,9 @@ Before kicking off multi-agent execution, align with the user using `protocol/sc
 
 ### Supported Platforms
 Works seamlessly across **Claude Code (`adapters/claude-code/teamwork.md`), OpenAI Codex (`adapters/codex/protocol.md`), DeepSeek V3/R1 (`adapters/deepseek/teamwork.md`), OpenCode (`adapters/opencode/agents.json`), WorkBuddy (`adapters/workbuddy/teamwork.md`), ZCode (`adapters/zcode/teamwork.dwf.ts`), and Generic Agents (`adapters/generic/teamwork.md`)**.
+
+### Empirical Benchmark & Case Studies
+See [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) and [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (or root portal [`BENCHMARKS.md`](BENCHMARKS.md)) for 50-task empirical evaluations, component ablation study, and 5 grounded case studies (boundary lock, honest failure tail capture, DyLAN token pruning, stall recovery, and Harness² experience recall).
 
 ## Credits & Academic References
 

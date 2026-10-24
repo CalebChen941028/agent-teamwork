@@ -610,10 +610,10 @@ export function composeHarnessGuardrails(
   const domains = deduplicated.filter((g) => g.scope === "domain");
 
   const invariantSlots = Math.min(invariants.length, Math.max(1, cap - 2));
-  const domainSlots = cap - invariantSlots;
+  const domainSlots = Math.max(0, cap - invariantSlots);
 
-  const resultInvariants = invariants.slice(-invariantSlots);
-  const resultDomains = domains.slice(-domainSlots);
+  const resultInvariants = invariantSlots > 0 ? invariants.slice(-invariantSlots) : [];
+  const resultDomains = domainSlots > 0 ? domains.slice(-domainSlots) : [];
 
   const combined = [...resultInvariants, ...resultDomains];
   if (combined.length < cap && invariants.length > resultInvariants.length) {

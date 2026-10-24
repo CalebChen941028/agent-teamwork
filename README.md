@@ -42,7 +42,7 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## Empirical Benchmark & Real-World Case Studies
 
-> **Full Bilingual Benchmark Report**: See [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete telemetry traces, before-and-after code diffs, and benchmark logs across 50 real-world engineering tasks.
+> **Full Bilingual Benchmark Report**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete telemetry traces, before-and-after code diffs, component ablation matrices, and benchmark logs across 50 real-world engineering tasks.
 
 ### Benchmark Scorecard: Single-Agent vs Unguided Swarm vs agent-teamwork v0.3.0
 
