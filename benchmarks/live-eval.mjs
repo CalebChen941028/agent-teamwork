@@ -1577,8 +1577,8 @@ export function renderReport(report, log = console.log) {
 function printUsage(stream = console.log) {
   stream("Usage: node benchmarks/live-eval.mjs [options]");
   stream("");
-  stream("Live head-to-head eval: mimo-v2.6-flash Solo (baseline) vs mimo-v2.6-flash + agent-teamwork");
-  stream("(teamwork), running the 10 canonical SWE-bench tasks in isolated git sandboxes under os.tmpdir().");
+  stream("Live head-to-head eval: Solo (baseline) vs agent-teamwork (teamwork),");
+  stream("running the 15 canonical SWE-bench tasks in isolated git sandboxes under os.tmpdir().");
   stream("");
   stream("Options:");
   stream("  --mode <ab|baseline|teamwork>  Track(s) to run (default: ab — both plus comparison)");
@@ -1591,7 +1591,7 @@ function printUsage(stream = console.log) {
   stream("  --max-turns <n>                Hard per-track turn budget (default: 6, max 50)");
   stream("  --max-tokens <n>               Per-request completion budget, reasoning included");
   stream("                                 (default: 16384 — reasoning models need headroom)");
-  stream("  --timeout-ms <n>               Per-request HTTP timeout (default: 180000, max 900000)");
+  stream("  --timeout-ms <n>               Per-request HTTP timeout (default: 420000, max 900000)");
   stream("  --api-key <key>                API key (else OPENCODE_API_KEY / ZEN_API_KEY /");
   stream("                                 ZHIPUAI_API_KEY, else models.local.json `api_key`)");
   stream("  --check                        Auth precheck + tiny probe call, then exit");
