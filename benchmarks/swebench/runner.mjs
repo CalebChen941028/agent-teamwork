@@ -114,6 +114,10 @@ export function extractFileBlocks(text) {
   return blocks;
 }
 
+export function normalizeForMatching(text) {
+  return String(text || "").replace(/\r\n/g, "\n").split("\n").map((line) => line.trimEnd()).join("\n");
+}
+
 export function applyFileWrites(repoDir, files) {
   const written = [];
   const escaped = [];
@@ -145,14 +149,23 @@ export function applyFileWrites(repoDir, files) {
         if (original.includes(target)) {
           original = original.replace(target, replacement);
         } else {
-          // Flexible whitespace matching fallback (normalize CRLF and trailing spaces per line)
-          const normTarget = target.trim().replace(/\r\n/g, "\n");
-          const normOriginal = original.replace(/\r\n/g, "\n");
+          // Flexible whitespace matching fallback (normalize CRLF and strip trailing whitespace per line)
+          const normOriginal = normalizeForMatching(original);
+          const normTarget = normalizeForMatching(target);
+          const normReplacement = replacement.replace(/\r\n/g, "\n");
+
           if (normOriginal.includes(normTarget)) {
-            original = normOriginal.replace(normTarget, replacement.replace(/\r\n/g, "\n"));
+            original = normOriginal.replace(normTarget, normReplacement);
           } else {
-            failed.push(`${rel}: target block not found in file`);
-            continue;
+            // Symmetrically trim outer blank lines if boundary spacing differed
+            const trimmedTarget = normTarget.trim();
+            const trimmedReplacement = normReplacement.trim();
+            if (trimmedTarget && normOriginal.includes(trimmedTarget)) {
+              original = normOriginal.replace(trimmedTarget, trimmedReplacement);
+            } else {
+              failed.push(`${rel}: target block not found in file`);
+              continue;
+            }
           }
         }
         if (original.length > 0 && !original.endsWith("\n")) {

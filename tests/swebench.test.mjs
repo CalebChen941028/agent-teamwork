@@ -17,6 +17,7 @@ import {
   applyFileWrites,
   appendPrediction,
   parseCliArgs,
+  normalizeForMatching,
 } from "../benchmarks/swebench/runner.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -306,6 +307,31 @@ test("SWE-bench adapter: extractFileBlocks and applyFileWrites support surgical 
     assert.equal(invalidReport.written.length, 0);
     assert.equal(invalidReport.failed.length, 1);
     assert.ok(invalidReport.failed[0].includes("target block not found"));
+
+    // 4. CRLF + trailing space per-line tolerance (F1 & F2 resolution)
+    const crlfFile = path.join(tmpDir, "crlf_demo.py");
+    fs.writeFileSync(crlfFile, "import os\r\n\r\ndef main():   \r\n    print('old')\r\n", "utf8");
+
+    const crlfReplace = [
+      '<replace path="crlf_demo.py">',
+      "<target>",
+      "def main():",
+      "    print('old')",
+      "</target>",
+      "<replacement>",
+      "def main():",
+      "    print('new')",
+      "</replacement>",
+      "</replace>",
+    ].join("\n");
+
+    const crlfBlocks = extractFileBlocks(crlfReplace);
+    const crlfReport = applyFileWrites(tmpDir, crlfBlocks);
+    assert.equal(crlfReport.written.length, 1);
+    assert.equal(crlfReport.failed.length, 0);
+
+    const crlfResult = fs.readFileSync(crlfFile, "utf8");
+    assert.equal(crlfResult, "import os\n\ndef main():\n    print('new')\n", "Must not inject extraneous blank lines (F1/F2 symmetric normalize)");
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
