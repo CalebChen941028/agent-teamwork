@@ -26,6 +26,11 @@ import {
   formatTeamworkConclusion,
   normalizeRelPath,
 } from "../../shared/verify-gate.js";
+import {
+  createLiveClient,
+  resolveLiveApiKey,
+  resolveRuntimeConfig,
+} from "../live-eval.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -91,6 +96,125 @@ export function applyFileWrites(repoDir, files) {
 }
 
 // ---------------------------------------------------------------------------
+// Repository Cache & Per-Instance Sandboxes
+// ---------------------------------------------------------------------------
+
+const GIT_SANE_ENV = { ...process.env, GIT_TERMINAL_PROMPT: "0" };
+
+function repoCachePath(repo) {
+  return path.join(__dirname, "cache", "repos", repo.replace("/", "__"));
+}
+
+export function ensureRepoClone(repo, { remote = `https://github.com/${repo}.git` } = {}) {
+  const dir = repoCachePath(repo);
+  const probe = git(dir, ["rev-parse", "--git-dir"], { env: GIT_SANE_ENV });
+  if (probe.status !== 0) {
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(path.dirname(dir), { recursive: true });
+    const res = git(path.dirname(dir), ["clone", "--quiet", remote, dir], { env: GIT_SANE_ENV });
+    if (res.status !== 0) {
+      throw new Error(`git clone failed for ${repo}: ${(res.stderr || "").trim().slice(0, 300)}`);
+    }
+  }
+  return dir;
+}
+
+export function ensureCommitAvailable(repoDir, sha) {
+  if (git(repoDir, ["cat-file", "-e", `${sha}^{commit}`], { env: GIT_SANE_ENV }).status === 0) {
+    return;
+  }
+  git(repoDir, ["fetch", "--quiet", "origin"], { env: GIT_SANE_ENV });
+  if (git(repoDir, ["cat-file", "-e", `${sha}^{commit}`], { env: GIT_SANE_ENV }).status !== 0) {
+    throw new Error(`base commit ${sha} not found in repository clone`);
+  }
+}
+
+export function createInstanceSandbox({ instance, track, parentDir = null }) {
+  const cacheDir = ensureRepoClone(instance.repo);
+  ensureCommitAvailable(cacheDir, instance.base_commit);
+  const safeId = String(instance.instance_id).replace(/[^A-Za-z0-9._-]/g, "_");
+  const dir = fs.mkdtempSync(path.join(parentDir || os.tmpdir(), `swebench-${track}-${safeId}-`));
+  const res = git(os.tmpdir(), ["clone", "--quiet", "--shared", "--no-checkout", cacheDir, dir], {
+    env: GIT_SANE_ENV,
+  });
+  if (res.status !== 0) {
+    throw new Error(`sandbox clone failed for ${instance.instance_id}: ${(res.stderr || "").trim().slice(0, 300)}`);
+  }
+  const checkout = git(dir, ["checkout", "--quiet", "--detach", instance.base_commit], { env: GIT_SANE_ENV });
+  if (checkout.status !== 0) {
+    throw new Error(
+      `checkout failed for ${instance.instance_id}@${instance.base_commit}: ${(checkout.stderr || "").trim().slice(0, 300)}`,
+    );
+  }
+  return dir;
+}
+
+// ---------------------------------------------------------------------------
+// Repository Visibility (file tree + read-on-request protocol)
+// ---------------------------------------------------------------------------
+
+const SOURCE_FILE_RE = /\.(py|js|ts|mjs|cjs|c|h|cpp|cc|java|go|rs|rb|php|sh|cfg|toml|ini|json|yaml|yml|rst|txt|in|pyi)$/i;
+
+export function buildRepoFileTree(repoDir, { maxEntries = 400 } = {}) {
+  const res = git(repoDir, ["ls-files"], { env: GIT_SANE_ENV });
+  const all = (res.stdout || "").split("\n").map((l) => l.trim()).filter(Boolean);
+  if (all.length <= maxEntries) {
+    return { tree: all.join("\n"), totalFiles: all.length, truncated: false };
+  }
+  const priority = all.filter((l) => SOURCE_FILE_RE.test(l) || !l.includes("/"));
+  const capped = priority.slice(0, maxEntries);
+  return {
+    tree: capped.join("\n"),
+    totalFiles: all.length,
+    truncated: true,
+    shownFiles: capped.length,
+  };
+}
+
+const READ_TAG_RE = /<read\s+path=["']([^"']+)["']\s*\/?>/gi;
+
+export function extractReadRequests(text, { maxRequests = 5 } = {}) {
+  const paths = [];
+  const source = String(text || "");
+  let match;
+  while ((match = READ_TAG_RE.exec(source)) !== null && paths.length < maxRequests) {
+    const rel = normalizeRelPath(match[1].trim());
+    if (rel && !paths.includes(rel)) paths.push(rel);
+  }
+  return paths;
+}
+
+export function readRepoFile(repoDir, relPath, { maxChars = 60000 } = {}) {
+  const resolvedRoot = path.resolve(repoDir);
+  const abs = path.resolve(repoDir, normalizeRelPath(relPath));
+  if (!abs.startsWith(resolvedRoot + path.sep)) {
+    return { path: relPath, error: "path escapes sandbox" };
+  }
+  let content;
+  try {
+    content = fs.readFileSync(abs, "utf8");
+  } catch {
+    return { path: relPath, error: "file not found" };
+  }
+  if (content.length > maxChars) {
+    return { path: relPath, content: content.slice(0, maxChars), truncated: true };
+  }
+  return { path: relPath, content };
+}
+
+export function renderReadResponses(reads) {
+  return reads
+    .map((r) => {
+      if (r.error) return `<read-result path="${r.path}" error="${r.error}"/>`;
+      const body = r.truncated
+        ? `${r.content}\n... [truncated at ${r.content.length} chars — request a narrower section or edit carefully]`
+        : r.content;
+      return `<read-result path="${r.path}">\n${body}\n</read-result>`;
+    })
+    .join("\n\n");
+}
+
+// ---------------------------------------------------------------------------
 // Prompt Formulation & Scoping Contract
 // ---------------------------------------------------------------------------
 
@@ -149,15 +273,36 @@ export function buildSwebenchSystemPrompt(contract, track = "teamwork") {
   ].join("\n");
 }
 
-export function buildSwebenchUserPrompt(instance) {
-  return [
+export function buildSwebenchUserPrompt(instance, fileTree = null) {
+  const parts = [
     `# Issue Report: ${instance.instance_id} (${instance.repo})`,
     "",
     instance.problem_statement,
     "",
     instance.hints_text ? `Hints / Maintainer Discussion:\n${instance.hints_text}\n` : "",
-    "Analyze the issue, locate the bug in the repository, and emit the corrected file blocks.",
-  ].join("\n");
+  ];
+
+  if (fileTree && fileTree.tree) {
+    parts.push("# Repository File Tree (checked out at the base commit)");
+    parts.push(fileTree.tree);
+    if (fileTree.truncated) {
+      parts.push(`[tree truncated: showing ${fileTree.shownFiles} of ${fileTree.totalFiles} files — prefer source directories]`);
+    }
+    parts.push("");
+    parts.push(
+      [
+        "# Repository Read Access",
+        "The working tree above is live in your workspace. Before editing a file, read its current contents:",
+        '<read path="requests/models.py"/>  (up to 5 files per turn)',
+        "The driver replies with <read-result path=\"...\"> blocks containing exact file contents.",
+        "Analyze the issue, locate the bug, then emit the corrected file blocks.",
+      ].join("\n"),
+    );
+  } else {
+    parts.push("Analyze the issue, locate the bug in the repository, and emit the corrected file blocks.");
+  }
+
+  return parts.join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -185,7 +330,7 @@ export async function runSwebenchInstance({
 
   const messages = [
     { role: "system", content: buildSwebenchSystemPrompt(contract, track) },
-    { role: "user", content: buildSwebenchUserPrompt(instance) },
+    { role: "user", content: buildSwebenchUserPrompt(instance, buildRepoFileTree(repoDir)) },
   ];
 
   for (let turn = 1; turn <= maxTurns; turn++) {
@@ -258,11 +403,19 @@ export async function runSwebenchInstance({
     if (blockedFiles.length > 0) {
       feedbackParts.push(`[PATH LOCK] Blocked forbidden file writes: ${blockedFiles.join(", ")}`);
     }
+    const readRequests = extractReadRequests(content);
+    if (readRequests.length > 0) {
+      const reads = readRequests.map((rel) => readRepoFile(repoDir, rel));
+      feedbackParts.push(renderReadResponses(reads));
+    }
     if (!wroteFiles) {
-      feedbackParts.push("[NO DISK WRITES] You produced analysis but wrote no files. Emit <file path=\"...\"> blocks to apply changes.");
+      if (readRequests.length === 0) {
+        feedbackParts.push("[NO DISK WRITES] You produced analysis but wrote no files. Emit <file path=\"...\"> blocks to apply changes.");
+      }
     } else {
       feedbackParts.push(`[DISK WRITES APPLIED] Modified files: ${writeReport.written.join(", ")}. Inspect git status and continue.`);
     }
+    feedbackParts.push(`[TURN BUDGET] turn ${turn}/${maxTurns}. When you have located the defect, emit the corrected <file> blocks and end with STATUS: DONE.`);
     messages.push({ role: "user", content: feedbackParts.join("\n") });
   }
 
@@ -316,6 +469,10 @@ export function parseCliArgs(argv) {
     outReport: null,
     maxTurns: DEFAULT_MAX_TURNS,
     timeoutMs: DEFAULT_TIMEOUT_MS,
+    maxTokens: DEFAULT_MAX_TOKENS,
+    apiKey: null,
+    baseUrl: null,
+    keepSandboxes: false,
     dryRun: false,
     help: false,
   };
@@ -330,6 +487,12 @@ export function parseCliArgs(argv) {
     else if (a === "--model" && raw[i + 1]) args.model = raw[++i];
     else if (a === "--out-predictions" && raw[i + 1]) args.outPredictions = raw[++i];
     else if (a === "--out-report" && raw[i + 1]) args.outReport = raw[++i];
+    else if (a === "--max-turns" && raw[i + 1]) args.maxTurns = Number(raw[++i]) || args.maxTurns;
+    else if (a === "--timeout-ms" && raw[i + 1]) args.timeoutMs = Number(raw[++i]) || args.timeoutMs;
+    else if (a === "--max-tokens" && raw[i + 1]) args.maxTokens = Number(raw[++i]) || args.maxTokens;
+    else if (a === "--api-key" && raw[i + 1]) args.apiKey = raw[++i];
+    else if (a === "--base-url" && raw[i + 1]) args.baseUrl = raw[++i];
+    else if (a === "--keep-sandboxes") args.keepSandboxes = true;
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "-h" || a === "--help") args.help = true;
   }
@@ -350,9 +513,17 @@ Options:
   --mode <teamwork|baseline|ab> Evaluation mode (default: teamwork)
   --model <id>                  Model id (default: deepseek-v4.1-flash)
   --out-predictions <file>      Path to output predictions.jsonl
+                                (in ab mode: -teamwork / -baseline suffixes are derived)
   --out-report <file.json>      Path to output summary benchmark report
+  --max-turns <n>               Per-instance turn budget (default: 6)
+  --max-tokens <n>              Per-request completion budget (default: 16384)
+  --timeout-ms <n>              Per-request HTTP timeout (default: 420000)
+  --api-key <key>               API key (else OPENCODE_API_KEY / ZEN_API_KEY /
+                                ZHIPUAI_API_KEY, else models.local.json api_key)
+  --base-url <url>              OpenAI-compatible chat/completions endpoint
+  --keep-sandboxes              Keep per-instance git sandboxes under os.tmpdir()
   --dry-run                     Validate pipeline without calling live LLM API
-  -h, --help                    Show this help message
+  -h, --help                    Show this help
 
 Workflow:
   1. Export sample instances:
@@ -364,11 +535,191 @@ Workflow:
 `);
 }
 
-if (process.argv[1] && process.argv[1].endsWith("runner.mjs")) {
-  const args = parseCliArgs(process.argv.slice(2));
+// ---------------------------------------------------------------------------
+// Main Driver
+// ---------------------------------------------------------------------------
+
+export function loadInstances({ instancesFile, repo = null, instanceId = null } = {}) {
+  if (!instancesFile) {
+    throw new Error("No instances source: pass --instances <file.json> (from loader.py)");
+  }
+  const raw = JSON.parse(fs.readFileSync(instancesFile, "utf8"));
+  let items = Array.isArray(raw) ? raw : Array.isArray(raw.instances) ? raw.instances : null;
+  if (!items) throw new Error(`Instances file ${instancesFile} is neither an array nor {instances: []}`);
+  if (repo) items = items.filter((it) => it.repo === repo);
+  if (instanceId) items = items.filter((it) => it.instance_id === instanceId);
+  for (const it of items) {
+    if (!it.instance_id || !it.repo || !it.base_commit || !it.problem_statement) {
+      throw new Error(`Instance missing required fields (instance_id/repo/base_commit/problem_statement): ${it.instance_id || "?"}`);
+    }
+  }
+  return items;
+}
+
+function predictionsPathFor(args, track) {
+  if (args.mode !== "ab") return args.outPredictions;
+  const ext = path.extname(args.outPredictions);
+  const base = args.outPredictions.slice(0, args.outPredictions.length - ext.length);
+  return `${base}-${track}${ext}`;
+}
+
+function modelNameFor(track, model) {
+  return track === "teamwork" ? `agent-teamwork-v0.4.0+swebench (${model})` : `${model}-solo`;
+}
+
+function summarizeResult(result) {
+  return {
+    instanceId: result.instanceId,
+    track: result.track,
+    turnsUsed: result.turnsUsed,
+    patchChars: (result.modelPatch || "").length,
+    patchEmpty: !(result.modelPatch || "").trim(),
+    interceptedWrites: result.interceptedWrites,
+    falseVictories: result.falseVictories,
+    stagnationRounds: result.stagnationRounds,
+    abortReason: result.abortReason,
+    durationMs: Math.round(result.durationMs),
+  };
+}
+
+export async function main(argv = process.argv.slice(2)) {
+  const args = parseCliArgs(argv);
   if (args.help) {
     printUsage();
-    process.exit(0);
+    return 0;
   }
-  console.log(`[SWE-bench Runner] Initialized with mode=${args.mode}, model=${args.model}`);
+  if (!["teamwork", "baseline", "ab"].includes(args.mode)) {
+    console.error(`✖ Unknown mode "${args.mode}" (expected teamwork | baseline | ab)`);
+    return 1;
+  }
+
+  const instances = loadInstances(args);
+  console.log(
+    `[SWE-bench Runner] ${instances.length} instance(s) | mode=${args.mode} | model=${args.model} | maxTurns=${args.maxTurns}`,
+  );
+
+  if (args.dryRun) {
+    for (const it of instances) {
+      console.log(`  [dry-run] ${it.instance_id} @ ${it.base_commit.slice(0, 10)} (${it.repo})`);
+    }
+    console.log("[dry-run] Pipeline validated; no API calls made.");
+    return 0;
+  }
+
+  const resolution = resolveLiveApiKey({ cliKey: args.apiKey });
+  const config = resolveRuntimeConfig({ args: { model: args.model, baseUrl: args.baseUrl }, resolution });
+  if (!config.apiKey) {
+    console.error("✖ No API key available — live SWE-bench runs perform REAL model calls and refuse to fabricate data.");
+    console.error("  Pass --api-key, or set OPENCODE_API_KEY / ZEN_API_KEY, or configure models.local.json (git-ignored).");
+    return 1;
+  }
+
+  const client = createLiveClient({
+    apiKey: config.apiKey,
+    model: args.model,
+    baseUrl: config.baseUrl,
+    extraHeaders: config.extraHeaders,
+    maxTokens: args.maxTokens,
+    timeoutMs: args.timeoutMs,
+  });
+
+  const tracks = args.mode === "ab" ? ["teamwork", "baseline"] : [args.mode];
+  const report = {
+    benchmark: "swebench-verified",
+    model: args.model,
+    mode: args.mode,
+    keySource: config.keySource,
+    maxTurns: args.maxTurns,
+    generatedAt: new Date().toISOString(),
+    tracks: {},
+  };
+
+  for (const track of tracks) {
+    const predPath = predictionsPathFor(args, track);
+    fs.rmSync(predPath, { force: true });
+    const trackResults = [];
+    const trackErrors = [];
+    console.log(`\n=== Track: ${track} → ${predPath} ===`);
+
+    for (const instance of instances) {
+      console.log(`\n[${track}] ${instance.instance_id} (${instance.repo}@${instance.base_commit.slice(0, 10)})`);
+      let sandbox = null;
+      try {
+        sandbox = createInstanceSandbox({ instance, track });
+        const result = await runSwebenchInstance({
+          instance,
+          repoDir: sandbox,
+          client,
+          track,
+          maxTurns: args.maxTurns,
+          log: (m) => console.log(m),
+        });
+        appendPrediction(predPath, {
+          instanceId: result.instanceId,
+          modelPatch: result.modelPatch,
+          modelName: modelNameFor(track, args.model),
+        });
+        const summary = summarizeResult(result);
+        trackResults.push(summary);
+        console.log(
+          `  → patch ${summary.patchChars} chars, turns=${summary.turnsUsed}, abort=${summary.abortReason || "none"}, ${Math.round(summary.durationMs / 1000)}s`,
+        );
+      } catch (err) {
+        appendPrediction(predPath, {
+          instanceId: instance.instance_id,
+          modelPatch: "",
+          modelName: modelNameFor(track, args.model),
+        });
+        trackErrors.push({ instanceId: instance.instance_id, error: String(err && err.message ? err.message : err) });
+        console.error(`  ✖ failed: ${err && err.message ? err.message : err}`);
+      } finally {
+        if (sandbox && !args.keepSandboxes) {
+          fs.rmSync(sandbox, { recursive: true, force: true });
+        }
+      }
+    }
+
+    const totals = client.totals();
+    report.tracks[track] = {
+      predictionsPath: predPath,
+      instancesTotal: instances.length,
+      patchesGenerated: trackResults.filter((r) => !r.patchEmpty).length,
+      results: trackResults,
+      errors: trackErrors,
+      tokenUsage: {
+        prompt: totals.promptTokens,
+        completion: totals.completionTokens,
+        total: totals.totalTokens,
+        calls: totals.calls,
+      },
+    };
+    console.log(
+      `\n[${track} summary] patches=${report.tracks[track].patchesGenerated}/${instances.length} errors=${trackErrors.length}`,
+    );
+  }
+
+  if (args.outReport) {
+    fs.mkdirSync(path.dirname(path.resolve(args.outReport)), { recursive: true });
+    fs.writeFileSync(args.outReport, JSON.stringify(report, null, 2), "utf8");
+    console.log(`\n[✔] Report written to ${args.outReport}`);
+  }
+
+  // Pre-warm the official Docker verdict path with an offline sanity check.
+  for (const track of tracks) {
+    const predPath = predictionsPathFor(args, track);
+    if (fs.existsSync(predPath)) {
+      console.log(`[✔] Predictions written: ${predPath} (verify with: python3 benchmarks/swebench/eval.py --predictions ${predPath} --local-check-only)`);
+    }
+  }
+  return 0;
+}
+
+if (process.argv[1] && process.argv[1].endsWith("runner.mjs")) {
+  main().then(
+    (code) => process.exit(code),
+    (err) => {
+      console.error("✖ SWE-bench runner crashed:", err && err.stack ? err.stack : err);
+      process.exit(1);
+    },
+  );
 }

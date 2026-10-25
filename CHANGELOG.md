@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.4.0] - 2026-10-25
 
 ### Added
+- **Official SWE-bench Verified containerized evaluation adapter (`benchmarks/swebench/`)**:
+  - `loader.py`: HuggingFace dataset caching and export for the 500-instance SWE-bench Verified dataset (`SWE-bench/SWE-bench_Verified`).
+  - `runner.mjs`: Multi-turn CLI driver supporting file tree injection, per-instance git sandboxes, `<read path="..."/>` multi-turn inspection (60KB buffer), physical path lock containment, and standard `predictions.jsonl` generation.
+  - `eval.py`: Official Docker evaluation bridge invoking `swebench.harness.run_evaluation` with blind holdout regression tests.
+  - Empirical Docker verification on `psf/requests` (8 tasks) with `deepseek-v4.1-flash`: `agent-teamwork` achieved **62.5% Pass@1 (5/8)** vs Solo baseline **50.0% (4/8)** (+12.5% margin), 0 vs 1 fatal patch errors (`psf__requests-6028` surgical 535-char patch vs 30k-char failed rewrite), and −42.8% token overhead (+75% Solo token bloat).
+  - Full operational guide: `docs/SWEBENCH_GUIDE.md` and `docs/SWEBENCH_GUIDE.zh-CN.md`.
+  - 3 offline unit tests in `tests/swebench.test.mjs` (49/49 total passing suite).
 - **Live online API evaluation suite (`benchmarks/live-eval.mjs`, `npm run benchmark:live`)**: real A/B head-to-head exam of the 10 canonical SWE-bench tasks — Track A Solo vs Track B model + agent-teamwork — over any OpenAI-compatible chat/completions endpoint. Default channel: OpenCode Zen gateway (`https://opencode.ai/zen/go/v1/chat/completions`) with `mimo-v2.6-flash`; key resolution `--api-key` > `OPENCODE_API_KEY` > `ZEN_API_KEY` > `ZHIPUAI_API_KEY` (legacy Zhipu channel) > `models.local.json` (`api_key`/`base_url`/`model`/`extra_headers`). CLI: `--mode`, `--task(s)`, `--out`, `--max-turns`, `--max-tokens`, `--base-url`, `--timeout-ms`, `--check`, `--keep-sandboxes`. Zen gateway session header (`x-opencode-session`) auto-injected.
 - **`benchmarks/merge-live-reports.mjs`**: auditable splice of supplemental re-runs (e.g. after HTTP-timeout track errors) into a canonical dataset; refuses to replace non-infra-errored tracks.
 - **Raw run artifacts committed under `benchmarks/results/`**: `live-ab-final.json` (canonical), `live-ab-full.json` + console log (primary run), three single-track supplements, single-task validation run.

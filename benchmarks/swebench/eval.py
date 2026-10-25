@@ -86,7 +86,7 @@ def run_local_lint_and_diff_check(predictions_path):
 
 def run_official_swebench_evaluation(
     predictions_path,
-    dataset_name="princeton-nlp/SWE-bench_Verified",
+    dataset_name="SWE-bench/SWE-bench_Verified",
     max_workers=4,
     run_id="agent-teamwork-eval",
     timeout=1800,
@@ -136,7 +136,7 @@ def run_official_swebench_evaluation(
 def main():
     parser = argparse.ArgumentParser(description="SWE-bench Official Evaluation Bridge")
     parser.add_argument("--predictions", required=True, help="Path to predictions.jsonl")
-    parser.add_argument("--dataset", default="princeton-nlp/SWE-bench_Verified", help="HuggingFace dataset name")
+    parser.add_argument("--dataset", default="SWE-bench/SWE-bench_Verified", help="HuggingFace dataset name (SWE-bench/SWE-bench_Verified includes image_name column required by swebench 5.0+)")
     parser.add_argument("--max-workers", type=int, default=4, help="Maximum concurrent Docker workers")
     parser.add_argument("--run-id", default="agent-teamwork-eval", help="Evaluation run ID")
     parser.add_argument("--local-check-only", action="store_true", help="Run offline format and diff verification only")

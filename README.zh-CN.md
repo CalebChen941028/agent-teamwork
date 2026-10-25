@@ -42,11 +42,26 @@
 
 ## 实测效果对比与基准评测报告 (Empirical Benchmark & Case Studies)
 
-> **完整双语活体评测报告**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含方法论、逐题遥测、失败形态分析与原始运行证据，覆盖 10 项对齐 SWE-bench / Aider 的标准任务。一键复现：`npm run benchmark:live`（真实 API 调用；配置见[单测与构建校验](#单测与构建校验双层门禁架构)）。
+> 🏆 **SWE-bench Verified 官方 Docker 盲测大考（`psf/requests` 全量 8 题）**：
+> 在 `deepseek-v4.1-flash` 真实模型上，通过官方容器沙箱裁决：`agent-teamwork` 斩获 **62.5% Pass@1（5/8）** 对比 Solo 裸模型 **50.0%（4/8）** —— 实现 **+12.5% Pass@1 突破断层**，**0 对 1 致命补丁损坏**，并**降低 42.8% Token 开销**（Solo 膨胀 +75%）。详见完整指南与报告：[`docs/SWEBENCH_GUIDE.zh-CN.md`](docs/SWEBENCH_GUIDE.zh-CN.md) 与 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md)。
+>
+> 🚀 **15 题在线合成任务大考（`deepseek-v4.1-flash`）**：
+> Pass@1 100% 顶格持平，越界落地 18 对 0，虚假胜利 2 对 0，调用数 −24%。详见 [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)。
+>
+> 📖 **完整双语活体评测门户**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含完整方法论、逐题遥测与官方记分卡证据。
 
-### 实测成绩看板 (Scorecard - OpenCode Zen + mimo-v2.6-flash, 2026-10-24)
+### 官方实测成绩看板：SWE-bench Verified (`psf/requests` · Docker 真实裁决)
 
-一次真实 A/B 活体大考，两轨模型/端点/预算完全一致，胜负由真实子进程退出码裁决：
+| 核心指标 | Solo 裸模型（Track A） | + agent-teamwork（Track B） | 差值 | 关键说明 |
+| :--- | :---: | :---: | :---: | :--- |
+| **官方 Resolved（Pass@1）** | 4/8（50.0%） | **5/8（62.5%）** | **+12.5 pts** | 官方 Docker 隔离盲测用例判定 |
+| **致命补丁损坏（`git apply`）** | 1（`psf__requests-6028`） | **0** | **−1 error** | 3 万字符全仓重写 vs 535 字符手术补丁 |
+| **总 Token 消耗** | 41.8 万 | **23.9 万** | **−42.8%** | Solo 产生 +75.0% 的严重 Token 膨胀 |
+| **API 调用次数** | 21 次 | **17 次** | **−19.0%** | 多回合 `<read/>` 协议精准收敛 |
+
+### 历史基准看板 (mimo-v2.6-flash, 2026-10-24)
+
+首轮 10 题活体大考，两轨模型/端点/预算完全一致，促成 v0.4.0 写入感知修复的直接动因：
 
 | 核心指标 | Solo（无引导） | `agent-teamwork` (v0.3.0) | 差值 | 说明 |
 | :--- | :---: | :---: | :---: | :--- |
@@ -202,20 +217,31 @@
 
 ---
 
-## 单测与构建校验：双层门禁架构
+## 单测与构建校验：三层门禁架构
 
 **Level-1 —— 确定性离线门禁（零网络、零 API Key）：**
 
 ```bash
-npm test                      # node scripts/build.mjs（SSOT 同构 + 开源合规扫描）+ 全量单元测试
-npm run benchmark             # Level-1 状态机基准评测（离线 runner，跑 10 项标准任务）
+npm test                      # node scripts/build.mjs（SSOT 同构 + 开源合规扫描）+ 49 项单元测试全绿
+npm run benchmark             # Level-1 状态机基准评测（离线 runner，跑标准任务）
 ```
 
 **Level-2 —— 真实在线 API 评测（`npm run benchmark:live`）：**
 
-对同一套 10 项 SWE-bench 标准任务发起真实 A/B 活体大考——A 轨（Solo：单模型单体 Prompt、无任何护栏）vs B 轨（模型 + agent-teamwork：范围契约、物理路径锁、失败尾部反馈、停滞早停）——每题在 `os.tmpdir()` 下独立 Git 沙箱中执行，胜负严格由真实子进程退出码、真实 `usage` Token 账单与真实网络耗时裁决。
+对 15 项真实软件工程基准任务发起真实 A/B 活体大考——A 轨（Solo：单模型单体 Prompt、无任何护栏）vs B 轨（模型 + agent-teamwork：范围契约、物理路径锁、失败尾部反馈、写入感知停滞恢复）——每题在 `os.tmpdir()` 下独立 Git 沙箱中执行，胜负严格由真实子进程退出码、真实 `usage` Token 账单与真实网络耗时裁决。
 
-端点与密钥配置（默认：OpenCode Zen 网关 + `mimo-v2.6-flash`）：
+**Level-3 —— 官方 SWE-bench Verified 容器评测（`benchmarks/swebench/`）：**
+
+借助多回合 `<read path="..."/>` 按需读取协议与物理路径锁，自动生成标准 `predictions.jsonl`，并通过官方 Docker 裁判容器执行全隔离盲测裁决（`swebench.harness.run_evaluation`）：
+
+```bash
+# 导出任务、驱动 agent-teamwork 求解并在 Docker 中裁决
+python3 benchmarks/swebench/loader.py --repo psf/requests --export /tmp/tasks.json
+node benchmarks/swebench/runner.mjs --instances /tmp/tasks.json --mode ab
+python3 benchmarks/swebench/eval.py --predictions benchmarks/swebench/predictions-teamwork.jsonl
+```
+
+端点与密钥配置（默认：OpenCode Zen 网关 + `deepseek-v4.1-flash` 或 `mimo-v2.6-flash`）：
 
 ```bash
 # 方式一：环境变量

@@ -2,27 +2,65 @@
 
 [![Version: 0.4.0](https://img.shields.io/badge/version-0.4.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-41%2F41%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-49%2F49%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
 
-> 🚀 **最新 15 题大考**：2026-10-25 完成的 `deepseek-v4.1-flash` 全量 15 题大考（Pass@1 100% 顶格持平，越界落地 18 对 0，调用数 −24%，写入感知 0 误杀中止），详见 [docs/BENCHMARK_REPORT.zh-CN.md](docs/BENCHMARK_REPORT.zh-CN.md)。下文为 v0.3.x `mimo-v2.6-flash` 历史基准与促成 v0.4.0 写入感知修复的归因记录。
+> 🏆 **最新大考：SWE-bench Verified 官方 Docker 盲测实测（`psf/requests` 全量 8 题）**：
+> 在 `deepseek-v4.1-flash` 真实模型上，通过官方容器沙箱裁决：agent-teamwork 斩获 **62.5% Pass@1（5/8）** 对比 Solo 裸模型 **50.0%（4/8）** —— 实现 **+12.5% Pass@1 突破断层**，**0 对 1 致命补丁损坏**，并**降低 42.8% Token 开销**（Solo 膨胀 +75%）。详见完整指南与报告：[`docs/SWEBENCH_GUIDE.zh-CN.md`](docs/SWEBENCH_GUIDE.zh-CN.md)。
 >
-> 📖 **完整报告**：方法论、逐题遥测、失败形态分析与可落地发现见 [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)。原始运行证据：[`benchmarks/results/`](benchmarks/results/)。
-
-本页全部数字来自 2026-10-24 的一次真实 A/B 活体大考——真实 HTTP 调用、真实子进程退出码、真实 `usage` Token 账单。
-
-- **运行环境**：OpenCode Zen 网关 / ZCode Engine 评测驱动，macOS arm64 (Darwin 27.0.0)，Node.js v22.23.1
-- **端点**：`https://opencode.ai/zen/go/v1/chat/completions` —— **模型**：`mimo-v2.6-flash`
-- **任务集**：对齐 SWE-bench / Aider 的 10 项标准任务（`SWE-JS-001`…`010`），`os.tmpdir()` 下 Git 沙箱，每轨 6 轮，`max_tokens` 16384，temperature 0.2
-- **复现**：`npm run benchmark:live`（配置方法见 [README § 单测与构建校验](README.zh-CN.md#单测与构建校验双层门禁架构)）
+> 🚀 **15 题大考（`deepseek-v4.1-flash`）**：
+> Pass@1 100% 顶格持平，越界落地 18 对 0，调用数 −24%，写入感知 0 误杀中止。详见 [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)。
+>
+> 📖 **历史 10 题基准（`mimo-v2.6-flash`）**：
+> 保留在下文 §3，作为促成 v0.4.0 写入感知修复的真实归因记录。
 
 ---
 
-## 1. 实测成绩看板：Solo vs + agent-teamwork
+## 1. SWE-bench Verified 官方实测看板（`psf/requests` · Docker 真实裁决）
 
-同一模型、同一端点、同一预算。唯一变量是协作脚手架。
+2026-10-25 基于 `deepseek-v4.1-flash` 对 SWE-bench Verified 中 `psf/requests` 全量 8 道题目执行盲测评估。测试代码在执行期间全程严格隐藏，评测结果通过官方 Docker 容器（`swebench.harness.run_evaluation`）执行隐藏用例严格判定：
+
+| 指标 | Solo 裸模型基线（Track A） | + agent-teamwork（Track B） | 差值 |
+| :--- | :---: | :---: | :---: |
+| **补丁产出率** | 8/8（100%） | 8/8（100%） | — |
+| **官方 Resolved（Pass@1 真实裁决）** | **4/8（50.0%）** | **5/8（62.5%）** | **+12.5 pts（多解出 1 题）** |
+| **Unresolved（盲测未通过）** | 3（2317, 2931, 5414） | 3（2317, 2931, 5414） | —（模型推理能力边界） |
+| **致命补丁损坏（`git apply` 失败）** | **1（`psf__requests-6028`）** | **0** | **−1 error** |
+| **API 调用次数 / 回合消耗** | 21 次 | **17 次** | **−19.0%** |
+| **总 Token 消耗** | 41.8 万 | **23.9 万** | **−42.8%（Solo 膨胀 +75%）** |
+
+```
+官方 SWE-bench Resolved（Pass@1, psf/requests, Docker 盲测裁决）
++ agent-teamwork                [████████████████████░░░░░░░░░░░░]  62.5% (5/8)
+Solo (deepseek-v4.1-flash)      [████████████████░░░░░░░░░░░░░░░░]  50.0% (4/8)
+
+核心启示：在 psf__requests-6028 上，Solo 耗时 332 秒生成了 30,348 字符的整文件重写，导致 git apply 彻底冲突报废；
+Teamwork 仅用 2 回合生成 535 字符的手术式补丁精准修复并全绿通过。
+```
+
+官方权威记分卡与证据：[`benchmarks/swebench/results/`](benchmarks/swebench/results/)。完整复现流程：[`docs/SWEBENCH_GUIDE.zh-CN.md`](docs/SWEBENCH_GUIDE.zh-CN.md)。
+
+---
+
+## 2. 15 题大考看板（`deepseek-v4.1-flash`）
+
+| 指标 | Solo（A 轨） | + agent-teamwork（B 轨） | 差值 |
+| :--- | :---: | :---: | :---: |
+| **Pass@1（校验退出码 0）** | 100.0%（15/15） | 100.0%（15/15） | 顶格持平 |
+| **API 调用次数** | 25 | **19** | **−24%** |
+| **越界写入落地** | **18 个文件 / 3 题** | **0** | 路径锁拦截 7 次提案 |
+| **虚假胜利宣称** | 2 | **0** | **−2** |
+| **停滞中止 / 重规划** | 不适用 | **0 / 0** | 写入感知生效 |
+
+完整报告：[`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)。原始数据：[`benchmarks/results/live-ab-deepseek-final.json`](benchmarks/results/live-ab-deepseek-final.json)。
+
+---
+
+## 3. 历史 10 题基准看板（`mimo-v2.6-flash`）
+
+本节全部数字来自 2026-10-24 针对 `mimo-v2.6-flash` 在 `https://opencode.ai/zen/go/v1/chat/completions` 端点上的真实 A/B 活体大考（复现命令：`npm run benchmark:live`）。同一模型、同一端点、同一预算。唯一变量是协作脚手架。
 
 | 指标 | Solo（A 轨） | + agent-teamwork（B 轨） | 差值 |
 | :--- | :---: | :---: | :---: |
@@ -50,7 +88,7 @@ Solo (mimo-v2.6-flash)          [███████████████�
 
 ---
 
-## 2. 逐题结果
+### 3.1 逐题结果
 
 | 任务 | 类别 | Solo | Teamwork | Solo 轮/Token | Team 轮/Token |
 | :--- | :--- | :---: | :---: | :--- | :--- |
@@ -65,36 +103,51 @@ Solo (mimo-v2.6-flash)          [███████████████�
 | SWE-JS-009 qs 嵌套解码 + DoS 上限 | 解析器安全 | ✔ | ✔ | 5 / 15.8k | 2 / 26.8k |
 | SWE-JS-010 配置深冻结不可变 | 配置 | ✖ | ✖ | 6 / 13.7k | 3 / 5.3k |
 
-### 2.1 扩展标准大考任务集（全量 15 题）
-
-在 mimo-v2.6-flash 首轮大考 10 题基础上，基准测试套件已进一步深化扩充至 15 项真实软件工程基准任务（`SWE-JS-001` 至 `SWE-JS-015`），新增 5 项硬核高阶工程场景：
-
-| 任务编号 | 任务名称与工程领域 | 核心考点与真实风险 |
-| :--- | :--- | :--- |
-| `SWE-JS-011` | 倒排索引文档存储（复合状态机与索引完整性） | 跨文档事务批量更新与标签倒排索引同步，失败原子回滚与反幽灵引用 |
-| `SWE-JS-012` | 可重入分布式锁与租约回收（分布式并发与死锁防御） | 可重入异步互斥锁，带租约超时自动回收、无死锁排队与属主安全校验 |
-| `SWE-JS-013` | RFC 6902 JSON Patch 事务求值（RFC 协议一致性与回滚防御） | 完整 JSON Patch 算子与 JSON Pointer 导航，测试不满足原子回滚与原型污染阻断 |
-| `SWE-JS-014` | 两阶段提交（2PC）状态机（分布式事务与故障恢复） | 协调器管理多参与者 Prepare/Commit/Abort 状态机，节点异常与投票拒绝完整回滚 |
-| `SWE-JS-015` | 背压异步流管道与熔断拆除（响应式流与背压控制） | highWaterMark 缓冲与 pause/resume 流量控制，中途异常全阶段传播与干净销毁 |
-
 备注：SWE-JS-003 Solo 终局退出码 13（模型重写里出现未决的顶层 await）。SWE-JS-006 Solo 贡献全场唯一一次虚假胜利（第 1 轮宣称完成实则失败，第 2 轮通过）。三个死于 180 秒 HTTP 超时的轨次以 420 秒重跑并经 `benchmarks/merge-live-reports.mjs` 合并，拼接日志在 `live-ab-final.json → meta.supplements`。
+
+### 3.2 标准任务全景清单（`SWE-JS-001` 至 `SWE-JS-015`）
+
+标准基准套件涵盖 15 道标准软件工程任务：
+- `SWE-JS-001` 原型污染防护（安全防御）
+- `SWE-JS-002` 异步队列背压（并发控制）
+- `SWE-JS-003` 路由异步错误传播（路由健壮性）
+- `SWE-JS-004` 循环 $ref 解析（模式校验）
+- `SWE-JS-005` SemVer 预发布过滤（版本解析）
+- `SWE-JS-006` 跨平台路径分隔符（文件系统）
+- `SWE-JS-007` LRU 并发逐出（数据结构）
+- `SWE-JS-008` AbortSignal 双向拆除（事件机制）
+- `SWE-JS-009` qs 嵌套解码 + DoS 上限（解析器安全）
+- `SWE-JS-010` 配置深冻结不可变（配置隔离）
+- `SWE-JS-011` 倒排索引文档存储（复合状态机与索引完整性）
+- `SWE-JS-012` 可重入分布式锁与租约回收（分布式并发与死锁防御）
+- `SWE-JS-013` RFC 6902 JSON Patch 事务求值（RFC 协议一致性与回滚防御）
+- `SWE-JS-014` 两阶段提交状态机（分布式 2PC 事务恢复）
+- `SWE-JS-015` 背压异步流管道与熔断拆除（响应式流与背压控制）
 
 ---
 
-## 3. 双层评测架构
+## 4. 三层评测门禁架构
 
-| 层级 | 命令 | 证明什么 | 网络 |
+| 层级 | 命令 | 证明什么 | 网络依赖 |
 | :--- | :--- | :--- | :---: |
-| **1 —— 离线门禁** | `npm test` | 18 个共享纯函数 TS/JS/DWF 三端 AST 同构（SSOT）、开源合规扫描、40 项单测（含 18 项注入传输的 live-eval 驱动器测试） | 无 |
-| **2 —— 在线 A/B 大考** | `npm run benchmark:live` | 10 项标准任务上的真实 Pass@1、真实 Token 账单、真实延迟、真实边界行为 | 真实 API |
+| **1 —— 离线门禁** | `npm test` | 18 个共享纯函数 TS/JS/DWF 三端 AST 同构（SSOT）、开源合规扫描、49 项单测 | 无 |
+| **2 —— 在线合成大考** | `npm run benchmark:live` | 15 项真实软件工程基准任务上的 Pass@1、真实 Token 账单与越界拦截 | 真实 API |
+| **3 —— 官方 SWE-bench 实测** | `python3 benchmarks/swebench/eval.py` | 官方 SWE-bench Verified 工业级沙箱容器隐藏盲测裁决 | Docker + 真实 API |
 
-两层共享同一任务地面真值（`benchmarks/tasks.mjs`）与同一裁决通道：校验子进程的 `process.exitCode`。
+---
 
-## 4. 一键复现
+## 5. 一键复现指南
 
 ```bash
+# 1. 离线门禁与 SSOT 同构检验
+npm test
+
+# 2. 仓内在线合成任务大考 (15 题)
 export OPENCODE_API_KEY="oc_sk_..."        # 或 models.local.json，见 README
 npm run benchmark:live -- --check          # 鉴权预检 + 微型探针
-npm run benchmark:live -- --out run.json   # 全量 10 题 A/B 大考
-npm run benchmark:live -- --task SWE-JS-001
+npm run benchmark:live -- --out run.json   # 全量 15 题 A/B 大考
+
+# 3. 官方 SWE-bench Verified 容器评测 (以 psf/requests 8 题为例)
+node benchmarks/swebench/runner.mjs --instances benchmarks/swebench/tasks-requests-8.json --mode ab
+python3 benchmarks/swebench/eval.py --predictions benchmarks/swebench/predictions-teamwork.jsonl
 ```

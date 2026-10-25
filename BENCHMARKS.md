@@ -2,27 +2,65 @@
 
 [![Version: 0.4.0](https://img.shields.io/badge/version-0.4.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-41%2F41%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-49%2F49%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
 
-> 🚀 **Latest 15-Task Benchmark**: The full 15-task live eval on `deepseek-v4.1-flash` (100% Pass@1 ceiling, 18 vs 0 out-of-bounds writes, −24% calls, 0 stagnation aborts with write-awareness) is documented in [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md). Below is the baseline `mimo-v2.6-flash` historical run that motivated the v0.4.0 write-aware engine fix.
+> 🏆 **Latest Benchmark: SWE-bench Verified Official Docker Evaluation (`psf/requests`)**:
+> Containerized blind holdout test adjudication with `deepseek-v4.1-flash`: **+12.5% Pass@1 margin (62.5% vs 50.0%)**, **0 vs 1 fatal patch errors**, and **−42.8% token overhead** (+75% Solo token bloat). Full report & replication guide in [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md).
 >
-> 📖 **Full report**: methodology, per-task telemetry, failure-mode analysis, and actionable findings live in [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md). Raw run artifacts: [`benchmarks/results/`](benchmarks/results/).
-
-All figures on this page come from one live A/B exam run on 2026-10-24 — real HTTP calls, real subprocess exit codes, real `usage` token billing.
-
-- **Runtime**: OpenCode Zen gateway / ZCode Engine harness, macOS arm64 (Darwin 27.0.0), Node.js v22.23.1
-- **Endpoint**: `https://opencode.ai/zen/go/v1/chat/completions` — **Model**: `mimo-v2.6-flash`
-- **Suite**: 10 canonical SWE-bench / Aider aligned tasks (`SWE-JS-001`…`010`), git sandboxes under `os.tmpdir()`, 6 turns per track, `max_tokens` 16384, temperature 0.2
-- **Reproduction**: `npm run benchmark:live` (config in [README § Testing](README.md#testing--build-verification-two-level-architecture))
+> 🚀 **15-Task Live Benchmark (`deepseek-v4.1-flash`)**:
+> Full 15-task live eval (100% Pass@1 ceiling, 18 vs 0 leaked files, 2 vs 0 false claims, −24% API calls, 0 stagnation aborts with write-awareness). Full report in [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md).
+>
+> 📖 **Historical 10-Task Baseline (`mimo-v2.6-flash`)**:
+> Preserved below in §3 as the empirical motivation that inspired the v0.4.0 write-aware engine fix.
 
 ---
 
-## 1. Live Scorecard: Solo vs + agent-teamwork
+## 1. SWE-bench Verified Scorecard (`psf/requests` · Official Docker Harness)
 
-Same model, same endpoint, same budgets. The only variable is the collaboration scaffolding.
+Evaluated on 2026-10-25 using `deepseek-v4.1-flash` against all 8 tasks of `psf/requests` in SWE-bench Verified. Test suites are strictly hidden during execution; results are adjudicated by official Docker containers via `swebench.harness.run_evaluation`.
+
+| Metric | Solo Baseline (Track A) | + agent-teamwork (Track B) | Delta |
+| :--- | :---: | :---: | :---: |
+| **Patches Generated** | 8/8 (100%) | 8/8 (100%) | — |
+| **Official Resolved (Pass@1)** | **4/8 (50.0%)** | **5/8 (62.5%)** | **+12.5% (+1 task)** |
+| **Unresolved (Blind Failures)** | 3 (2317, 2931, 5414) | 3 (2317, 2931, 5414) | — (model reasoning boundary) |
+| **Fatal Patch Errors (`git apply` failure)** | **1 (`psf__requests-6028`)** | **0** | **−1 error** |
+| **Total API Calls / Turns** | 21 calls | **17 calls** | **−19.0%** |
+| **Total Tokens Consumed** | 418,000 | **239,000** | **−42.8% (+75% Solo bloat)** |
+
+```
+Official SWE-bench Resolved (Pass@1, psf/requests, Docker verified)
++ agent-teamwork                [████████████████████░░░░░░░░░░░░]  62.5% (5/8)
+Solo (deepseek-v4.1-flash)      [████████████████░░░░░░░░░░░░░░░░]  50.0% (4/8)
+
+Key Takeaway: On psf__requests-6028, Solo spent 332s generating a 30,348-character full-file rewrite
+that broke git apply. Teamwork produced a 535-character surgical patch in 2 turns and resolved the issue.
+```
+
+Official audit scorecards: [`benchmarks/swebench/results/`](benchmarks/swebench/results/). Details: [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md).
+
+---
+
+## 2. 15-Task Synthetic Benchmark (`deepseek-v4.1-flash`)
+
+| Metric | Solo (Track A) | + agent-teamwork (Track B) | Delta |
+| :--- | :---: | :---: | :---: |
+| **Pass@1 (exit code 0)** | 100.0% (15/15) | 100.0% (15/15) | tie at ceiling |
+| **API calls consumed** | 25 | **19** | **−24%** |
+| **Out-of-bounds writes landed** | **18 files / 3 tasks** | **0** | path lock blocked 7 attempts |
+| **False victory claims** | 2 | **0** | **−2** |
+| **Stall aborts / replans** | n/a | **0 / 0** | write-aware held |
+
+Full report: [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md). Raw run: [`benchmarks/results/live-ab-deepseek-final.json`](benchmarks/results/live-ab-deepseek-final.json).
+
+---
+
+## 3. Historical 10-Task Baseline (`mimo-v2.6-flash`)
+
+All figures below come from the live A/B exam run on 2026-10-24 against `mimo-v2.6-flash` at `https://opencode.ai/zen/go/v1/chat/completions` (reproducible via `npm run benchmark:live`). Same model, same endpoint, same budgets. The only variable is the collaboration scaffolding.
 
 | Metric | Solo (Track A) | + agent-teamwork (Track B) | Delta |
 | :--- | :---: | :---: | :---: |
@@ -50,7 +88,7 @@ The honest headline: on this reasoning model, the harness **lowered** Pass@1 whi
 
 ---
 
-## 2. Per-Task Results
+### 3.1 Per-Task Results
 
 | Task | Category | Solo | Teamwork | Solo turns/tok | Team turns/tok |
 | :--- | :--- | :---: | :---: | :--- | :--- |
@@ -65,36 +103,51 @@ The honest headline: on this reasoning model, the harness **lowered** Pass@1 whi
 | SWE-JS-009 qs nested decoder + DoS cap | Parser security | ✔ | ✔ | 5 / 15.8k | 2 / 26.8k |
 | SWE-JS-010 Config deep-freeze immutability | Config | ✖ | ✖ | 6 / 13.7k | 3 / 5.3k |
 
-### 2.1 Expanded Canonical Benchmark Suite (Full 15 Tasks)
-
-Following the initial 10-task evaluation on mimo-v2.6-flash, the canonical benchmark suite has been expanded to 15 standard software engineering tasks (`SWE-JS-001` through `SWE-JS-015`), adding 5 high-difficulty architectural scenarios:
-
-| Task ID | Task Name & Category | Verification Invariants & Failure Risks |
-| :--- | :--- | :--- |
-| `SWE-JS-011` | Inverted Index Document Store (Coupled State Machine) | Transactional batch updates, tag index synchronization, atomic rollback, and ghost reference prevention |
-| `SWE-JS-012` | Reentrant Distributed Mutex (Concurrency & Deadlock Defense) | Reentrant async mutex with lease expiration auto-reclamation, FIFO queueing, and ownership validation |
-| `SWE-JS-013` | RFC 6902 JSON Patch Evaluator (RFC Protocol Conformance) | Full RFC 6902 operators, JSON Pointer navigation, atomic rollback on test failure, and prototype pollution defense |
-| `SWE-JS-014` | Two-Phase Commit State Machine (Distributed Transactions) | Multi-participant prepare/commit/abort state machine with crash handling and complete rollback isolation |
-| `SWE-JS-015` | Backpressure Stream Pipeline (Reactive Streams Flow Control) | highWaterMark backpressure, chunk batching, downstream error propagation, and clean pipeline destruction |
-
 Notes: SWE-JS-003 Solo ended on exit code 13 (unsettled top-level await in the model's rewrite). SWE-JS-006 Solo produced the run's single false victory (claimed done on turn 1 while failing; passed on turn 2). Three tracks that died on the 180 s HTTP timeout were re-run at 420 s and merged via `benchmarks/merge-live-reports.mjs`; the splice log is in `live-ab-final.json → meta.supplements`.
+
+### 3.2 Canonical Benchmark Tasks (`SWE-JS-001` through `SWE-JS-015`)
+
+The canonical benchmark suite includes 15 standardized engineering tasks:
+- `SWE-JS-001` Prototype pollution guard (Security)
+- `SWE-JS-002` Async queue backpressure (Concurrency)
+- `SWE-JS-003` Router async error propagation (Routing)
+- `SWE-JS-004` Circular $ref resolution (Schema)
+- `SWE-JS-005` SemVer pre-release filtering (SemVer)
+- `SWE-JS-006` Cross-platform path separators (Filesystem)
+- `SWE-JS-007` LRU concurrent eviction (Data structures)
+- `SWE-JS-008` AbortSignal two-way teardown (Events)
+- `SWE-JS-009` qs nested decoder + DoS cap (Parser security)
+- `SWE-JS-010` Config deep-freeze immutability (Config)
+- `SWE-JS-011` Inverted index document store (State machine & indexing)
+- `SWE-JS-012` Reentrant distributed mutex (Concurrency & lease recovery)
+- `SWE-JS-013` RFC 6902 JSON Patch evaluator (RFC compliance & rollback)
+- `SWE-JS-014` Two-phase commit state machine (Distributed 2PC transaction)
+- `SWE-JS-015` Backpressure stream pipeline (Reactive streams flow control)
 
 ---
 
-## 3. Two-Level Evaluation Architecture
+## 4. Multi-Level Evaluation Architecture
 
 | Level | Command | What it proves | Network |
 | :--- | :--- | :--- | :---: |
-| **1 — Offline gates** | `npm test` | 18 shared pure functions AST-identical across TS/JS/DWF (SSOT), open-source compliance scan, 40 unit tests incl. 18 live-eval harness tests with injected transports | none |
-| **2 — Live A/B exam** | `npm run benchmark:live` | Real Pass@1, real token billing, real latency, real boundary behavior on the 10 canonical tasks | real API |
+| **1 — Offline gates** | `npm test` | 18 shared pure functions AST-identical across TS/JS/DWF (SSOT), open-source compliance scan, 49 unit tests | none |
+| **2 — Live Synthetic Exam** | `npm run benchmark:live` | Real Pass@1, real token billing, real latency, real boundary behavior on the 15 canonical tasks | real API |
+| **3 — Official SWE-bench Verified** | `python3 benchmarks/swebench/eval.py` | Official Docker container blind test adjudication on SWE-bench Verified tasks | Docker + real API |
 
-Both levels share the same task ground truth (`benchmarks/tasks.mjs`) and the same verdict channel: the verifier subprocess's `process.exitCode`.
+---
 
-## 4. Run It Yourself
+## 5. Run It Yourself
 
 ```bash
+# 1. Offline tests & SSOT verification
+npm test
+
+# 2. In-Repo live synthetic benchmark
 export OPENCODE_API_KEY="oc_sk_..."        # or models.local.json, see README
 npm run benchmark:live -- --check          # auth precheck + tiny probe
-npm run benchmark:live -- --out run.json   # full 10-task A/B exam
-npm run benchmark:live -- --task SWE-JS-001
+npm run benchmark:live -- --out run.json   # 15-task A/B exam
+
+# 3. Official SWE-bench Verified Docker evaluation
+node benchmarks/swebench/runner.mjs --instances benchmarks/swebench/tasks-requests-8.json --mode ab
+python3 benchmarks/swebench/eval.py --predictions benchmarks/swebench/predictions-teamwork.jsonl
 ```

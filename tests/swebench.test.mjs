@@ -11,6 +11,9 @@ import {
   buildSwebenchSystemPrompt,
   buildSwebenchUserPrompt,
   extractFileBlocks,
+  extractReadRequests,
+  readRepoFile,
+  renderReadResponses,
   applyFileWrites,
   appendPrediction,
   parseCliArgs,
@@ -121,4 +124,76 @@ test("SWE-bench loader: loader.py CLI --info executes cleanly and outputs datase
   assert.ok(res.stdout.includes("Total Verified Instances: 500"));
   assert.ok(res.stdout.includes("django/django"));
   assert.ok(res.stdout.includes("psf/requests"));
+});
+
+test("SWE-bench adapter: read-request protocol extraction and sandbox-contained file reads", () => {
+  const text = [
+    "Let me inspect the model layer first.",
+    '<read path="requests/models.py"/>',
+    '<read path="requests/adapters.py"/>',
+    '<read path="../../etc/passwd"/>',
+    '<read path="requests/models.py"/>', // duplicate must be deduped
+  ].join("\n");
+  const requests = extractReadRequests(text);
+  assert.deepEqual(requests, ["requests/models.py", "requests/adapters.py", "../../etc/passwd"]);
+
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "swebench-read-"));
+  try {
+    fs.mkdirSync(path.join(tmpDir, "requests"), { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, "requests", "models.py"), "class Response:\n    pass\n", "utf8");
+
+    const ok = readRepoFile(tmpDir, "requests/models.py");
+    assert.ok(ok.content.includes("class Response:"));
+
+    const escaped = readRepoFile(tmpDir, "../../etc/passwd");
+    assert.equal(escaped.error, "path escapes sandbox");
+    assert.ok(renderReadResponses([escaped]).includes('error="path escapes sandbox"'));
+
+    const truncated = readRepoFile(tmpDir, "requests/models.py", { maxChars: 6 });
+    assert.equal(truncated.truncated, true);
+    assert.ok(renderReadResponses([truncated]).includes("[truncated"));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
+test("SWE-bench adapter: buildSwebenchUserPrompt embeds file tree and read protocol only when provided", () => {
+  const instance = {
+    instance_id: "psf__requests-1142",
+    repo: "psf/requests",
+    problem_statement: "content-length always sent",
+  };
+
+  const bare = buildSwebenchUserPrompt(instance);
+  assert.ok(bare.includes("psf__requests-1142"));
+  assert.ok(!bare.includes("<read path="), "No read protocol without a live tree");
+
+  const withTree = buildSwebenchUserPrompt(instance, {
+    tree: "requests/__init__.py\nrequests/models.py",
+    totalFiles: 2,
+    truncated: false,
+  });
+  assert.ok(withTree.includes("requests/models.py"));
+  assert.ok(withTree.includes('<read path="requests/models.py"/>'));
+  assert.ok(!withTree.includes("[tree truncated"));
+});
+
+test("SWE-bench adapter: parseCliArgs accepts driver flags and keeps defaults", () => {
+  const args = parseCliArgs([
+    "--instances", "/tmp/tasks.json",
+    "--mode", "baseline",
+    "--model", "deepseek-v4.1-flash",
+    "--max-turns", "12",
+    "--api-key", "k",
+    "--keep-sandboxes",
+  ]);
+  assert.equal(args.mode, "baseline");
+  assert.equal(args.maxTurns, 12);
+  assert.equal(args.apiKey, "k");
+  assert.equal(args.keepSandboxes, true);
+
+  const defaults = parseCliArgs([]);
+  assert.equal(defaults.mode, "teamwork");
+  assert.equal(defaults.maxTurns, 6);
+  assert.equal(defaults.keepSandboxes, false);
 });

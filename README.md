@@ -42,11 +42,26 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## Empirical Benchmark & Real-World Case Studies
 
-> **Full Bilingual Live-Eval Report**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for methodology, per-task telemetry, failure-mode analysis, and raw run artifacts across 10 canonical multi-file engineering tasks grounded in SWE-bench (Lite/Verified) & Aider methodology. Reproduce with `npm run benchmark:live` (real API calls; see [Testing & Build Verification](#testing--build-verification-two-level-architecture)).
+> 🏆 **SWE-bench Verified Official Docker Evaluation (`psf/requests` 8 Tasks)**:
+> In full blind containerized evaluation against real-world GitHub issues with `deepseek-v4.1-flash`: `agent-teamwork` achieved **62.5% Pass@1 (5/8)** vs Solo baseline **50.0% (4/8)** — achieving a **+12.5% Pass@1 margin**, **0 vs 1 fatal patch errors**, and **−42.8% token overhead** (+75% Solo token bloat). Details: [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md) & [`BENCHMARKS.md`](BENCHMARKS.md).
+>
+> 🚀 **15-Task Live Synthetic Benchmark (`deepseek-v4.1-flash`)**:
+> Pass@1 100% vs 100% ceiling, 18 vs 0 out-of-bounds writes, 2 vs 0 false victory claims, and −24% API calls. Details: [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md).
+>
+> 📖 **Full Bilingual Live-Eval Portal**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete methodology, telemetry, and raw scorecards.
 
-### Live Scorecard: Solo vs agent-teamwork v0.3.0 (OpenCode Zen + mimo-v2.6-flash, 2026-10-24)
+### Live Scorecard: SWE-bench Verified (`psf/requests` · Official Docker Adjudication)
 
-One live A/B exam, same model/endpoint/budgets in both tracks, verdicts from real subprocess exit codes:
+| Key Metric | Solo (Track A) | + agent-teamwork (Track B) | Delta | Note |
+| :--- | :---: | :---: | :---: | :--- |
+| **Official Resolved (Pass@1)** | 4/8 (50.0%) | **5/8 (62.5%)** | **+12.5 pts** | Blind holdout container verification |
+| **Fatal Patch Errors (`git apply`)** | 1 (`psf__requests-6028`) | **0** | **−1 error** | Monolithic rewrite vs surgical 535-char patch |
+| **Total Tokens Consumed** | 418k | **239k** | **−42.8%** | Solo suffered +75.0% token bloat |
+| **API Calls Consumed** | 21 | **17** | **−19.0%** | Multi-turn read protocol stabilized convergence |
+
+### Historical Baseline Scorecard (mimo-v2.6-flash, 2026-10-24)
+
+Initial 10-task exam where write-aware engine improvements were diagnosed and developed:
 
 | Key Metric | Solo (Unguided) | `agent-teamwork` (v0.3.0) | Delta | Note |
 | :--- | :---: | :---: | :---: | :--- |
@@ -202,20 +217,31 @@ To uninstall and restore backups:
 
 ---
 
-## Testing & Build Verification: Two-Level Architecture
+## Testing & Build Verification: Multi-Level Architecture
 
 **Level-1 — Deterministic offline gates (no network, no API key):**
 
 ```bash
-npm test                      # node scripts/build.mjs (SSOT parity + open-source compliance) + all unit tests
-npm run benchmark             # Level-1 state-machine benchmark over the 10 canonical tasks (offline runner)
+npm test                      # node scripts/build.mjs (SSOT parity + open-source compliance) + all 49 unit tests
+npm run benchmark             # Level-1 state-machine benchmark over the canonical tasks (offline runner)
 ```
 
 **Level-2 — Real online API evaluation (`npm run benchmark:live`):**
 
-Runs the same 10 canonical SWE-bench tasks as a genuine live A/B exam — Track A (Solo: single model, monolithic prompt, no guardrails) vs Track B (model + agent-teamwork: scoping contract, path lock, failure-tail feedback, stagnation early-stop) — each task in its own git sandbox under `os.tmpdir()`, scored strictly by real subprocess exit codes, real `usage` token accounting, and real wall-clock latency.
+Runs the 15 canonical SWE-bench tasks as a genuine live A/B exam — Track A (Solo: single model, monolithic prompt, no guardrails) vs Track B (model + agent-teamwork: scoping contract, path lock, failure-tail feedback, write-aware stagnation recovery) — each task in its own git sandbox under `os.tmpdir()`, scored strictly by real subprocess exit codes, real `usage` token accounting, and real wall-clock latency.
 
-Configure the endpoint and key (default: OpenCode Zen gateway + `mimo-v2.6-flash`):
+**Level-3 — Official SWE-bench Verified containerized evaluation (`benchmarks/swebench/`):**
+
+Generates standard `predictions.jsonl` using the multi-turn `<read path="..."/>` protocol and path lock, then verifies blind patches via the official Docker harness (`swebench.harness.run_evaluation`):
+
+```bash
+# Export tasks, run agent-teamwork, and evaluate in Docker
+python3 benchmarks/swebench/loader.py --repo psf/requests --export /tmp/tasks.json
+node benchmarks/swebench/runner.mjs --instances /tmp/tasks.json --mode ab
+python3 benchmarks/swebench/eval.py --predictions benchmarks/swebench/predictions-teamwork.jsonl
+```
+
+Configure the endpoint and key (default: OpenCode Zen gateway + `deepseek-v4.1-flash` or `mimo-v2.6-flash`):
 
 ```bash
 # Option 1: environment variables

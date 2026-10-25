@@ -13,3 +13,5 @@ models.local.json
 .video_agent/
 .zcode/
 benchmarks/swebench/cache/
+logs/
+
