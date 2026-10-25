@@ -17,7 +17,7 @@ import urllib.request
 import pandas as pd
 
 HUGGINGFACE_PARQUET_URL = (
-    "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified"
+    "https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified"
     "/resolve/main/data/test-00000-of-00001.parquet"
 )
 
@@ -94,6 +94,7 @@ def export_instances(
             "hints_text": str(row.get("hints_text", "") or ""),
             "environment_setup_commit": str(row.get("environment_setup_commit", "") or ""),
             "difficulty": str(row.get("difficulty", "") or ""),
+            "image": str(row.get("image", "") or ""),
         }
         if not hide_gold:
             rec["patch"] = str(row.get("patch", "") or "")
