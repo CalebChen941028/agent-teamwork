@@ -531,7 +531,7 @@ export async function runSwebenchInstance({
 // Predictions Exporter
 // ---------------------------------------------------------------------------
 
-export function appendPrediction(predictionsPath, { instanceId, modelPatch, modelName = "agent-teamwork-v0.4.0" }) {
+export function appendPrediction(predictionsPath, { instanceId, modelPatch, modelName = "agent-teamwork-v0.5.0" }) {
   const line = JSON.stringify({
     instance_id: instanceId,
     model_name_or_path: modelName,
@@ -651,7 +651,7 @@ function predictionsPathFor(args, track) {
 }
 
 function modelNameFor(track, model) {
-  return track === "teamwork" ? `agent-teamwork-v0.4.0+swebench (${model})` : `${model}-solo`;
+  return track === "teamwork" ? `agent-teamwork-v0.5.0+swebench (${model})` : `${model}-solo`;
 }
 
 function summarizeResult(result) {

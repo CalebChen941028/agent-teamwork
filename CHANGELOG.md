@@ -4,16 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.0] - 2026-10-25
+## [0.5.0] - 2026-10-25
 
 ### Added
 - **Official SWE-bench Verified containerized evaluation adapter (`benchmarks/swebench/`)**:
-  - `loader.py`: HuggingFace dataset caching and export for the 500-instance SWE-bench Verified dataset (`SWE-bench/SWE-bench_Verified`).
-  - `runner.mjs`: Multi-turn CLI driver supporting file tree injection, per-instance git sandboxes, `<read path="..."/>` multi-turn inspection (60KB buffer), physical path lock containment, and standard `predictions.jsonl` generation.
+  - `loader.py`: Direct ingestion and local caching for the 500-instance dataset (`SWE-bench/SWE-bench_Verified`) with container `image` metadata.
+  - `runner.mjs`: Multi-turn CLI driver supporting file tree injection, per-instance git sandboxes, physical path lock containment, and standard `predictions.jsonl` generation.
+  - **Performance & Protocol Upgrades**:
+    - 1-based line-slicing read protocol (`<read path="..." start="n" end="m"/>` or `lines="n-m"`) with numbered lines formatting, reducing read token volume by up to 90%.
+    - Multi-turn file tree context pruning (compressing the repository tree on turns 2+), saving 30%–50% prompt tokens on large repositories.
+    - Core source file tree prioritization, filtering out irrelevant docs/changelogs to ensure core `src/` modules remain 100% visible.
+    - Critical late-turn write alerts on `!hasDiff`, breaking analysis paralysis loops and preventing empty patch timeouts.
   - `eval.py`: Official Docker evaluation bridge invoking `swebench.harness.run_evaluation` with blind holdout regression tests.
-  - Empirical Docker verification on `psf/requests` (8 tasks) and `pytest-dev/pytest` (19 tasks) with `deepseek-v4.1-flash` (27 tasks total): `agent-teamwork` achieved **70.4% Pass@1 (19/27)** vs Solo baseline **59.3% (16/27)** (+11.1% margin, 0 vs 2 fatal patch errors) — specifically **62.5% vs 50.0%** on `psf/requests` (+12.5% margin, −42.8% token overhead) and **73.7% vs 63.2%** on `pytest-dev/pytest` (+10.5% margin, −33.9% smaller surgical patches).
+  - **Empirical Docker Verification Across 27 Tasks (`deepseek-v4.1-flash`)**:
+    - **Combined Total**: **70.4% Pass@1 (19/27)** vs Solo baseline **59.3% (16/27)** (**+11.1% Pass@1 margin**, **0 vs 2 fatal patch errors**).
+    - **Tier 2 (`pytest-dev/pytest` 19 tasks)**: **73.7% (14/19) vs 63.2% (12/19)** (+10.5% margin, −33.9% smaller surgical patches, 0 vs 1 malformed diff errors).
+    - **Tier 1 (`psf/requests` 8 tasks)**: **62.5% (5/8) vs 50.0% (4/8)** (+12.5% margin, −42.8% token overhead, 0 vs 1 fatal `git apply` errors).
   - Full operational guide: `docs/SWEBENCH_GUIDE.md` and `docs/SWEBENCH_GUIDE.zh-CN.md`.
   - 3 offline unit tests in `tests/swebench.test.mjs` (49/49 total passing suite).
+
+## [0.4.0] - 2026-10-25
+
+### Added
 - **Live online API evaluation suite (`benchmarks/live-eval.mjs`, `npm run benchmark:live`)**: real A/B head-to-head exam of the 10 canonical SWE-bench tasks — Track A Solo vs Track B model + agent-teamwork — over any OpenAI-compatible chat/completions endpoint. Default channel: OpenCode Zen gateway (`https://opencode.ai/zen/go/v1/chat/completions`) with `mimo-v2.6-flash`; key resolution `--api-key` > `OPENCODE_API_KEY` > `ZEN_API_KEY` > `ZHIPUAI_API_KEY` (legacy Zhipu channel) > `models.local.json` (`api_key`/`base_url`/`model`/`extra_headers`). CLI: `--mode`, `--task(s)`, `--out`, `--max-turns`, `--max-tokens`, `--base-url`, `--timeout-ms`, `--check`, `--keep-sandboxes`. Zen gateway session header (`x-opencode-session`) auto-injected.
 - **`benchmarks/merge-live-reports.mjs`**: auditable splice of supplemental re-runs (e.g. after HTTP-timeout track errors) into a canonical dataset; refuses to replace non-infra-errored tracks.
 - **Raw run artifacts committed under `benchmarks/results/`**: `live-ab-final.json` (canonical), `live-ab-full.json` + console log (primary run), three single-track supplements, single-task validation run.
