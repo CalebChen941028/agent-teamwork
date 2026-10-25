@@ -211,15 +211,102 @@ test("SWE-bench adapter: parseCliArgs accepts driver flags and keeps defaults", 
     "--model", "deepseek-v4.1-flash",
     "--max-turns", "12",
     "--api-key", "k",
+    "--concurrency", "4",
+    "--resume",
     "--keep-sandboxes",
   ]);
   assert.equal(args.mode, "baseline");
   assert.equal(args.maxTurns, 12);
   assert.equal(args.apiKey, "k");
+  assert.equal(args.concurrency, 4);
+  assert.equal(args.resume, true);
   assert.equal(args.keepSandboxes, true);
 
   const defaults = parseCliArgs([]);
   assert.equal(defaults.mode, "teamwork");
   assert.equal(defaults.maxTurns, 6);
+  assert.equal(defaults.concurrency, 1);
+  assert.equal(defaults.resume, false);
   assert.equal(defaults.keepSandboxes, false);
+});
+
+test("SWE-bench adapter: extractFileBlocks and applyFileWrites support surgical block replace & whitespace normalization", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "swebench-replace-test-"));
+  try {
+    const filePath = path.join(tmpDir, "calculator.py");
+    fs.writeFileSync(filePath, "def add(a, b):\n    return a - b\n\ndef sub(a, b):\n    return a - b\n", "utf8");
+
+    // 1. Tagged <replace> block
+    const taggedResponse = [
+      '<replace path="calculator.py">',
+      "<target>",
+      "def add(a, b):",
+      "    return a - b",
+      "</target>",
+      "<replacement>",
+      "def add(a, b):",
+      "    return a + b",
+      "</replacement>",
+      "</replace>",
+    ].join("\n");
+
+    const blocks = extractFileBlocks(taggedResponse);
+    assert.equal(blocks.length, 1);
+    assert.equal(blocks[0].type, "replace");
+    assert.equal(blocks[0].path, "calculator.py");
+    assert.ok(blocks[0].target.includes("return a - b"));
+    assert.ok(blocks[0].replacement.includes("return a + b"));
+
+    const writeReport = applyFileWrites(tmpDir, blocks);
+    assert.equal(writeReport.written.length, 1);
+    assert.equal(writeReport.written[0], "calculator.py");
+    assert.equal(writeReport.failed.length, 0);
+
+    const updated = fs.readFileSync(filePath, "utf8");
+    assert.ok(updated.includes("return a + b"));
+    assert.ok(updated.endsWith("\n"), "Must ensure clean trailing newline");
+
+    // 2. Aider-style search/replace block
+    const aiderResponse = [
+      '<replace path="calculator.py">',
+      "<<<<<<< SEARCH",
+      "def sub(a, b):",
+      "    return a - b",
+      "=======",
+      "def sub(a, b):",
+      "    # Fixed subtraction",
+      "    return a - b",
+      ">>>>>>> REPLACE",
+      "</replace>",
+    ].join("\n");
+
+    const aiderBlocks = extractFileBlocks(aiderResponse);
+    assert.equal(aiderBlocks.length, 1);
+    assert.equal(aiderBlocks[0].type, "replace");
+
+    const aiderReport = applyFileWrites(tmpDir, aiderBlocks);
+    assert.equal(aiderReport.written.length, 1);
+    const aiderUpdated = fs.readFileSync(filePath, "utf8");
+    assert.ok(aiderUpdated.includes("# Fixed subtraction"));
+
+    // 3. Error reporting when target block does not exist
+    const invalidResponse = [
+      '<replace path="calculator.py">',
+      "<target>",
+      "non_existent_function_call()",
+      "</target>",
+      "<replacement>",
+      "fixed()",
+      "</replacement>",
+      "</replace>",
+    ].join("\n");
+
+    const invalidBlocks = extractFileBlocks(invalidResponse);
+    const invalidReport = applyFileWrites(tmpDir, invalidBlocks);
+    assert.equal(invalidReport.written.length, 0);
+    assert.equal(invalidReport.failed.length, 1);
+    assert.ok(invalidReport.failed[0].includes("target block not found"));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
 });

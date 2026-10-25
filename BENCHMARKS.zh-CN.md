@@ -2,7 +2,7 @@
 
 [![Version: 0.5.0](https://img.shields.io/badge/version-0.5.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-49%2F49%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
@@ -176,7 +176,7 @@ Solo (mimo-v2.6-flash)          [███████████████�
 
 | 层级 | 命令 | 证明什么 | 网络依赖 |
 | :--- | :--- | :--- | :---: |
-| **1 —— 离线门禁** | `npm test` | 18 个共享纯函数 TS/JS/DWF 三端 AST 同构（SSOT）、开源合规扫描、49 项单测 | 无 |
+| **1 —— 离线门禁** | `npm test` | 18 个共享纯函数 TS/JS/DWF 三端 AST 同构（SSOT）、开源合规扫描、50 项单测 | 无 |
 | **2 —— 在线合成大考** | `npm run benchmark:live` | 15 项真实软件工程基准任务上的 Pass@1、真实 Token 账单与越界拦截 | 真实 API |
 | **3 —— 官方 SWE-bench 实测** | `python3 benchmarks/swebench/eval.py` | 官方 SWE-bench Verified 工业级沙箱容器隐藏盲测裁决 | Docker + 真实 API |
 

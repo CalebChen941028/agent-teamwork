@@ -2,7 +2,7 @@
 
 [![Version: 0.5.0](https://img.shields.io/badge/version-0.5.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-49%2F49%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
@@ -176,7 +176,7 @@ The canonical benchmark suite includes 15 standardized engineering tasks:
 
 | Level | Command | What it proves | Network |
 | :--- | :--- | :--- | :---: |
-| **1 — Offline gates** | `npm test` | 18 shared pure functions AST-identical across TS/JS/DWF (SSOT), open-source compliance scan, 49 unit tests | none |
+| **1 — Offline gates** | `npm test` | 18 shared pure functions AST-identical across TS/JS/DWF (SSOT), open-source compliance scan, 50 unit tests | none |
 | **2 — Live Synthetic Exam** | `npm run benchmark:live` | Real Pass@1, real token billing, real latency, real boundary behavior on the 15 canonical tasks | real API |
 | **3 — Official SWE-bench Verified** | `python3 benchmarks/swebench/eval.py` | Official Docker container blind test adjudication on SWE-bench Verified tasks | Docker + real API |
 

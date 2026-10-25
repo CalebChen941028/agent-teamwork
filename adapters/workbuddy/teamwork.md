@@ -23,6 +23,9 @@ Designed for **WorkBuddy** (including WorkBuddy-Bench office, web, and code work
 3. **Two-Level Harness² Recursion**:
    - **Task-Level (`invariant` & `domain` Guardrails)**: Synthesized via `composeHarnessGuardrails`. When a milestone check fails (broken build, mismatched schema, missing edge case), formulate a compact `invariant` or `domain` rule and inject it into the Reworker and subsequent milestones.
    - **Cross-Task Experience Library (`~/.config/agent-teamwork/experience.json`)**: Retrieved via `rankExperienceLibrary` and recorded after the final audit; strictly discards `confounded` multi-factor guesses.
+4. **Surgical Diff & Block Edit Discipline**: On existing files, apply targeted block replacement instead of whole-file overhauls.
+5. **Syntax & Pre-flight Verification**: Run syntax checks (`python -m py_compile`, `node --check`) before executing suite tests to prevent test collection crashes.
+6. **Budget-Aware Action Urgency**: When budget runs low, prioritize emitting concrete, verifiable code edits over pure analysis.
 
 ### Execution Stages
 1. **Stage 1 — Scoping & Conformance Alignment**: Confirm Primary Goal, The Goal Behind the Goal, exact Deliverable Schema/Path Contract, Non-Goals, and `verifyCommand`.
@@ -55,6 +58,7 @@ Designed for **WorkBuddy** (including WorkBuddy-Bench office, web, and code work
 3. **Harness² 双层递归自适应**：
    - **任务内护栏（`composeHarnessGuardrails`）**：当某里程碑出现构建失败或格式偏差时，提炼精简护栏注入返工与后续里程碑。
    - **跨任务经验库（`rankExperienceLibrary`）**：终局审计提炼 `{ cue, lesson, evidence }` 三元组，严格剔除 `confounded`（多因素混杂）条目。
+4. **手术式块替换与预检门禁**：对既有代码/文件优先采取局部块替换；运行重型命令前先执行语法预检；预算过半后停止泛分析强制落盘。
 
 ### 五阶段执行流
 1. **范围与交付契约对齐**：确认直接目标、目标背后的目标、精确的交付物结构契约、明确不做的边界以及统一验收命令 `verifyCommand`。

@@ -19,6 +19,8 @@
 - **Phase 3: Parallel Milestone Execution & Empirical Micro-Test Synthesis**:
   - Snapshots baseline dirty files before milestone execution.
   - If no global `verifyCommand` is provided, synthesizes language-aware empirical micro-test plans (`synthesizeMicroTestPlan`).
+  - Enforces surgical block edit discipline (`<replace>` over monolithic rewrites) and pre-flight syntax checks (`python -m py_compile`, `node --check`).
+  - Injects budget urgency alerts to prevent analysis paralysis in late rounds.
   - Dispatches parallel worker items with clean contexts and active Harness² guardrails.
   - Computes incremental out-of-bounds file modifications via `findOutOfBoundsFiles`.
 - **Phase 4: Adversarial Quality Gate & Guardrail Evolution**:
@@ -87,6 +89,8 @@ Phase 7: End-to-End Audit, Harness² Experience Reflection & Report Generation
 - **阶段三：增量快照施工、实证微测合成与路径边界拦截**：
   - 开工前记录工作区基准脏文件快照。
   - 若未提供统一命令，针对交付物自动合成实证微测方案（`synthesizeMicroTestPlan`）。
+  - 执行手术式局部块编辑纪律（`<replace>` 优于全文件重写）与单文件语法预检（`python -m py_compile`、`node --check`）。
+  - 在多轮后程注入预算紧迫感告警，坚决打破分析瘫痪。
   - 以独立上下文和动态护栏并行派发施工工作项。
   - 施工后通过 `findOutOfBoundsFiles` 精准拦截越界改动。
 - **阶段四：质检验收与结构化对抗挑战**：

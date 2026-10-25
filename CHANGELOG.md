@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Multi-turn file tree context pruning (compressing the repository tree on turns 2+), saving 30%–50% prompt tokens on large repositories.
     - Core source file tree prioritization, filtering out irrelevant docs/changelogs to ensure core `src/` modules remain 100% visible.
     - Critical late-turn write alerts on `!hasDiff`, breaking analysis paralysis loops and preventing empty patch timeouts.
+    - Surgical block edit protocol (`<replace path="...">` with `<target>`/`<replacement>` and Aider markers), eliminating whole-file diff corruption and saving massive context tokens.
+    - Pre-flight syntax and import check integration (`python -m py_compile`, `node --check`) catching compilation defects before running test runners.
+    - High-reliability checkpointing (`--resume`) and concurrent evaluation worker pool (`--concurrency N`).
+    - Cross-platform synchronization of surgical edit, import pre-flight, and budget action urgency across Claude Code, Codex, DeepSeek, WorkBuddy, and Generic adapters.
   - `eval.py`: Official Docker evaluation bridge invoking `swebench.harness.run_evaluation` with blind holdout regression tests.
   - **Empirical Docker Verification Across 52 Verified Tasks (`deepseek-v4.1-flash`)**:
     - **Cumulative Grand Total**: **55.8% Pass@1 (29/52)** vs Solo baseline **46.2% (24/52)** (**+9.6% Pass@1 margin**, **net +5 resolved tasks**, 3 vs 5 fatal patch errors, over 2.0M tokens saved).
@@ -22,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Tier 2 (`pytest-dev/pytest` 19 tasks)**: **73.7% (14/19) vs 63.2% (12/19)** (+10.5% margin, −33.9% smaller surgical patches, 0 vs 1 malformed diff errors).
     - **Tier 1 (`psf/requests` 8 tasks)**: **62.5% (5/8) vs 50.0% (4/8)** (+12.5% margin, −42.8% token overhead, 0 vs 1 fatal `git apply` errors).
   - Full operational guide: `docs/SWEBENCH_GUIDE.md` and `docs/SWEBENCH_GUIDE.zh-CN.md`.
-  - 3 offline unit tests in `tests/swebench.test.mjs` (49/49 total passing suite).
+  - 4 offline unit tests in `tests/swebench.test.mjs` (50/50 total passing suite).
 
 ## [0.4.0] - 2026-10-25
 

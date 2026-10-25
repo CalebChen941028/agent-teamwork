@@ -58,41 +58,128 @@ function git(cwd, args, options = {}) {
 
 export function extractUnifiedDiff(repoDir) {
   const res = git(repoDir, ["diff", "HEAD"]);
-  return (res.stdout || "").trim();
+  let diff = (res.stdout || "").trim();
+  if (diff && !diff.endsWith("\n")) {
+    diff += "\n";
+  }
+  return diff;
 }
 
 export function extractFileBlocks(text) {
   const blocks = [];
   const source = String(text || "");
+
+  // 1. Surgical block replacements: <replace path="..."> or <edit path="...">
+  const replaceRe = /<(?:replace|edit)\s+path=["']([^"']+)["']>([\s\S]*?)<\/(?:replace|edit)>/gi;
+  let rMatch;
+  while ((rMatch = replaceRe.exec(source)) !== null) {
+    const filePath = rMatch[1].trim();
+    const body = rMatch[2];
+
+    const targetMatch = /<(?:target|search)>([\s\S]*?)<\/(?:target|search)>/i.exec(body);
+    const replacementMatch = /<(?:replacement|action)>([\s\S]*?)<\/(?:replacement|action)>/i.exec(body);
+
+    if (targetMatch && replacementMatch) {
+      blocks.push({
+        type: "replace",
+        path: filePath,
+        target: targetMatch[1],
+        replacement: replacementMatch[1],
+      });
+      continue;
+    }
+
+    const searchReplaceRe = /<{7}\s*SEARCH\s*\n([\s\S]*?)\n={7}\s*\n([\s\S]*?)\n>{7}\s*REPLACE/g;
+    const srMatches = Array.from(body.matchAll(searchReplaceRe));
+    if (srMatches.length > 0) {
+      for (const sm of srMatches) {
+        blocks.push({
+          type: "replace",
+          path: filePath,
+          target: sm[1],
+          replacement: sm[2],
+        });
+      }
+      continue;
+    }
+  }
+
+  // 2. Full-file replacement: <file path="...">...</file>
   const tagRe = /<file\s+path=["']([^"']+)["']>([\s\S]*?)<\/file>/gi;
   let match;
   while ((match = tagRe.exec(source)) !== null) {
-    blocks.push({ path: match[1].trim(), content: match[2] });
+    blocks.push({ type: "write", path: match[1].trim(), content: match[2] });
   }
+
   return blocks;
 }
 
 export function applyFileWrites(repoDir, files) {
   const written = [];
   const escaped = [];
+  const failed = [];
   const resolvedRoot = path.resolve(repoDir);
 
-  for (const f of files) {
+  for (const f of files || []) {
     const rel = normalizeRelPath(f.path);
+    if (!rel) {
+      failed.push("<empty-path>");
+      continue;
+    }
     const abs = path.resolve(repoDir, rel);
     if (!abs.startsWith(resolvedRoot + path.sep) && abs !== resolvedRoot) {
       escaped.push(rel);
       continue;
     }
+
+    if (f.type === "replace") {
+      try {
+        if (!fs.existsSync(abs)) {
+          failed.push(`${rel}: file does not exist for surgical replace`);
+          continue;
+        }
+        let original = fs.readFileSync(abs, "utf8");
+        const target = f.target ?? "";
+        const replacement = f.replacement ?? "";
+
+        if (original.includes(target)) {
+          original = original.replace(target, replacement);
+        } else {
+          // Flexible whitespace matching fallback (normalize CRLF and trailing spaces per line)
+          const normTarget = target.trim().replace(/\r\n/g, "\n");
+          const normOriginal = original.replace(/\r\n/g, "\n");
+          if (normOriginal.includes(normTarget)) {
+            original = normOriginal.replace(normTarget, replacement.replace(/\r\n/g, "\n"));
+          } else {
+            failed.push(`${rel}: target block not found in file`);
+            continue;
+          }
+        }
+        if (original.length > 0 && !original.endsWith("\n")) {
+          original += "\n";
+        }
+        fs.writeFileSync(abs, original, "utf8");
+        written.push(rel);
+      } catch (err) {
+        failed.push(`${rel}: ${(err && err.message) || "replace error"}`);
+      }
+      continue;
+    }
+
+    // Default: full file write
     try {
       fs.mkdirSync(path.dirname(abs), { recursive: true });
-      fs.writeFileSync(abs, f.content, "utf8");
+      let content = typeof f.content === "string" ? f.content : "";
+      if (content.length > 0 && !content.endsWith("\n")) {
+        content += "\n";
+      }
+      fs.writeFileSync(abs, content, "utf8");
       written.push(rel);
     } catch {
       escaped.push(rel);
     }
   }
-  return { written, escaped };
+  return { written, escaped, failed };
 }
 
 // ---------------------------------------------------------------------------
@@ -312,8 +399,19 @@ export function buildSwebenchScopingContract(instance) {
 export function buildSwebenchSystemPrompt(contract, track = "teamwork") {
   const fileProtocol = [
     "File Modification Protocol (Strict):",
+    "Preferred (Surgical Block Replacement - saves context & prevents diff corruption):",
+    '<replace path="relative/path/to/source_file.py">',
+    "<target>",
+    "exact existing code snippet to replace",
+    "</target>",
+    "<replacement>",
+    "new replacement code",
+    "</replacement>",
+    "</replace>",
+    "",
+    "Full-File Overwrite (for new files or complete file rewrites):",
     '<file path="relative/path/to/source_file.py">',
-    "...complete revised file content (no diffs, no placeholders)...",
+    "...complete revised file content (no placeholders)...",
     "</file>",
     "End reply with: STATUS: DONE or STATUS: CONTINUE.",
   ].join("\n");
@@ -335,8 +433,9 @@ export function buildSwebenchSystemPrompt(contract, track = "teamwork") {
     "",
     "Engine Guardrails (Strict Enforcement):",
     "1. BOUNDARY LOCK: Modify ONLY repository implementation files. Never tamper with tests/ or .git/.",
-    "2. SURGICAL DISCIPLINE: Make minimal, backwards-compatible fixes. Do not refactor unrelated modules.",
-    "3. ADVERSARIAL RIGOR: Enumerate edge cases (empty inputs, unicode, type bounds) before claiming completion.",
+    "2. SURGICAL DISCIPLINE: Make minimal, backwards-compatible fixes. Prefer <replace> over full file rewrites.",
+    "3. IMPORT & DISCOVERY INTEGRITY: Ensure modified modules compile cleanly without syntax errors and preserve package importability.",
+    "4. ADVERSARIAL RIGOR: Enumerate edge cases (empty inputs, unicode, type bounds) before claiming completion.",
     "",
     fileProtocol,
   ].join("\n");
@@ -488,20 +587,43 @@ export async function runSwebenchInstance({
 
     if (!wroteFiles) {
       if (readRequests.length === 0) {
-        feedbackParts.push("[NO DISK WRITES] You produced analysis but wrote no files. Emit <file path=\"...\"> blocks to apply changes.");
+        feedbackParts.push("[NO DISK WRITES] You produced analysis but wrote no files. Emit <replace path=\"...\"> or <file path=\"...\"> blocks to apply changes.");
       }
     } else {
       feedbackParts.push(`[DISK WRITES APPLIED] Modified files: ${writeReport.written.join(", ")}. Inspect git status and continue.`);
+    }
+
+    if (writeReport.failed && writeReport.failed.length > 0) {
+      feedbackParts.push(`[WRITE ERROR] Failed to apply edit block(s): ${writeReport.failed.join("; ")}`);
+    }
+
+    // Pre-flight syntax validation on written files
+    if (writeReport.written.length > 0) {
+      for (const rel of writeReport.written) {
+        if (rel.endsWith(".py")) {
+          const pyComp = spawnSync("python3", ["-m", "py_compile", path.join(repoDir, rel)], { encoding: "utf8" });
+          if (pyComp.status !== 0) {
+            const errTail = formatFailureOutput(pyComp.stdout, pyComp.stderr, 400);
+            feedbackParts.push(`[SYNTAX INTEGRITY WARNING] python3 -m py_compile failed on ${rel}:\n${errTail}\nFix this syntax defect immediately.`);
+          }
+        } else if (rel.endsWith(".js") || rel.endsWith(".mjs")) {
+          const jsComp = spawnSync("node", ["--check", path.join(repoDir, rel)], { encoding: "utf8" });
+          if (jsComp.status !== 0) {
+            const errTail = formatFailureOutput(jsComp.stdout, jsComp.stderr, 400);
+            feedbackParts.push(`[SYNTAX INTEGRITY WARNING] node --check failed on ${rel}:\n${errTail}\nFix this syntax defect immediately.`);
+          }
+        }
+      }
     }
 
     // Critical Urgency Nudge if no files have been modified yet in the late turns
     const urgentTurnThreshold = Math.max(3, maxTurns - 2);
     if (!hasDiff && turn >= urgentTurnThreshold) {
       feedbackParts.push(
-        `[CRITICAL BUDGET ALERT: Turn ${turn} of ${maxTurns}] Zero files have been modified so far. You are at imminent risk of an EMPTY PATCH failure! You MUST stop reading/exploration now and emit concrete <file path="...">...</file> patch blocks in your next response!`
+        `[CRITICAL BUDGET ALERT: Turn ${turn} of ${maxTurns}] Zero files have been modified so far. You are at imminent risk of an EMPTY PATCH failure! You MUST stop reading/exploration now and emit concrete <replace path="..."> or <file path="..."> patch blocks in your next response!`
       );
     } else {
-      feedbackParts.push(`[TURN BUDGET] turn ${turn}/${maxTurns}. When you have located the defect, emit the corrected <file> blocks and end with STATUS: DONE.`);
+      feedbackParts.push(`[TURN BUDGET] turn ${turn}/${maxTurns}. When you have located the defect, emit the corrected <replace> or <file> blocks and end with STATUS: DONE.`);
     }
     messages.push({ role: "user", content: feedbackParts.join("\n") });
   }
@@ -559,6 +681,8 @@ export function parseCliArgs(argv) {
     maxTokens: DEFAULT_MAX_TOKENS,
     apiKey: null,
     baseUrl: null,
+    concurrency: 1,
+    resume: false,
     keepSandboxes: false,
     dryRun: false,
     help: false,
@@ -579,6 +703,9 @@ export function parseCliArgs(argv) {
     else if (a === "--max-tokens" && raw[i + 1]) args.maxTokens = Number(raw[++i]) || args.maxTokens;
     else if (a === "--api-key" && raw[i + 1]) args.apiKey = raw[++i];
     else if (a === "--base-url" && raw[i + 1]) args.baseUrl = raw[++i];
+    else if (a === "--concurrency" && raw[i + 1]) args.concurrency = Math.max(1, Number(raw[++i]) || 1);
+    else if (a === "--resume") args.resume = true;
+    else if (a === "--no-resume") args.resume = false;
     else if (a === "--keep-sandboxes") args.keepSandboxes = true;
     else if (a === "--dry-run") args.dryRun = true;
     else if (a === "-h" || a === "--help") args.help = true;
@@ -598,7 +725,9 @@ Options:
   --instance <id>               Run specific instance_id (e.g. psf__requests-1142)
   --repo <name>                 Filter by repository (e.g. psf/requests, django/django)
   --mode <teamwork|baseline|ab> Evaluation mode (default: teamwork)
-  --model <id>                  Model id (default: deepseek-v4.1-flash)
+  --model <model_name>          Model to evaluate (default: deepseek-v4.1-flash)
+  --concurrency <N>             Number of instances to evaluate in parallel (default: 1)
+  --resume                      Resume from existing predictions file (skips already resolved instances)
   --out-predictions <file>      Path to output predictions.jsonl
                                 (in ab mode: -teamwork / -baseline suffixes are derived)
   --out-report <file.json>      Path to output summary benchmark report
@@ -723,12 +852,27 @@ export async function main(argv = process.argv.slice(2)) {
 
   for (const track of tracks) {
     const predPath = predictionsPathFor(args, track);
-    fs.rmSync(predPath, { force: true });
+    const completedIds = new Set();
+
+    if (args.resume && fs.existsSync(predPath)) {
+      const existingLines = fs.readFileSync(predPath, "utf8").split("\n").filter(Boolean);
+      for (const line of existingLines) {
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed && parsed.instance_id) completedIds.add(parsed.instance_id);
+        } catch {}
+      }
+      console.log(`[resume] Found ${completedIds.size} already completed instance(s) in ${predPath}`);
+    } else {
+      fs.rmSync(predPath, { force: true });
+    }
+
+    const instancesToRun = instances.filter((it) => !completedIds.has(it.instance_id));
     const trackResults = [];
     const trackErrors = [];
-    console.log(`\n=== Track: ${track} → ${predPath} ===`);
+    console.log(`\n=== Track: ${track} → ${predPath} (${instancesToRun.length}/${instances.length} to evaluate) ===`);
 
-    for (const instance of instances) {
+    async function evaluateOne(instance) {
       console.log(`\n[${track}] ${instance.instance_id} (${instance.repo}@${instance.base_commit.slice(0, 10)})`);
       let sandbox = null;
       try {
@@ -764,6 +908,25 @@ export async function main(argv = process.argv.slice(2)) {
           fs.rmSync(sandbox, { recursive: true, force: true });
         }
       }
+    }
+
+    const limit = Math.max(1, args.concurrency || 1);
+    if (limit === 1) {
+      for (const instance of instancesToRun) {
+        await evaluateOne(instance);
+      }
+    } else {
+      console.log(`[concurrency] Running with worker pool size = ${limit}`);
+      const executing = [];
+      for (const instance of instancesToRun) {
+        const p = Promise.resolve().then(() => evaluateOne(instance));
+        const e = p.then(() => executing.splice(executing.indexOf(e), 1));
+        executing.push(e);
+        if (executing.length >= limit) {
+          await Promise.race(executing);
+        }
+      }
+      await Promise.all(executing);
     }
 
     const totals = client.totals();
