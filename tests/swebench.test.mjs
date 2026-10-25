@@ -91,7 +91,7 @@ test("SWE-bench adapter: appendPrediction and eval.py validation", () => {
     appendPrediction(predFile, {
       instanceId: "psf__requests-1142",
       modelPatch: "diff --git a/requests/models.py b/requests/models.py\n--- a/requests/models.py\n+++ b/requests/models.py\n@@ -1,1 +1,2 @@\n",
-      modelName: "agent-teamwork-v0.5.0",
+      modelName: "agent-teamwork-v0.5.1",
     });
 
     assert.ok(fs.existsSync(predFile));
@@ -100,7 +100,7 @@ test("SWE-bench adapter: appendPrediction and eval.py validation", () => {
     const parsed = JSON.parse(lines[0]);
     assert.equal(parsed.instance_id, "psf__requests-1142");
     assert.ok(parsed.model_patch.includes("diff --git"));
-    assert.equal(parsed.model_name_or_path, "agent-teamwork-v0.5.0");
+    assert.equal(parsed.model_name_or_path, "agent-teamwork-v0.5.1");
 
     // Test eval.py --local-check-only
     const evalScript = path.join(rootDir, "benchmarks", "swebench", "eval.py");

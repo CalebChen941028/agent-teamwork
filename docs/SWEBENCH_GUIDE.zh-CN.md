@@ -1,6 +1,6 @@
 # agent-teamwork 官方 SWE-bench Verified 对接与实操指南
 
-[![Version: 0.5.0](https://img.shields.io/badge/version-0.5.0-green.svg)](../CHANGELOG.md)
+[![Version: 0.5.1](https://img.shields.io/badge/version-0.5.1-green.svg)](../CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
 [![Tests: 100% Pass](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](../tests/)
 [![SWE-bench: Verified](https://img.shields.io/badge/SWE--bench-Verified%20(500%20Tasks)-purple.svg)](https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified)

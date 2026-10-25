@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-10-25
+
+### Added
+- **Surgical Block Edit Protocol (`benchmarks/swebench/runner.mjs`)**:
+  - Direct block replacement `<replace path="...">` supporting `<target>` / `<replacement>`, `<search>` / `<action>`, and Aider search/replace markers (`<<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE`).
+  - Eliminates whole-file rewrite failure modes, preventing large diff generation corruptions and saving massive context tokens on large source files.
+- **Language-Aware Pre-Flight Syntax Verification**:
+  - Real-time compilation and syntax sanity checks (`python3 -m py_compile`, `node --check`) executed immediately after file operations.
+  - Feeds structured `[SYNTAX INTEGRITY WARNING]` diagnostic feedback directly into model turns before invoking tests or committing patches.
+- **High-Reliability Concurrent Execution Pool & Checkpointing**:
+  - Added `--concurrency <N>` asynchronous task worker pool for high-throughput batch evaluation.
+  - Added atomic `--resume` checkpointing to seamlessly skip completed instance predictions during network interruptions or rate-limit events.
+- **Universal Cross-Platform Adapter Synchronization**:
+  - Synchronized surgical edit protocols, syntax integrity checks, and budget action urgency across Claude Code, Codex, DeepSeek, WorkBuddy, and Generic adapters, as well as role prompts and skill manifests.
+
+### Fixed
+- **Whitespace Tolerance & Fallback Symmetry (Audit Remediations F1 & F2)**:
+  - Implemented `normalizeForMatching()` in `benchmarks/swebench/runner.mjs` applying per-line trailing whitespace stripping (`trimEnd()`) and symmetric boundary trimming.
+  - Fixes block-matching failures caused by CRLF/LF line ending differences or internal trailing spaces, while strictly guaranteeing byte-level immutability when targets are not found.
+- **Diff Formatting & Trailing Newline Self-Healing**:
+  - Enforced trailing newline (`\n`) normalization in `extractUnifiedDiff` and file writes to prevent `patch unexpectedly ends in middle of line` errors during downstream `git apply` / Docker container evaluation.
+
 ## [0.5.0] - 2026-10-25
 
 ### Added
@@ -15,10 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Multi-turn file tree context pruning (compressing the repository tree on turns 2+), saving 30%–50% prompt tokens on large repositories.
     - Core source file tree prioritization, filtering out irrelevant docs/changelogs to ensure core `src/` modules remain 100% visible.
     - Critical late-turn write alerts on `!hasDiff`, breaking analysis paralysis loops and preventing empty patch timeouts.
-    - Surgical block edit protocol (`<replace path="...">` with `<target>`/`<replacement>` and Aider markers), eliminating whole-file diff corruption and saving massive context tokens.
-    - Pre-flight syntax and import check integration (`python -m py_compile`, `node --check`) catching compilation defects before running test runners.
-    - High-reliability checkpointing (`--resume`) and concurrent evaluation worker pool (`--concurrency N`).
-    - Cross-platform synchronization of surgical edit, import pre-flight, and budget action urgency across Claude Code, Codex, DeepSeek, WorkBuddy, and Generic adapters.
   - `eval.py`: Official Docker evaluation bridge invoking `swebench.harness.run_evaluation` with blind holdout regression tests.
   - **Empirical Docker Verification Across 52 Verified Tasks (`deepseek-v4.1-flash`)**:
     - **Cumulative Grand Total**: **55.8% Pass@1 (29/52)** vs Solo baseline **46.2% (24/52)** (**+9.6% Pass@1 margin**, **net +5 resolved tasks**, 3 vs 5 fatal patch errors, over 2.0M tokens saved).
@@ -26,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - **Tier 2 (`pytest-dev/pytest` 19 tasks)**: **73.7% (14/19) vs 63.2% (12/19)** (+10.5% margin, −33.9% smaller surgical patches, 0 vs 1 malformed diff errors).
     - **Tier 1 (`psf/requests` 8 tasks)**: **62.5% (5/8) vs 50.0% (4/8)** (+12.5% margin, −42.8% token overhead, 0 vs 1 fatal `git apply` errors).
   - Full operational guide: `docs/SWEBENCH_GUIDE.md` and `docs/SWEBENCH_GUIDE.zh-CN.md`.
-  - 4 offline unit tests in `tests/swebench.test.mjs` (50/50 total passing suite).
+  - Offline unit tests in `tests/swebench.test.mjs` (50/50 total passing suite).
 
 ## [0.4.0] - 2026-10-25
 
