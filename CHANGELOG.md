@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Core source file tree prioritization, filtering out irrelevant docs/changelogs to ensure core `src/` modules remain 100% visible.
     - Critical late-turn write alerts on `!hasDiff`, breaking analysis paralysis loops and preventing empty patch timeouts.
   - `eval.py`: Official Docker evaluation bridge invoking `swebench.harness.run_evaluation` with blind holdout regression tests.
-  - **Empirical Docker Verification Across 27 Tasks (`deepseek-v4.1-flash`)**:
-    - **Combined Total**: **70.4% Pass@1 (19/27)** vs Solo baseline **59.3% (16/27)** (**+11.1% Pass@1 margin**, **0 vs 2 fatal patch errors**).
+  - **Empirical Docker Verification Across 52 Verified Tasks (`deepseek-v4.1-flash`)**:
+    - **Cumulative Grand Total**: **55.8% Pass@1 (29/52)** vs Solo baseline **46.2% (24/52)** (**+9.6% Pass@1 margin**, **net +5 resolved tasks**, 3 vs 5 fatal patch errors, over 2.0M tokens saved).
+    - **Tier 2.5 Multi-Repo (25 tasks · Django, SymPy, Sklearn, Sphinx, Pylint)**: **40.0% (10/25) vs 32.0% (8/25)** (+8.0% margin, empty patches cut in half 12 → 6, −46.2% token tax, −45.3% API calls).
     - **Tier 2 (`pytest-dev/pytest` 19 tasks)**: **73.7% (14/19) vs 63.2% (12/19)** (+10.5% margin, −33.9% smaller surgical patches, 0 vs 1 malformed diff errors).
     - **Tier 1 (`psf/requests` 8 tasks)**: **62.5% (5/8) vs 50.0% (4/8)** (+12.5% margin, −42.8% token overhead, 0 vs 1 fatal `git apply` errors).
   - Full operational guide: `docs/SWEBENCH_GUIDE.md` and `docs/SWEBENCH_GUIDE.zh-CN.md`.

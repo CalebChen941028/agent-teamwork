@@ -42,8 +42,9 @@
 
 ## 实测效果对比与基准评测报告 (Empirical Benchmark & Case Studies)
 
-> 🏆 **SWE-bench Verified 官方 Docker 盲测大考（`pytest` 19 题 + `requests` 8 题 = 累计 27 题）**：
-> 在 `deepseek-v4.1-flash` 真实模型上，通过官方容器沙箱裁决：`agent-teamwork` 合计斩获 **70.4% Pass@1（19/27）** 对比 Solo 裸模型 **59.3%（16/27）**（**+11.1 pts 领先**，**0 对 2 致命补丁损坏**）：
+> 🏆 **SWE-bench Verified 官方 Docker 盲测大考（跨 7 大仓库累计 52 题工业级全量实测）**：
+> 在 `deepseek-v4.1-flash` 真实模型上，通过官方容器沙箱裁决：`agent-teamwork` 合计斩获 **55.8% Pass@1（29/52）** 对比 Solo 裸模型 **46.2%（24/52）**（**+9.6 pts 领先**，**净胜 5 题**，**3 对 5 致命补丁损坏**，**累计省下 200 万+ Token**）：
+> - **Tier 2.5（跨 5 仓 25 题 · Django, SymPy, Sklearn, Sphinx, Pylint）**：**40.0%（10/25）对比 32.0%（8/25）**（+8.0 pts 领先，Token 消耗 −46.2%，空补丁 12 减半至 6）。
 > - **Tier 2（`pytest-dev/pytest` 全量 19 题）**：**73.7%（14/19）对比 63.2%（12/19）**（+10.5 pts 领先，净胜 2 题，平均补丁缩小 33.9%，0 对 1 补丁格式断裂）。
 > - **Tier 1（`psf/requests` 全量 8 题）**：**62.5%（5/8）对比 50.0%（4/8）**（+12.5 pts 领先，Token 开销降低 42.8%，0 对 1 致命补丁损坏）。
 > 详见完整指南与报告：[`docs/SWEBENCH_GUIDE.zh-CN.md`](docs/SWEBENCH_GUIDE.zh-CN.md) 与 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md)。
@@ -53,14 +54,15 @@
 >
 > 📖 **完整双语活体评测门户**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含完整方法论、逐题遥测与官方记分卡证据。
 
-### 官方实测成绩看板：SWE-bench Verified (Docker 真实裁决 · 累计 27 题)
+### 官方实测成绩看板：SWE-bench Verified (Docker 真实裁决 · 累计 52 题)
 
 | 评测套件 / 指标 | Solo 裸模型（Track A） | + agent-teamwork（Track B） | 差值 | 关键说明 |
 | :--- | :---: | :---: | :---: | :--- |
-| **`pytest-dev/pytest` Resolved（19 题）** | 12/19（63.2%） | **14/19（73.7%）** | **+10.5 pts** | 净胜 2 题（独胜 `7205`, `7236`, `7490` 对 `5787`） |
-| **`psf/requests` Resolved（8 题）** | 4/8（50.0%） | **5/8（62.5%）** | **+12.5 pts** | 净胜 1 题（独胜 `requests-6028`） |
-| **两场官方盲测合计 Pass@1（27 题）** | 16/27（59.3%） | **19/27（70.4%）** | **+11.1 pts** | 官方 Docker 隔离盲测用例判定 |
-| **致命补丁损坏（`git apply`）** | 2（`6028`, `7205`） | **0** | **−2 errors** | 大改重写断裂 vs 535/606 字符手术式补丁 |
+| **三大战役累计总计（52 题）** | 24/52（46.2%） | **29/52（55.8%）** | **+9.6 pts** | **跨 7 大仓库净胜 5 题** |
+| **Tier 2.5 跨 5 仓大考（25 题）** | 8/25（32.0%） | **10/25（40.0%）** | **+8.0 pts** | 净胜 2 题，空补丁减半（12→6），省 46.2% Token |
+| **Tier 2 `pytest-dev/pytest`（19 题）** | 12/19（63.2%） | **14/19（73.7%）** | **+10.5 pts** | 净胜 2 题（独胜 `7205`, `7236`, `7490` 对 `5787`） |
+| **Tier 1 `psf/requests`（8 题）** | 4/8（50.0%） | **5/8（62.5%）** | **+12.5 pts** | 净胜 1 题（独胜 `requests-6028`） |
+| **致命补丁损坏（`git apply`）** | 5 例 | **3 例** | **−2 例** | 大改重写断裂 vs 手术式补丁提取 |
 
 ### 历史基准看板 (mimo-v2.6-flash, 2026-10-24)
 

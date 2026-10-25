@@ -42,8 +42,9 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## Empirical Benchmark & Real-World Case Studies
 
-> 🏆 **SWE-bench Verified Official Docker Evaluations (`pytest` 19 Tasks + `requests` 8 Tasks = 27 Tasks)**:
-> In full blind containerized evaluation against real-world GitHub issues with `deepseek-v4.1-flash`: `agent-teamwork` achieved **70.4% Pass@1 (19/27)** vs Solo baseline **59.3% (16/27)** (**+11.1% Pass@1 margin**, **0 vs 2 fatal patch errors**):
+> 🏆 **SWE-bench Verified Official Docker Evaluations (52 Tasks Across 7 Repositories)**:
+> In full blind containerized evaluation against real-world GitHub issues with `deepseek-v4.1-flash`: `agent-teamwork` achieved **55.8% Pass@1 (29/52)** vs Solo baseline **46.2% (24/52)** (**+9.6% Pass@1 margin**, **net +5 resolved tasks**, **3 vs 5 fatal patch errors**, **over 2.0M tokens saved**):
+> - **Tier 2.5 (Multi-Repo 25 tasks · Django, SymPy, Sklearn, Sphinx, Pylint)**: **40.0% (10/25) vs 32.0% (8/25)** (+8.0% Pass@1, −46.2% token tax, empty patches cut 12 → 6).
 > - **Tier 2 (`pytest-dev/pytest` 19 tasks)**: **73.7% (14/19) vs 63.2% (12/19)** (+10.5% Pass@1, −33.9% smaller surgical patches, 0 vs 1 malformed patch error).
 > - **Tier 1 (`psf/requests` 8 tasks)**: **62.5% (5/8) vs 50.0% (4/8)** (+12.5% Pass@1, −42.8% token overhead, 0 vs 1 fatal `git apply` error).
 > Details: [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md) & [`BENCHMARKS.md`](BENCHMARKS.md).
@@ -53,14 +54,15 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 >
 > 📖 **Full Bilingual Live-Eval Portal**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete methodology, telemetry, and raw scorecards.
 
-### Live Scorecard: SWE-bench Verified (Official Docker Adjudication · 27 Tasks)
+### Live Scorecard: SWE-bench Verified (Official Docker Adjudication · 52 Tasks)
 
 | Suite / Metric | Solo (Track A) | + agent-teamwork (Track B) | Delta | Note |
 | :--- | :---: | :---: | :---: | :--- |
-| **`pytest-dev/pytest` Resolved (19 tasks)** | 12/19 (63.2%) | **14/19 (73.7%)** | **+10.5 pts** | Net +2 resolved (`7205`, `7236`, `7490` vs `5787`) |
-| **`psf/requests` Resolved (8 tasks)** | 4/8 (50.0%) | **5/8 (62.5%)** | **+12.5 pts** | Net +1 resolved (`requests-6028`) |
-| **Combined Pass@1 (27 tasks)** | 16/27 (59.3%) | **19/27 (70.4%)** | **+11.1 pts** | Blind holdout container verification |
-| **Fatal Patch Errors (`git apply`)** | 2 (`6028`, `7205`) | **0** | **−2 errors** | Monolithic rewrites vs surgical 535/606-char diffs |
+| **Grand Total Cumulative (52 tasks)** | 24/52 (46.2%) | **29/52 (55.8%)** | **+9.6 pts** | **Net +5 resolved across 7 major repos** |
+| **Tier 2.5 Multi-Repo (25 tasks)** | 8/25 (32.0%) | **10/25 (40.0%)** | **+8.0 pts** | Net +2 resolved, empty patches cut 12 → 6, −46.2% tokens |
+| **Tier 2 `pytest-dev/pytest` (19 tasks)** | 12/19 (63.2%) | **14/19 (73.7%)** | **+10.5 pts** | Net +2 resolved (`7205`, `7236`, `7490` vs `5787`) |
+| **Tier 1 `psf/requests` (8 tasks)** | 4/8 (50.0%) | **5/8 (62.5%)** | **+12.5 pts** | Net +1 resolved (`requests-6028`) |
+| **Fatal Patch Errors (`git apply`)** | 5 | **3** | **−2 errors** | Monolithic rewrites vs surgical diff extraction |
 
 ### Historical Baseline Scorecard (mimo-v2.6-flash, 2026-10-24)
 

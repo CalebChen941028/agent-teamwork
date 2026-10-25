@@ -1,0 +1,716 @@
+{
+  "benchmark": "swebench-verified",
+  "model": "deepseek-v4.1-flash",
+  "mode": "ab",
+  "keySource": "OPENCODE_API_KEY",
+  "maxTurns": 6,
+  "generatedAt": "2026-10-25T07:39:04.539Z",
+  "tracks": {
+    "teamwork": {
+      "predictionsPath": "benchmarks/swebench/predictions-multi25-teamwork.jsonl",
+      "instancesTotal": 25,
+      "patchesGenerated": 19,
+      "results": [
+        {
+          "instanceId": "django__django-10097",
+          "track": "teamwork",
+          "turnsUsed": 4,
+          "patchChars": 684,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 58412
+        },
+        {
+          "instanceId": "django__django-10554",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 316932
+        },
+        {
+          "instanceId": "django__django-10880",
+          "track": "teamwork",
+          "turnsUsed": 2,
+          "patchChars": 728,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 29488
+        },
+        {
+          "instanceId": "django__django-10914",
+          "track": "teamwork",
+          "turnsUsed": 4,
+          "patchChars": 1556,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 73987
+        },
+        {
+          "instanceId": "django__django-10973",
+          "track": "teamwork",
+          "turnsUsed": 4,
+          "patchChars": 2454,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 82644
+        },
+        {
+          "instanceId": "sympy__sympy-11618",
+          "track": "teamwork",
+          "turnsUsed": 3,
+          "patchChars": 1135,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 105192
+        },
+        {
+          "instanceId": "sympy__sympy-12419",
+          "track": "teamwork",
+          "turnsUsed": 5,
+          "patchChars": 649,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 155558
+        },
+        {
+          "instanceId": "sympy__sympy-12481",
+          "track": "teamwork",
+          "turnsUsed": 5,
+          "patchChars": 82631,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 71420
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-10297",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 70566
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-10844",
+          "track": "teamwork",
+          "turnsUsed": 3,
+          "patchChars": 1251,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 126792
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-10908",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 46216,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 96146
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-11310",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 2153,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 118785
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-11578",
+          "track": "teamwork",
+          "turnsUsed": 2,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 1,
+          "stagnationRounds": 1,
+          "abortReason": "stagnation-early-stop",
+          "durationMs": 272670
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10323",
+          "track": "teamwork",
+          "turnsUsed": 3,
+          "patchChars": 801,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 38753
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10435",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 37055
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10449",
+          "track": "teamwork",
+          "turnsUsed": 5,
+          "patchChars": 2058,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 91429
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10466",
+          "track": "teamwork",
+          "turnsUsed": 5,
+          "patchChars": 314717,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 237055
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10614",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 2660,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 216080
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4661",
+          "track": "teamwork",
+          "turnsUsed": 4,
+          "patchChars": 1832,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 88447
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4551",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 7142,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 1,
+          "abortReason": null,
+          "durationMs": 282502
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4604",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 1,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 118624
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4970",
+          "track": "teamwork",
+          "turnsUsed": 5,
+          "patchChars": 3829,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 266748
+        },
+        {
+          "instanceId": "pylint-dev__pylint-6386",
+          "track": "teamwork",
+          "turnsUsed": 5,
+          "patchChars": 1324,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 53820
+        },
+        {
+          "instanceId": "sympy__sympy-12096",
+          "track": "teamwork",
+          "turnsUsed": 5,
+          "patchChars": 93747,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 130006
+        },
+        {
+          "instanceId": "sympy__sympy-12489",
+          "track": "teamwork",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 71093
+        }
+      ],
+      "errors": [],
+      "tokenUsage": {
+        "prompt": 1409660,
+        "completion": 382583,
+        "total": 1792243,
+        "calls": 129
+      }
+    },
+    "baseline": {
+      "predictionsPath": "benchmarks/swebench/predictions-multi25-baseline.jsonl",
+      "instancesTotal": 25,
+      "patchesGenerated": 13,
+      "results": [
+        {
+          "instanceId": "django__django-10097",
+          "track": "baseline",
+          "turnsUsed": 2,
+          "patchChars": 670,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 37532
+        },
+        {
+          "instanceId": "django__django-10880",
+          "track": "baseline",
+          "turnsUsed": 4,
+          "patchChars": 728,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 32222
+        },
+        {
+          "instanceId": "django__django-10914",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 49376
+        },
+        {
+          "instanceId": "django__django-10973",
+          "track": "baseline",
+          "turnsUsed": 3,
+          "patchChars": 2490,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 30418
+        },
+        {
+          "instanceId": "sympy__sympy-12419",
+          "track": "baseline",
+          "turnsUsed": 5,
+          "patchChars": 666,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 44436
+        },
+        {
+          "instanceId": "sympy__sympy-12481",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 179633
+        },
+        {
+          "instanceId": "sympy__sympy-12489",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 184414
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-10908",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 2241,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 103748
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-11310",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 28762
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10323",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 209500
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10435",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 21730
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10614",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 183816
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4604",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 114636
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4661",
+          "track": "baseline",
+          "turnsUsed": 5,
+          "patchChars": 10348,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 105250
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4970",
+          "track": "baseline",
+          "turnsUsed": 5,
+          "patchChars": 1115,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 147089
+        },
+        {
+          "instanceId": "pylint-dev__pylint-6386",
+          "track": "baseline",
+          "turnsUsed": 5,
+          "patchChars": 2319,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 94617
+        },
+        {
+          "instanceId": "django__django-10554",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 328741
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4551",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 337319
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-10297",
+          "track": "baseline",
+          "turnsUsed": 5,
+          "patchChars": 3687,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 1,
+          "abortReason": null,
+          "durationMs": 258438
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-10844",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 1083,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 100074
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-11578",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 34903
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10449",
+          "track": "baseline",
+          "turnsUsed": 2,
+          "patchChars": 827,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 169400
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-10466",
+          "track": "baseline",
+          "turnsUsed": 5,
+          "patchChars": 1328,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 113122
+        },
+        {
+          "instanceId": "sympy__sympy-11618",
+          "track": "baseline",
+          "turnsUsed": 4,
+          "patchChars": 1320,
+          "patchEmpty": false,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 313600
+        },
+        {
+          "instanceId": "sympy__sympy-12096",
+          "track": "baseline",
+          "turnsUsed": 6,
+          "patchChars": 0,
+          "patchEmpty": true,
+          "interceptedWrites": 0,
+          "falseVictories": 0,
+          "stagnationRounds": 0,
+          "abortReason": null,
+          "durationMs": 255585
+        }
+      ],
+      "errors": [],
+      "tokenUsage": {
+        "prompt": 2581107,
+        "completion": 748732,
+        "total": 3329839,
+        "calls": 236
+      }
+    }
+  },
+  "mergeNotes": [
+    {
+      "track": "teamwork",
+      "instanceId": "pylint-dev__pylint-4551",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "teamwork",
+      "instanceId": "pylint-dev__pylint-4604",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "teamwork",
+      "instanceId": "pylint-dev__pylint-4970",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "teamwork",
+      "instanceId": "pylint-dev__pylint-6386",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "teamwork",
+      "instanceId": "sympy__sympy-12096",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "teamwork",
+      "instanceId": "sympy__sympy-12489",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "django__django-10554",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "pylint-dev__pylint-4551",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "scikit-learn__scikit-learn-10297",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "sphinx-doc__sphinx-10449",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "sphinx-doc__sphinx-10466",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "sympy__sympy-11618",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    },
+    {
+      "track": "baseline",
+      "instanceId": "sympy__sympy-12096",
+      "reason": "gateway 429 ttft_admission_refused during main run; re-run in a separate invocation and merged"
+    }
+  ],
+  "mergedAt": "2026-10-25T17:44:14.787872"
+}
