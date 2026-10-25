@@ -154,6 +154,7 @@ export function createInstanceSandbox({ instance, track, parentDir = null }) {
 // ---------------------------------------------------------------------------
 
 const SOURCE_FILE_RE = /\.(py|js|ts|mjs|cjs|c|h|cpp|cc|java|go|rs|rb|php|sh|cfg|toml|ini|json|yaml|yml|rst|txt|in|pyi)$/i;
+const NON_CORE_DIRS = /^(doc|docs|changelog|news|bench|extra|scripts|\.github)\//i;
 
 export function buildRepoFileTree(repoDir, { maxEntries = 400 } = {}) {
   const res = git(repoDir, ["ls-files"], { env: GIT_SANE_ENV });
@@ -161,8 +162,10 @@ export function buildRepoFileTree(repoDir, { maxEntries = 400 } = {}) {
   if (all.length <= maxEntries) {
     return { tree: all.join("\n"), totalFiles: all.length, truncated: false };
   }
-  const priority = all.filter((l) => SOURCE_FILE_RE.test(l) || !l.includes("/"));
-  const capped = priority.slice(0, maxEntries);
+  // Prioritize primary source directory files over documentation / changelogs
+  const coreSource = all.filter((l) => !NON_CORE_DIRS.test(l) && SOURCE_FILE_RE.test(l));
+  const candidate = coreSource.length > 0 ? coreSource : all;
+  const capped = candidate.slice(0, maxEntries);
   return {
     tree: capped.join("\n"),
     totalFiles: all.length,
@@ -171,45 +174,111 @@ export function buildRepoFileTree(repoDir, { maxEntries = 400 } = {}) {
   };
 }
 
-const READ_TAG_RE = /<read\s+path=["']([^"']+)["']\s*\/?>/gi;
+const READ_TAG_RE = /<read\b([^>]*?)(?:\/>|>(?:<\/read>)?)/gi;
 
-export function extractReadRequests(text, { maxRequests = 5 } = {}) {
-  const paths = [];
-  const source = String(text || "");
-  let match;
-  while ((match = READ_TAG_RE.exec(source)) !== null && paths.length < maxRequests) {
-    const rel = normalizeRelPath(match[1].trim());
-    if (rel && !paths.includes(rel)) paths.push(rel);
-  }
-  return paths;
+function toReadItemKey(r) {
+  if (typeof r === "string") return `${r}::`;
+  return `${r.path}:${r.start || ""}:${r.end || ""}`;
 }
 
-export function readRepoFile(repoDir, relPath, { maxChars = 60000 } = {}) {
+export function extractReadRequests(text, { maxRequests = 5 } = {}) {
+  const requests = [];
+  const source = String(text || "");
+  let match;
+  while ((match = READ_TAG_RE.exec(source)) !== null && requests.length < maxRequests) {
+    const attrs = match[1] || "";
+    const pathMatch = /path=["']([^"']+)["']/.exec(attrs);
+    if (!pathMatch) continue;
+    const rel = normalizeRelPath(pathMatch[1].trim());
+    if (!rel) continue;
+
+    const startMatch = /start=["']?(\d+)["']?/.exec(attrs);
+    const endMatch = /end=["']?(\d+)["']?/.exec(attrs);
+    const linesMatch = /lines=["']?(\d+)\s*[-:]\s*(\d+)["']?/.exec(attrs);
+    const start = startMatch ? Number(startMatch[1]) : (linesMatch ? Number(linesMatch[1]) : null);
+    const end = endMatch ? Number(endMatch[1]) : (linesMatch ? Number(linesMatch[2]) : null);
+
+    const item = (start != null || end != null) ? { path: rel, start, end } : rel;
+    const key = toReadItemKey(item);
+    if (!requests.some((r) => toReadItemKey(r) === key)) {
+      requests.push(item);
+    }
+  }
+  return requests;
+}
+
+export function readRepoFile(repoDir, target, { maxChars = 60000 } = {}) {
+  const relPath = typeof target === "string" ? target : (target && target.path ? target.path : "");
+  const start = typeof target === "object" && target ? target.start : null;
+  const end = typeof target === "object" && target ? target.end : null;
+
   const resolvedRoot = path.resolve(repoDir);
-  const abs = path.resolve(repoDir, normalizeRelPath(relPath));
+  const normalized = normalizeRelPath(relPath);
+  const abs = path.resolve(repoDir, normalized);
   if (!abs.startsWith(resolvedRoot + path.sep)) {
     return { path: relPath, error: "path escapes sandbox" };
   }
-  let content;
+  let raw;
   try {
-    content = fs.readFileSync(abs, "utf8");
+    raw = fs.readFileSync(abs, "utf8");
   } catch {
     return { path: relPath, error: "file not found" };
   }
-  if (content.length > maxChars) {
-    return { path: relPath, content: content.slice(0, maxChars), truncated: true };
+
+  const allLines = raw.split("\n");
+  const totalLines = allLines.length;
+
+  if (start != null || end != null) {
+    const s = Math.max(1, start != null ? start : 1);
+    const e = Math.min(totalLines, end != null ? end : totalLines);
+    if (s > e || s > totalLines) {
+      return {
+        path: relPath,
+        content: `[lines ${s}-${e} out of range; file has ${totalLines} lines]`,
+        start: s,
+        end: e,
+        totalLines,
+      };
+    }
+    const sliced = allLines.slice(s - 1, e);
+    const padLen = String(e).length;
+    const numbered = sliced
+      .map((line, idx) => `${String(s + idx).padStart(padLen, " ")} | ${line}`)
+      .join("\n");
+
+    return {
+      path: relPath,
+      content: numbered,
+      start: s,
+      end: e,
+      totalLines,
+      sliced: true,
+    };
   }
-  return { path: relPath, content };
+
+  if (raw.length > maxChars) {
+    return {
+      path: relPath,
+      content: raw.slice(0, maxChars),
+      truncated: true,
+      totalLines,
+      totalChars: raw.length,
+    };
+  }
+  return { path: relPath, content: raw, totalLines };
 }
 
 export function renderReadResponses(reads) {
   return reads
     .map((r) => {
       if (r.error) return `<read-result path="${r.path}" error="${r.error}"/>`;
+      if (r.sliced) {
+        return `<read-result path="${r.path}" lines="${r.start}-${r.end}" totalLines="${r.totalLines}">\n${r.content}\n</read-result>`;
+      }
       const body = r.truncated
-        ? `${r.content}\n... [truncated at ${r.content.length} chars — request a narrower section or edit carefully]`
+        ? `${r.content}\n... [truncated at ${r.content.length} chars (file has ${r.totalLines || "many"} lines) — use <read path="${r.path}" start="n" end="m"/> to inspect specific lines]`
         : r.content;
-      return `<read-result path="${r.path}">\n${body}\n</read-result>`;
+      return `<read-result path="${r.path}" totalLines="${r.totalLines || "unknown"}">\n${body}\n</read-result>`;
     })
     .join("\n\n");
 }
@@ -293,7 +362,8 @@ export function buildSwebenchUserPrompt(instance, fileTree = null) {
       [
         "# Repository Read Access",
         "The working tree above is live in your workspace. Before editing a file, read its current contents:",
-        '<read path="requests/models.py"/>  (up to 5 files per turn)',
+        '<read path="requests/models.py"/>  (reads entire file, up to 60KB)',
+        '<read path="requests/models.py" start="100" end="150"/>  (target specific line range; recommended to save context)',
         "The driver replies with <read-result path=\"...\"> blocks containing exact file contents.",
         "Analyze the issue, locate the bug, then emit the corrected file blocks.",
       ].join("\n"),
@@ -408,6 +478,14 @@ export async function runSwebenchInstance({
       const reads = readRequests.map((rel) => readRepoFile(repoDir, rel));
       feedbackParts.push(renderReadResponses(reads));
     }
+    // Context tax optimization: prune large file tree from initial user message for subsequent turns
+    if (turn === 1 && messages[1] && typeof messages[1].content === "string") {
+      messages[1].content = messages[1].content.replace(
+        /# Repository File Tree \(checked out at the base commit\)[\s\S]*?(?=# Repository Read Access)/,
+        `# Repository File Tree\n[Repository tree loaded in turn 1. Use <read path="..." [start="n" end="m"]/> to inspect source files]\n\n`
+      );
+    }
+
     if (!wroteFiles) {
       if (readRequests.length === 0) {
         feedbackParts.push("[NO DISK WRITES] You produced analysis but wrote no files. Emit <file path=\"...\"> blocks to apply changes.");
@@ -415,7 +493,16 @@ export async function runSwebenchInstance({
     } else {
       feedbackParts.push(`[DISK WRITES APPLIED] Modified files: ${writeReport.written.join(", ")}. Inspect git status and continue.`);
     }
-    feedbackParts.push(`[TURN BUDGET] turn ${turn}/${maxTurns}. When you have located the defect, emit the corrected <file> blocks and end with STATUS: DONE.`);
+
+    // Critical Urgency Nudge if no files have been modified yet in the late turns
+    const urgentTurnThreshold = Math.max(3, maxTurns - 2);
+    if (!hasDiff && turn >= urgentTurnThreshold) {
+      feedbackParts.push(
+        `[CRITICAL BUDGET ALERT: Turn ${turn} of ${maxTurns}] Zero files have been modified so far. You are at imminent risk of an EMPTY PATCH failure! You MUST stop reading/exploration now and emit concrete <file path="...">...</file> patch blocks in your next response!`
+      );
+    } else {
+      feedbackParts.push(`[TURN BUDGET] turn ${turn}/${maxTurns}. When you have located the defect, emit the corrected <file> blocks and end with STATUS: DONE.`);
+    }
     messages.push({ role: "user", content: feedbackParts.join("\n") });
   }
 

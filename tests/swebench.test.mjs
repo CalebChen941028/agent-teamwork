@@ -152,6 +152,32 @@ test("SWE-bench adapter: read-request protocol extraction and sandbox-contained 
     const truncated = readRepoFile(tmpDir, "requests/models.py", { maxChars: 6 });
     assert.equal(truncated.truncated, true);
     assert.ok(renderReadResponses([truncated]).includes("[truncated"));
+
+    // Multi-line file for line-slicing validation
+    const multiLine = Array.from({ length: 20 }, (_, i) => `line_${i + 1}`).join("\n");
+    fs.writeFileSync(path.join(tmpDir, "requests", "models.py"), multiLine, "utf8");
+
+    const slicedObj = readRepoFile(tmpDir, { path: "requests/models.py", start: 5, end: 7 });
+    assert.equal(slicedObj.sliced, true);
+    assert.equal(slicedObj.totalLines, 20);
+    assert.ok(slicedObj.content.includes("5 | line_5"));
+    assert.ok(slicedObj.content.includes("7 | line_7"));
+    assert.ok(!slicedObj.content.includes("line_8"));
+
+    const renderedSliced = renderReadResponses([slicedObj]);
+    assert.ok(renderedSliced.includes('lines="5-7"'));
+    assert.ok(renderedSliced.includes('totalLines="20"'));
+
+    // Sliced read tag extraction
+    const sliceTags = [
+      '<read path="requests/models.py" start="5" end="10"/>',
+      '<read path="requests/adapters.py" lines="15-30"/>',
+    ].join("\n");
+    const extractedSlices = extractReadRequests(sliceTags);
+    assert.deepEqual(extractedSlices, [
+      { path: "requests/models.py", start: 5, end: 10 },
+      { path: "requests/adapters.py", start: 15, end: 30 },
+    ]);
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
