@@ -42,22 +42,25 @@
 
 ## 实测效果对比与基准评测报告 (Empirical Benchmark & Case Studies)
 
-> 🏆 **SWE-bench Verified 官方 Docker 盲测大考（`psf/requests` 全量 8 题）**：
-> 在 `deepseek-v4.1-flash` 真实模型上，通过官方容器沙箱裁决：`agent-teamwork` 斩获 **62.5% Pass@1（5/8）** 对比 Solo 裸模型 **50.0%（4/8）** —— 实现 **+12.5% Pass@1 突破断层**，**0 对 1 致命补丁损坏**，并**降低 42.8% Token 开销**（Solo 膨胀 +75%）。详见完整指南与报告：[`docs/SWEBENCH_GUIDE.zh-CN.md`](docs/SWEBENCH_GUIDE.zh-CN.md) 与 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md)。
+> 🏆 **SWE-bench Verified 官方 Docker 盲测大考（`pytest` 19 题 + `requests` 8 题 = 累计 27 题）**：
+> 在 `deepseek-v4.1-flash` 真实模型上，通过官方容器沙箱裁决：`agent-teamwork` 合计斩获 **70.4% Pass@1（19/27）** 对比 Solo 裸模型 **59.3%（16/27）**（**+11.1 pts 领先**，**0 对 2 致命补丁损坏**）：
+> - **Tier 2（`pytest-dev/pytest` 全量 19 题）**：**73.7%（14/19）对比 63.2%（12/19）**（+10.5 pts 领先，净胜 2 题，平均补丁缩小 33.9%，0 对 1 补丁格式断裂）。
+> - **Tier 1（`psf/requests` 全量 8 题）**：**62.5%（5/8）对比 50.0%（4/8）**（+12.5 pts 领先，Token 开销降低 42.8%，0 对 1 致命补丁损坏）。
+> 详见完整指南与报告：[`docs/SWEBENCH_GUIDE.zh-CN.md`](docs/SWEBENCH_GUIDE.zh-CN.md) 与 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md)。
 >
 > 🚀 **15 题在线合成任务大考（`deepseek-v4.1-flash`）**：
 > Pass@1 100% 顶格持平，越界落地 18 对 0，虚假胜利 2 对 0，调用数 −24%。详见 [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)。
 >
 > 📖 **完整双语活体评测门户**：详见根目录看板 [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md)（简体中文）与 [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md)（English），内含完整方法论、逐题遥测与官方记分卡证据。
 
-### 官方实测成绩看板：SWE-bench Verified (`psf/requests` · Docker 真实裁决)
+### 官方实测成绩看板：SWE-bench Verified (Docker 真实裁决 · 累计 27 题)
 
-| 核心指标 | Solo 裸模型（Track A） | + agent-teamwork（Track B） | 差值 | 关键说明 |
+| 评测套件 / 指标 | Solo 裸模型（Track A） | + agent-teamwork（Track B） | 差值 | 关键说明 |
 | :--- | :---: | :---: | :---: | :--- |
-| **官方 Resolved（Pass@1）** | 4/8（50.0%） | **5/8（62.5%）** | **+12.5 pts** | 官方 Docker 隔离盲测用例判定 |
-| **致命补丁损坏（`git apply`）** | 1（`psf__requests-6028`） | **0** | **−1 error** | 3 万字符全仓重写 vs 535 字符手术补丁 |
-| **总 Token 消耗** | 41.8 万 | **23.9 万** | **−42.8%** | Solo 产生 +75.0% 的严重 Token 膨胀 |
-| **API 调用次数** | 21 次 | **17 次** | **−19.0%** | 多回合 `<read/>` 协议精准收敛 |
+| **`pytest-dev/pytest` Resolved（19 题）** | 12/19（63.2%） | **14/19（73.7%）** | **+10.5 pts** | 净胜 2 题（独胜 `7205`, `7236`, `7490` 对 `5787`） |
+| **`psf/requests` Resolved（8 题）** | 4/8（50.0%） | **5/8（62.5%）** | **+12.5 pts** | 净胜 1 题（独胜 `requests-6028`） |
+| **两场官方盲测合计 Pass@1（27 题）** | 16/27（59.3%） | **19/27（70.4%）** | **+11.1 pts** | 官方 Docker 隔离盲测用例判定 |
+| **致命补丁损坏（`git apply`）** | 2（`6028`, `7205`） | **0** | **−2 errors** | 大改重写断裂 vs 535/606 字符手术式补丁 |
 
 ### 历史基准看板 (mimo-v2.6-flash, 2026-10-24)
 

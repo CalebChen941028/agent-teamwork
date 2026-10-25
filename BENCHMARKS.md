@@ -7,8 +7,11 @@
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
 
-> 🏆 **Latest Benchmark: SWE-bench Verified Official Docker Evaluation (`psf/requests`)**:
-> Containerized blind holdout test adjudication with `deepseek-v4.1-flash`: **+12.5% Pass@1 margin (62.5% vs 50.0%)**, **0 vs 1 fatal patch errors**, and **−42.8% token overhead** (+75% Solo token bloat). Full report & replication guide in [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md).
+> 🏆 **Latest Benchmark: SWE-bench Verified Official Docker Evaluations (`pytest` 19 Tasks + `requests` 8 Tasks = 27 Tasks)**:
+> Containerized blind holdout test adjudication with `deepseek-v4.1-flash`:
+> - **Tier 2 (`pytest-dev/pytest` 19 tasks)**: **73.7% (14/19) vs 63.2% (12/19)** (**+10.5% Pass@1**, net +2 tasks, 0 vs 1 malformed patch error, −33.9% smaller surgical patches).
+> - **Tier 1 (`psf/requests` 8 tasks)**: **62.5% (5/8) vs 50.0% (4/8)** (**+12.5% Pass@1**, 0 vs 1 fatal `git apply` error, −42.8% token overhead).
+> - **Combined 27-Task Total**: **70.4% (19/27) vs 59.3% (16/27)** (**+11.1% Pass@1**, 0 vs 2 fatal patch errors). Full report & replication guide in [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md).
 >
 > 🚀 **15-Task Live Benchmark (`deepseek-v4.1-flash`)**:
 > Full 15-task live eval (100% Pass@1 ceiling, 18 vs 0 leaked files, 2 vs 0 false claims, −24% API calls, 0 stagnation aborts with write-awareness). Full report in [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md).
@@ -18,9 +21,23 @@
 
 ---
 
-## 1. SWE-bench Verified Scorecard (`psf/requests` · Official Docker Harness)
+## 1. SWE-bench Verified Scorecards (Official Docker Harness · 27 Tasks)
 
-Evaluated on 2026-10-25 using `deepseek-v4.1-flash` against all 8 tasks of `psf/requests` in SWE-bench Verified. Test suites are strictly hidden during execution; results are adjudicated by official Docker containers via `swebench.harness.run_evaluation`.
+Evaluated on 2026-10-25 using `deepseek-v4.1-flash` against `pytest-dev/pytest` (19 tasks) and `psf/requests` (8 tasks) in SWE-bench Verified. Test suites are strictly hidden during execution; results are adjudicated by official Docker containers via `swebench.harness.run_evaluation`.
+
+### 1.1 Tier 2: `pytest-dev/pytest` (19 Tasks)
+
+| Metric | Solo Baseline (Track A) | + agent-teamwork (Track B) | Delta |
+| :--- | :---: | :---: | :---: |
+| **Patches Generated** | 16/19 (84.2%) | 16/19 (84.2%) | — |
+| **Official Resolved (Pass@1)** | **12/19 (63.2%)** | **14/19 (73.7%)** | **+10.5% (+2 tasks)** |
+| **Unresolved (Patch applied, tests failed)** | 3 (`10356`, `7324`, `7490`) | 2 (`5787`, `7324`) | −1 |
+| **Empty Patches (Turn budget exhausted)** | 3 (`5840`, `6197`, `7236`) | 3 (`10356`, `5840`, `6197`) | — |
+| **Fatal Patch Errors (`git apply` failure)** | **1 (`pytest-dev__pytest-7205`)** | **0** | **−1 error** |
+| **Total API Calls / Tokens** | 58 calls / 1.71M tokens | 69 calls / 1.94M tokens | +19.0% / +13.7% |
+| **Average Patch Size** | 2,182 chars | **1,442 chars** | **−33.9% more surgical** |
+
+### 1.2 Tier 1: `psf/requests` (8 Tasks)
 
 | Metric | Solo Baseline (Track A) | + agent-teamwork (Track B) | Delta |
 | :--- | :---: | :---: | :---: |
@@ -32,12 +49,12 @@ Evaluated on 2026-10-25 using `deepseek-v4.1-flash` against all 8 tasks of `psf/
 | **Total Tokens Consumed** | 418,000 | **239,000** | **−42.8% (+75% Solo bloat)** |
 
 ```
-Official SWE-bench Resolved (Pass@1, psf/requests, Docker verified)
-+ agent-teamwork                [████████████████████░░░░░░░░░░░░]  62.5% (5/8)
-Solo (deepseek-v4.1-flash)      [████████████████░░░░░░░░░░░░░░░░]  50.0% (4/8)
+Official SWE-bench Resolved (Combined 27 Tasks: pytest-19 + requests-8, Docker verified)
++ agent-teamwork                [██████████████████████░░░░░░░░░░]  70.4% (19/27)
+Solo (deepseek-v4.1-flash)      [███████████████████░░░░░░░░░░░░░]  59.3% (16/27)
 
-Key Takeaway: On psf__requests-6028, Solo spent 332s generating a 30,348-character full-file rewrite
-that broke git apply. Teamwork produced a 535-character surgical patch in 2 turns and resolved the issue.
+Key Takeaway: On both requests-6028 and pytest-7205, Solo produced large rewrites (30,348 and 3,421 chars)
+that broke git apply. Teamwork produced surgical patches (535 and 606 chars) in 2 turns and resolved both.
 ```
 
 Official audit scorecards: [`benchmarks/swebench/results/`](benchmarks/swebench/results/). Details: [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md).

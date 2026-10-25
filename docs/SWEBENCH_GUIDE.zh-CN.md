@@ -174,10 +174,64 @@ Solo 补丁损坏率:       1 次 git apply 严重损坏 (error) vs Teamwork 0 �
 
 ---
 
-## 5. 推荐实测分级演进路线
+## 5. 阶段二实测大考结果：`pytest-dev/pytest`（19 题官方 Docker 裁决）
+
+继阶段一（`psf/requests`）之后，我们于 **2026-10-25** 使用 `deepseek-v4.1-flash` 对官方 SWE-bench Verified 中 `pytest-dev/pytest` 的全量 19 道题目（`benchmarks/swebench/tasks-pytest-19.json`）完成了端到端 A/B 大考，并经由官方 `swebench.harness.run_evaluation` 在隔离 Docker 容器中执行隐藏测试裁决。
+
+### 5.1 官方记分卡对比（`pytest-dev/pytest` · 19 题）
+
+| 指标 | Solo 裸模型基线（Track A） | + agent-teamwork（Track B） | 差值与优势 |
+| :--- | :---: | :---: | :---: |
+| **补丁产出率** | 16/19（84.2%）* | 16/19（84.2%） | — |
+| **官方 Resolved（Pass@1 真实裁决）** | **12/19（63.2%）** | **14/19（73.7%）** | **+10.5 pts（净胜 2 题）** |
+| **Unresolved（有补丁但盲测未过）** | 3（`10356`, `7324`, `7490`） | 2（`5787`, `7324`） | −1 |
+| **空补丁（回合耗尽未写入）** | 3（`5840`, `6197`, `7236`） | 3（`10356`, `5840`, `6197`） | — |
+| **补丁损坏 / 无法应用（`error`）** | **1（`pytest-dev__pytest-7205`）** | **0** | **−1 error** |
+| **环境异常（infra failure）** | 0 | 0 | — |
+| **API 调用次数** | 58（另 1 次 429 重试 + 补跑 3 次） | 69 | +19.0% |
+| **总 Token 消耗** | 1,707,827（1.35M / 362K） | 1,942,076（1.45M / 491K） | +13.7% |
+| **平均补丁大小** | 2,182 字符（大 51%） | **1,442 字符** | **−33.9% 更具手术式精准度** |
+| **累计解题墙钟** | 47.8 + 5.5 分钟（补跑） | 56.5 分钟 | — |
+
+*\*关于 `pytest-dev__pytest-10356` 的公平性披露*：Solo 首轮为 15/19，其中 `10356` 首次尝试遭上游网关瞬时 HTTP 429（`ttft_admission_refused, cell at capacity`），属网关容量问题而非模型失败。按同预算同协议对该题单独补跑一次（3 回合、2,029 字符）并合并进 `predictions-pytest-baseline.jsonl`。补跑后官方 Docker 仍判定为 `unresolved`（`no_tests_collected`），不改变比分，仅还原绝对公平。
+
+**如实披露的 Token 趋势反转**：在 `requests-8` 大考中 Teamwork 节省了 42.8% Token，而在 `pytest-19` 中反而多消耗 13.7% Token。原因是 `pytest` 仓库体量更大，Teamwork 每回合携带文件树与读取协议使 Prompt 侧开销上升；但这 +13.7% 的 Token 投入换来了 **+10.5% Pass@1（净胜 2 题 Resolved）**、**缩小 33.9% 的手术式补丁体积**以及 **0 次补丁损坏错误**。
+
+### 5.2 胜负手与分水岭实例剖析
+
+- **Teamwork 独得 3 题**：
+  - **`pytest-dev__pytest-7205`**（决定性一题，与 `requests-6028` 同型）：Teamwork 用 2 回合产出 606 字符手术式补丁，应用通过、隐藏测试转绿。Solo 同样用 2 回合，但重写了 3,421 字符的 `setuponly.py`，补丁在第 100 行发生格式断裂（`patch: **** malformed patch at line 100`），官方容器直接拒绝应用并判 `error`。大改重写在 diff 提取环节的脆弱性再次暴露。
+  - **`pytest-dev__pytest-7236`**：Teamwork 3 回合写出 2,036 字符补丁并 **Resolved**；Solo 6 个回合全部用于读代码，一字符未写，空补丁收场。
+  - **`pytest-dev__pytest-7490`**：Teamwork 939 字符补丁 **Resolved**；Solo 2,638 字符补丁虽能应用，但官方隐藏测试报 `no_tests_collected` 判定失败。
+- **Solo 独得 1 题**：
+  - **`pytest-dev__pytest-5787`**：Solo 2 回合 7,348 字符补丁 **Resolved**；Teamwork 3 回合 6,421 字符补丁应用后同样触发 `no_tests_collected`，为本次 Teamwork 的唯一净亏损点。
+- **共同失败 4 题归因**：
+  - `5840`、`6197`：两轨均用满 6 回合未写入。`deepseek-v4.1-flash` 在高难题上把全部预算耗在读代码与推理上，属固定 6 回合协议下的模型能力边界（停滞提醒正常触发、0 次误中止、两轨 0 越界写入、0 虚假胜利）。
+  - `10356`：Teamwork 未写入；Solo 补丁可应用但 `no_tests_collected`。
+  - `7324`：两轨补丁均能干净应用（1,791 与 2,056 字符），但隐藏测试未过，属典型的未命中根因。
+
+### 5.3 SWE-bench Verified 双阶段总计看板（Tier 1 + Tier 2 · 累计 27 题）
+
+| 评测批次 | 题数 | Solo 基线 Resolved | + agent-teamwork Resolved | 净胜分差 | 致命补丁损坏 (`error`) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Tier 1：`psf/requests`** | 8 | 4/8（50.0%） | **5/8（62.5%）** | **+12.5 pts** | 1（`requests-6028`）对 **0** |
+| **Tier 2：`pytest-dev/pytest`** | 19 | 12/19（63.2%） | **14/19（73.7%）** | **+10.5 pts** | 1（`pytest-7205`）对 **0** |
+| **两场官方盲测合计** | **27** | **16/27（59.3%）** | **19/27（70.4%）** | **+11.1 pts（净胜 3 题）** | **2 对 0** |
+
+### 5.4 阶段二权威审计产物索引
+
+- **Teamwork 预测补丁集**：[`benchmarks/swebench/predictions-pytest-teamwork.jsonl`](../benchmarks/swebench/predictions-pytest-teamwork.jsonl)
+- **Solo 基线预测补丁集**：[`benchmarks/swebench/predictions-pytest-baseline.jsonl`](../benchmarks/swebench/predictions-pytest-baseline.jsonl)
+- **双轨逐题遥测报告**：[`benchmarks/swebench/report-pytest-ab.json`](../benchmarks/swebench/report-pytest-ab.json)
+- **官方 Teamwork 记分卡（14/19）**：[`benchmarks/swebench/results/agent-teamwork-v0.4.0+swebench (deepseek-v4.1-flash).pytest-teamwork-verified-run.json`](../benchmarks/swebench/results/agent-teamwork-v0.4.0+swebench%20(deepseek-v4.1-flash).pytest-teamwork-verified-run.json)
+- **官方 Solo 记分卡（12/19）**：[`benchmarks/swebench/results/deepseek-v4.1-flash-solo.pytest-solo-verified-run.json`](../benchmarks/swebench/results/deepseek-v4.1-flash-solo.pytest-solo-verified-run.json)
+
+---
+
+## 6. 推荐实测分级演进路线
 
 | 阶段 | 推荐范围 | 目标与期望现象 | 当前状态 |
 | :--- | :--- | :--- | :---: |
 | **阶段 1：微型全仓探针** | `psf/requests`（全量 8 题） | 验证从 Issue 输入到 Docker 跑通完整生命周期；实测手术式补丁 vs 破坏性全仓重写。 | **已完成（62.5% 对 50.0%）** |
-| **阶段 2：系统并发代表作** | `pytest-dev/pytest`（19 题） | 深入测试复杂的异常捕获与级联文件修改，压测 Teamwork 挑战者机制的边界覆盖能力。 | 就绪可跑 |
+| **阶段 2：系统并发代表作** | `pytest-dev/pytest`（全量 19 题） | 深入测试复杂的异常捕获与级联文件修改，压测 Teamwork 挑战者机制的边界覆盖能力。 | **已完成（73.7% 对 63.2%）** |
 | **阶段 3：全量 500 题天梯对决** | 官方 `SWE-bench_Verified` 全量 | 直接生成对齐国际标准的权威测评报告，对标 Devin、Claude Code、Cursor 等业界顶级方案。 | 支持 `--max-workers` 并发 |

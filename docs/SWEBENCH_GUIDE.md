@@ -174,10 +174,64 @@ The decisive Pass@1 difference came down to **`psf__requests-6028`**:
 
 ---
 
-## 5. Recommended Staged Roadmap
+## 5. Tier 2 Empirical Evaluation: `pytest-dev/pytest` (19-Task Official Docker Run)
+
+Following Tier 1 (`psf/requests`), we executed Tier 2 on **2026-10-25** using `deepseek-v4.1-flash` across all 19 canonical tasks of `pytest-dev/pytest` in SWE-bench Verified (`benchmarks/swebench/tasks-pytest-19.json`), adjudicated in isolated Docker containers via `swebench.harness.run_evaluation`.
+
+### 5.1 Official Docker Scorecard (`pytest-dev/pytest` · 19 Tasks)
+
+| Metric | Solo Baseline (Track A) | + agent-teamwork (Track B) | Delta |
+| :--- | :---: | :---: | :---: |
+| **Patches Generated** | 16/19 (84.2%)* | 16/19 (84.2%) | — |
+| **Official Resolved (Pass@1)** | **12/19 (63.2%)** | **14/19 (73.7%)** | **+10.5% (+2 tasks)** |
+| **Unresolved (Patch applied, tests failed)** | 3 (`10356`, `7324`, `7490`) | 2 (`5787`, `7324`) | −1 |
+| **Empty Patches (Turn budget exhausted reading)** | 3 (`5840`, `6197`, `7236`) | 3 (`10356`, `5840`, `6197`) | — |
+| **Fatal Patch Errors (`git apply` failure)** | **1 (`pytest-dev__pytest-7205`)** | **0** | **−1 error** |
+| **Infrastructure Failures** | 0 | 0 | — |
+| **API Calls Consumed** | 58 (+1 429 retry, 3 suppl. turns) | 69 | +19.0% |
+| **Total Tokens Consumed** | 1,707,827 (1.35M / 362K) | 1,942,076 (1.45M / 491K) | +13.7% |
+| **Average Patch Size** | 2,182 chars (+51% larger) | **1,442 chars** | **−33.9% more surgical** |
+| **Wall Time** | 47.8 + 5.5 min | 56.5 min | — |
+
+*\*Fairness note on `pytest-dev__pytest-10356`*: Solo's initial attempt hit an upstream transient HTTP 429 (`ttft_admission_refused, cell at capacity`). The single task was transparently re-run under identical budgets (3 turns, 2,029-char patch) and spliced into `predictions-pytest-baseline.jsonl`. Official Docker evaluation still scored it as `unresolved` (`no_tests_collected`), leaving the headline score unchanged.
+
+**Honest Token Accounting Reversal**: While Teamwork saved 42.8% tokens on the smaller `psf/requests` repo, it consumed +13.7% more tokens on `pytest-dev/pytest` because resending the large repository file tree and read protocol across turns increases prompt tokens. That +13.7% token investment purchased **+10.5% Pass@1 (+2 net resolved tasks)**, **33.9% smaller surgical patches**, and **0 malformed-patch errors**.
+
+### 5.2 Decisive Head-to-Head Divergences
+
+- **Teamwork Exclusive Wins (3 tasks)**:
+  - **`pytest-dev__pytest-7205`** *(same failure mode as `requests-6028`)*: Teamwork produced a 606-char surgical patch in 2 turns that applied cleanly and passed all hidden tests. Solo also took 2 turns but rewrote 3,421 chars of `setuponly.py`, producing a corrupt diff (`patch: **** malformed patch at line 100`) rejected by the official container (`error`).
+  - **`pytest-dev__pytest-7236`**: Teamwork delivered a 2,036-char fix in 3 turns and **Resolved**; Solo spent all 6 turns reading files without writing a single character (empty patch).
+  - **`pytest-dev__pytest-7490`**: Teamwork delivered a 939-char fix and **Resolved**; Solo's 2,638-char patch applied but broke test collection (`no_tests_collected`).
+- **Solo Exclusive Win (1 task)**:
+  - **`pytest-dev__pytest-5787`**: Solo resolved in 2 turns (7,348 chars), whereas Teamwork's 3-turn 6,421-char patch triggered `no_tests_collected` during container verification.
+- **Shared Failures (4 tasks)**:
+  - `5840` & `6197`: Both tracks exhausted all 6 turns reading code and reasoning without emitting writes (0 false aborts, 0 out-of-bounds writes).
+  - `10356`: Teamwork emitted no patch; Solo's patch failed with `no_tests_collected`.
+  - `7324`: Both tracks produced clean patches (1,791 vs 2,056 chars) that missed the root cause on hidden tests.
+
+### 5.3 Combined SWE-bench Verified Aggregate (Tier 1 + Tier 2 · 27 Tasks)
+
+| Suite | Tasks | Solo Resolved | + agent-teamwork Resolved | Delta | Fatal Patch Errors (Solo vs Teamwork) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Tier 1: `psf/requests`** | 8 | 4/8 (50.0%) | **5/8 (62.5%)** | **+12.5%** | 1 (`requests-6028`) vs **0** |
+| **Tier 2: `pytest-dev/pytest`** | 19 | 12/19 (63.2%) | **14/19 (73.7%)** | **+10.5%** | 1 (`pytest-7205`) vs **0** |
+| **Combined Total** | **27** | **16/27 (59.3%)** | **19/27 (70.4%)** | **+11.1% (+3 tasks)** | **2 vs 0** |
+
+### 5.4 Tier 2 Audit Artifacts
+
+- **Teamwork Predictions**: [`benchmarks/swebench/predictions-pytest-teamwork.jsonl`](../benchmarks/swebench/predictions-pytest-teamwork.jsonl)
+- **Solo Baseline Predictions**: [`benchmarks/swebench/predictions-pytest-baseline.jsonl`](../benchmarks/swebench/predictions-pytest-baseline.jsonl)
+- **Dual-Track Telemetry Report**: [`benchmarks/swebench/report-pytest-ab.json`](../benchmarks/swebench/report-pytest-ab.json)
+- **Official Teamwork Scorecard (14/19)**: [`benchmarks/swebench/results/agent-teamwork-v0.4.0+swebench (deepseek-v4.1-flash).pytest-teamwork-verified-run.json`](../benchmarks/swebench/results/agent-teamwork-v0.4.0+swebench%20(deepseek-v4.1-flash).pytest-teamwork-verified-run.json)
+- **Official Solo Scorecard (12/19)**: [`benchmarks/swebench/results/deepseek-v4.1-flash-solo.pytest-solo-verified-run.json`](../benchmarks/swebench/results/deepseek-v4.1-flash-solo.pytest-solo-verified-run.json)
+
+---
+
+## 6. Recommended Staged Roadmap
 
 | Tier | Recommended Scope | Objective & Expected Outcome | Status |
 | :--- | :--- | :--- | :---: |
 | **Tier 1: Mini Repo Probe** | `psf/requests` (8 tasks) | Validate end-to-end lifecycle from issue text to Docker test resolution; observe surgical patching vs monolithic overwrites. | **COMPLETED (62.5% vs 50.0%)** |
-| **Tier 2: Concurrent Testing** | `pytest-dev/pytest` (19 tasks) | Test deep exception handling and multi-file cascade refactorings; exercise Challenger's boundary coverage. | Ready for execution |
+| **Tier 2: Concurrent Testing** | `pytest-dev/pytest` (19 tasks) | Test deep exception handling and multi-file cascade refactorings; exercise Challenger's boundary coverage. | **COMPLETED (73.7% vs 63.2%)** |
 | **Tier 3: Full 500-Task Exam** | Full `SWE-bench_Verified` | Generate an official, submission-ready leaderboard entry to benchmark directly against Devin, Claude Code, and Cursor. | Scalable via `--max-workers` |

@@ -42,22 +42,25 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## Empirical Benchmark & Real-World Case Studies
 
-> 🏆 **SWE-bench Verified Official Docker Evaluation (`psf/requests` 8 Tasks)**:
-> In full blind containerized evaluation against real-world GitHub issues with `deepseek-v4.1-flash`: `agent-teamwork` achieved **62.5% Pass@1 (5/8)** vs Solo baseline **50.0% (4/8)** — achieving a **+12.5% Pass@1 margin**, **0 vs 1 fatal patch errors**, and **−42.8% token overhead** (+75% Solo token bloat). Details: [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md) & [`BENCHMARKS.md`](BENCHMARKS.md).
+> 🏆 **SWE-bench Verified Official Docker Evaluations (`pytest` 19 Tasks + `requests` 8 Tasks = 27 Tasks)**:
+> In full blind containerized evaluation against real-world GitHub issues with `deepseek-v4.1-flash`: `agent-teamwork` achieved **70.4% Pass@1 (19/27)** vs Solo baseline **59.3% (16/27)** (**+11.1% Pass@1 margin**, **0 vs 2 fatal patch errors**):
+> - **Tier 2 (`pytest-dev/pytest` 19 tasks)**: **73.7% (14/19) vs 63.2% (12/19)** (+10.5% Pass@1, −33.9% smaller surgical patches, 0 vs 1 malformed patch error).
+> - **Tier 1 (`psf/requests` 8 tasks)**: **62.5% (5/8) vs 50.0% (4/8)** (+12.5% Pass@1, −42.8% token overhead, 0 vs 1 fatal `git apply` error).
+> Details: [`docs/SWEBENCH_GUIDE.md`](docs/SWEBENCH_GUIDE.md) & [`BENCHMARKS.md`](BENCHMARKS.md).
 >
 > 🚀 **15-Task Live Synthetic Benchmark (`deepseek-v4.1-flash`)**:
 > Pass@1 100% vs 100% ceiling, 18 vs 0 out-of-bounds writes, 2 vs 0 false victory claims, and −24% API calls. Details: [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md).
 >
 > 📖 **Full Bilingual Live-Eval Portal**: See root portal [`BENCHMARKS.md`](BENCHMARKS.md) / [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) (English) and [`BENCHMARKS.zh-CN.md`](BENCHMARKS.zh-CN.md) / [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (简体中文) for complete methodology, telemetry, and raw scorecards.
 
-### Live Scorecard: SWE-bench Verified (`psf/requests` · Official Docker Adjudication)
+### Live Scorecard: SWE-bench Verified (Official Docker Adjudication · 27 Tasks)
 
-| Key Metric | Solo (Track A) | + agent-teamwork (Track B) | Delta | Note |
+| Suite / Metric | Solo (Track A) | + agent-teamwork (Track B) | Delta | Note |
 | :--- | :---: | :---: | :---: | :--- |
-| **Official Resolved (Pass@1)** | 4/8 (50.0%) | **5/8 (62.5%)** | **+12.5 pts** | Blind holdout container verification |
-| **Fatal Patch Errors (`git apply`)** | 1 (`psf__requests-6028`) | **0** | **−1 error** | Monolithic rewrite vs surgical 535-char patch |
-| **Total Tokens Consumed** | 418k | **239k** | **−42.8%** | Solo suffered +75.0% token bloat |
-| **API Calls Consumed** | 21 | **17** | **−19.0%** | Multi-turn read protocol stabilized convergence |
+| **`pytest-dev/pytest` Resolved (19 tasks)** | 12/19 (63.2%) | **14/19 (73.7%)** | **+10.5 pts** | Net +2 resolved (`7205`, `7236`, `7490` vs `5787`) |
+| **`psf/requests` Resolved (8 tasks)** | 4/8 (50.0%) | **5/8 (62.5%)** | **+12.5 pts** | Net +1 resolved (`requests-6028`) |
+| **Combined Pass@1 (27 tasks)** | 16/27 (59.3%) | **19/27 (70.4%)** | **+11.1 pts** | Blind holdout container verification |
+| **Fatal Patch Errors (`git apply`)** | 2 (`6028`, `7205`) | **0** | **−2 errors** | Monolithic rewrites vs surgical 535/606-char diffs |
 
 ### Historical Baseline Scorecard (mimo-v2.6-flash, 2026-10-24)
 
