@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Unified installer for agent-teamwork
-# Supports: zcode | claude | codex | deepseek | opencode | workbuddy | generic
+# Unified multi-agent installer for agent-teamwork
+# Supports: all | zcode | claude | codex | antigravity | agents | deepseek | opencode | workbuddy | cursor | windsurf | cline | aider | generic
 set -euo pipefail
 
 TARGET="zcode"
-LANG_OPT="zh"
+LANG_OPT="auto"
 DRY_RUN=false
 DEST=""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "0.3.0")"
+VERSION="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "0.6.0")"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -30,7 +30,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      echo "Usage: $0 [--target zcode|claude|codex|deepseek|opencode|workbuddy|generic] [--lang zh|en] [--dry-run] [--dest <path>]"
+      echo "Usage: $0 [--target all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic] [--lang auto|zh|en] [--dry-run] [--dest <path>]"
       exit 0
       ;;
     *)
@@ -40,13 +40,51 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ "$LANG_OPT" == "auto" ]]; then
+  SYS_LOCALE="${LC_ALL:-${LANG:-en}}"
+  if [[ "$SYS_LOCALE" == zh* || "$SYS_LOCALE" == *CN* || "$SYS_LOCALE" == *TW* || "$SYS_LOCALE" == *HK* ]]; then
+    LANG_OPT="zh"
+  else
+    LANG_OPT="en"
+  fi
+fi
+
 if [[ "$LANG_OPT" != "zh" && "$LANG_OPT" != "en" ]]; then
-  echo "Unsupported language: $LANG_OPT (expected zh or en)" >&2
+  echo "Unsupported language: $LANG_OPT (expected auto, zh, or en)" >&2
   exit 1
 fi
 
 MANIFEST_DIR="$HOME/.local/share/agent-teamwork"
-MANIFEST_FILE="$MANIFEST_DIR/install-manifest.json"
+MANIFEST_FILE="$MANIFEST_DIR/install-manifest-${TARGET}.json"
+LEGACY_MANIFEST_FILE="$MANIFEST_DIR/install-manifest.json"
+
+if [[ "$TARGET" == "all" ]]; then
+  DETECTED_TARGETS=()
+  [[ -d "$HOME/.zcode" ]] && DETECTED_TARGETS+=("zcode")
+  [[ -d "$HOME/.claude" ]] && DETECTED_TARGETS+=("claude")
+  [[ -d "$HOME/.codex" ]] && DETECTED_TARGETS+=("codex")
+  [[ -d "$HOME/.dsh" || -d "$HOME/.deepseek" ]] && DETECTED_TARGETS+=("deepseek")
+  [[ -d "$HOME/.agents" ]] && DETECTED_TARGETS+=("agents")
+  [[ -d "$HOME/.gemini" ]] && DETECTED_TARGETS+=("antigravity")
+  [[ -d "$HOME/.opencode" ]] && DETECTED_TARGETS+=("opencode")
+  [[ -d "$HOME/.workbuddy" ]] && DETECTED_TARGETS+=("workbuddy")
+  [[ -d "$HOME/.cursor" ]] && DETECTED_TARGETS+=("cursor")
+  [[ -d "$HOME/.windsurf" ]] && DETECTED_TARGETS+=("windsurf")
+
+  if [[ ${#DETECTED_TARGETS[@]} -eq 0 ]]; then
+    DETECTED_TARGETS=("zcode" "claude" "codex" "agents")
+  fi
+
+  echo "==> Multi-Agent Batch Installation: Found ${#DETECTED_TARGETS[@]} target(s): ${DETECTED_TARGETS[*]}"
+  for t in "${DETECTED_TARGETS[@]}"; do
+    echo ""
+    echo "--- Installing for target: $t ---"
+    "$0" --target "$t" --lang "$LANG_OPT" $([[ "$DRY_RUN" == true ]] && echo "--dry-run")
+  done
+  echo ""
+  echo "All ${#DETECTED_TARGETS[@]} targets processed successfully."
+  exit 0
+fi
 
 case "$TARGET" in
   zcode)
@@ -54,20 +92,44 @@ case "$TARGET" in
     WORKFLOW_DEST="$BASE_DEST/workflows"
     SKILL_DEST="$BASE_DEST/skills/teamwork"
     ;;
-  claude)
+  claude|claude-code)
+    TARGET="claude"
     BASE_DEST="${DEST:-$HOME/.claude}"
     WORKFLOW_DEST="$BASE_DEST/commands"
     SKILL_DEST="$BASE_DEST/skills/teamwork"
+    MANIFEST_FILE="$MANIFEST_DIR/install-manifest-claude.json"
     ;;
   codex)
     BASE_DEST="${DEST:-$HOME/.codex}"
     WORKFLOW_DEST="$BASE_DEST/workflows"
     SKILL_DEST="$BASE_DEST/skills/teamwork"
     ;;
-  deepseek)
-    BASE_DEST="${DEST:-$HOME/.deepseek}"
+  antigravity|gemini)
+    TARGET="antigravity"
+    BASE_DEST="${DEST:-$HOME/.gemini/antigravity}"
+    WORKFLOW_DEST="$BASE_DEST/skills/teamwork"
+    SKILL_DEST="$BASE_DEST/skills/teamwork"
+    MANIFEST_FILE="$MANIFEST_DIR/install-manifest-antigravity.json"
+    ;;
+  agents)
+    TARGET="agents"
+    BASE_DEST="${DEST:-$HOME/.agents}"
+    WORKFLOW_DEST="$BASE_DEST/skills/teamwork"
+    SKILL_DEST="$BASE_DEST/skills/teamwork"
+    MANIFEST_FILE="$MANIFEST_DIR/install-manifest-agents.json"
+    ;;
+  deepseek|dsh)
+    TARGET="deepseek"
+    if [[ -n "$DEST" ]]; then
+      BASE_DEST="$DEST"
+    elif [[ -d "$HOME/.dsh" ]]; then
+      BASE_DEST="$HOME/.dsh"
+    else
+      BASE_DEST="$HOME/.deepseek"
+    fi
     WORKFLOW_DEST="$BASE_DEST/workflows"
     SKILL_DEST="$BASE_DEST/skills/teamwork"
+    MANIFEST_FILE="$MANIFEST_DIR/install-manifest-deepseek.json"
     ;;
   opencode)
     BASE_DEST="${DEST:-$HOME/.opencode}"
@@ -79,13 +141,23 @@ case "$TARGET" in
     WORKFLOW_DEST="$BASE_DEST/workflows"
     SKILL_DEST="$BASE_DEST/skills/teamwork"
     ;;
-  generic)
+  cursor)
+    BASE_DEST="${DEST:-$HOME/.cursor}"
+    WORKFLOW_DEST="$BASE_DEST/rules"
+    SKILL_DEST="$BASE_DEST/skills/teamwork"
+    ;;
+  windsurf)
+    BASE_DEST="${DEST:-$HOME/.windsurf}"
+    WORKFLOW_DEST="$BASE_DEST/rules"
+    SKILL_DEST="$BASE_DEST/skills/teamwork"
+    ;;
+  cline|aider|generic)
     BASE_DEST="${DEST:-$HOME/.agent-teamwork}"
     WORKFLOW_DEST="$BASE_DEST/workflows"
     SKILL_DEST="$BASE_DEST/skills/teamwork"
     ;;
   *)
-    echo "Unsupported target: $TARGET (expected: zcode, claude, codex, deepseek, opencode, workbuddy, generic)" >&2
+    echo "Unsupported target: $TARGET (expected: all, zcode, claude, codex, antigravity, agents, deepseek, opencode, workbuddy, cursor, windsurf, cline, aider, generic)" >&2
     exit 1
     ;;
 esac
@@ -103,7 +175,7 @@ if [[ "$DRY_RUN" == true ]]; then
   exit 0
 fi
 
-TIMESTAMP="$(date +%Y%m%d%H%M%S)"
+TIMESTAMP="$(date +%Y%m%d%H%M%S)_$$"
 
 mkdir -p "$WORKFLOW_DEST" "$SKILL_DEST/protocol" "$SKILL_DEST/roles"
 
@@ -112,29 +184,28 @@ INSTALLED_FILES=()
 backup_and_copy() {
   local src="$1"
   local dst="$2"
-  if [[ -f "$dst" ]]; then
+  if [[ -f "$dst" ]] && ! cmp -s "$src" "$dst"; then
     cp "$dst" "${dst}.bak-$TIMESTAMP"
   fi
   cp "$src" "$dst"
   INSTALLED_FILES+=("$dst")
 }
 
-# 1. Install skill and protocol docs
+# 1. Install skill, protocol docs, and bilingual role definitions into SKILL_DEST
 backup_and_copy "$SCRIPT_DIR/skills/teamwork/SKILL.md" "$SKILL_DEST/SKILL.md"
 backup_and_copy "$SCRIPT_DIR/protocol/scoping-interview.md" "$SKILL_DEST/protocol/scoping-interview.md"
 backup_and_copy "$SCRIPT_DIR/protocol/teamwork.md" "$SKILL_DEST/protocol/teamwork.md"
 
-# 2. Install language-specific role definitions
-for role_file in "$SCRIPT_DIR/roles/"*."${LANG_OPT}.md"; do
+for role_file in "$SCRIPT_DIR"/roles/*.md; do
   if [[ -f "$role_file" ]]; then
     base_name="$(basename "$role_file")"
     backup_and_copy "$role_file" "$SKILL_DEST/roles/$base_name"
   fi
 done
 
-echo "Installed skill, protocol, and ${LANG_OPT} roles to $SKILL_DEST"
+echo "Installed skill, protocol, and bilingual role prompts to $SKILL_DEST"
 
-# 3. Install target workflow/adapter
+# 2. Install target workflow/adapter
 if [[ "$TARGET" == "zcode" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/zcode/teamwork.dwf.ts" "$WORKFLOW_DEST/teamwork.dwf.ts"
   echo "Installed ZCode workflow to $WORKFLOW_DEST/teamwork.dwf.ts"
@@ -148,41 +219,70 @@ elif [[ "$TARGET" == "deepseek" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/deepseek/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
   echo "Installed DeepSeek protocol to $WORKFLOW_DEST/teamwork.md"
 elif [[ "$TARGET" == "opencode" ]]; then
-  backup_and_copy "$SCRIPT_DIR/adapters/opencode/agents.json" "$WORKFLOW_DEST/agents.json"
-  echo "Installed OpenCode agents configuration to $WORKFLOW_DEST/agents.json"
+  mkdir -p "$WORKFLOW_DEST/roles"
+  for role_file in "$SCRIPT_DIR"/roles/*."${LANG_OPT}".md; do
+    if [[ -f "$role_file" ]]; then
+      base_name="$(basename "$role_file")"
+      backup_and_copy "$role_file" "$WORKFLOW_DEST/roles/$base_name"
+    fi
+  done
+  if [[ -f "$WORKFLOW_DEST/agents.json" ]]; then
+    cp "$WORKFLOW_DEST/agents.json" "$WORKFLOW_DEST/agents.json.bak-$TIMESTAMP"
+  fi
+  sed "s/\.en\.md/.${LANG_OPT}.md/g" "$SCRIPT_DIR/adapters/opencode/agents.json" > "$WORKFLOW_DEST/agents.json"
+  INSTALLED_FILES+=("$WORKFLOW_DEST/agents.json")
+  echo "Installed OpenCode agents configuration (lang: $LANG_OPT) and role prompts to $WORKFLOW_DEST"
+elif [[ "$TARGET" == "antigravity" ]]; then
+  backup_and_copy "$SCRIPT_DIR/adapters/generic/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
+  echo "Installed Antigravity teamwork protocol to $WORKFLOW_DEST/teamwork.md"
+  if [[ -z "$DEST" && "$SKILL_DEST" != "$HOME/.gemini/config/skills/teamwork" ]]; then
+    GEMINI_CONFIG_SKILL="$HOME/.gemini/config/skills/teamwork"
+    mkdir -p "$GEMINI_CONFIG_SKILL/protocol" "$GEMINI_CONFIG_SKILL/roles"
+    backup_and_copy "$SCRIPT_DIR/skills/teamwork/SKILL.md" "$GEMINI_CONFIG_SKILL/SKILL.md"
+    backup_and_copy "$SCRIPT_DIR/protocol/scoping-interview.md" "$GEMINI_CONFIG_SKILL/protocol/scoping-interview.md"
+    backup_and_copy "$SCRIPT_DIR/protocol/teamwork.md" "$GEMINI_CONFIG_SKILL/protocol/teamwork.md"
+    for role_file in "$SCRIPT_DIR"/roles/*.md; do
+      if [[ -f "$role_file" ]]; then
+        base_name="$(basename "$role_file")"
+        backup_and_copy "$role_file" "$GEMINI_CONFIG_SKILL/roles/$base_name"
+      fi
+    done
+    echo "Also mirrored teamwork skill to $GEMINI_CONFIG_SKILL"
+  fi
+elif [[ "$TARGET" == "agents" ]]; then
+  backup_and_copy "$SCRIPT_DIR/adapters/generic/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
+  echo "Installed universal agents teamwork protocol to $WORKFLOW_DEST/teamwork.md"
 elif [[ "$TARGET" == "workbuddy" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/workbuddy/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
   echo "Installed WorkBuddy protocol to $WORKFLOW_DEST/teamwork.md"
 else
   backup_and_copy "$SCRIPT_DIR/adapters/generic/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
-  echo "Installed generic protocol to $WORKFLOW_DEST/teamwork.md"
+  echo "Installed generic protocol ($TARGET) to $WORKFLOW_DEST/teamwork.md"
 fi
 
-# 4. Record manifest using Node.js (merges existing files if installed across multiple targets)
+# 3. Record per-target manifest and legacy manifest using Node.js
 mkdir -p "$MANIFEST_DIR"
 printf '%s\n' "${INSTALLED_FILES[@]}" | node -e '
 const fs = require("node:fs");
 const manifestFile = process.argv[1];
-const version = process.argv[2];
-const target = process.argv[3];
-const lang = process.argv[4];
-const ts = process.argv[5];
-const newFiles = fs.readFileSync(0, "utf8").split("\n").map(s => s.trim()).filter(Boolean);
+const legacyFile = process.argv[2];
+const version = process.argv[3];
+const target = process.argv[4];
+const lang = process.argv[5];
+const ts = process.argv[6];
+const newFiles = Array.from(new Set(fs.readFileSync(0, "utf8").split("\n").map(s => s.trim()).filter(Boolean)));
 
-let existing = { files: [] };
-if (fs.existsSync(manifestFile)) {
-  try { existing = JSON.parse(fs.readFileSync(manifestFile, "utf8")); } catch {}
-}
-const mergedFiles = Array.from(new Set([...(existing.files || []), ...newFiles]));
 const payload = {
   version,
   target,
   lang,
   installed_at: new Date().toISOString(),
-  files: mergedFiles,
+  files: newFiles,
   backup_timestamp: ts,
 };
-fs.writeFileSync(manifestFile, JSON.stringify(payload, null, 2) + "\n", "utf8");
-' "$MANIFEST_FILE" "$VERSION" "$TARGET" "$LANG_OPT" "$TIMESTAMP"
+const serialized = JSON.stringify(payload, null, 2) + "\n";
+fs.writeFileSync(manifestFile, serialized, "utf8");
+fs.writeFileSync(legacyFile, serialized, "utf8");
+' "$MANIFEST_FILE" "$LEGACY_MANIFEST_FILE" "$VERSION" "$TARGET" "$LANG_OPT" "$TIMESTAMP"
 
 echo "Installation complete. Manifest saved to $MANIFEST_FILE."

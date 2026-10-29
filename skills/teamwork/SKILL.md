@@ -10,11 +10,11 @@ description: >-
   adversarial challenge attacks, invariant/domain guardrail evolution, stall replanning, and cross-task experience reflection.
 ---
 
-# Teamwork — 多智能体团队协作 / Multi-Agent Teamwork Initiative
+# Teamwork: 多智能体团队协作 / Multi-Agent Teamwork Initiative
 
 [中文](#阶段一范围访谈-phase-1-scoping-interview) | [English](#english-guide)
 
-概念受公开文档化的 agent 编排工作流启发（如 Google Antigravity 的 `/teamwork-preview`；机制实现融合开源项目 Microsoft Magentic-One、Google Research **Harness²** 与 claude-flow）。独立实现，与 Google、Anthropic、OpenAI 或 DeepSeek 无关联、未获其背书；Antigravity 是 Google LLC 的商标，此处仅作概念说明。支持 **ZCode、Claude Code、OpenAI Codex、DeepSeek (V3/R1)、OpenCode、WorkBuddy** 及通用 AI 编程助手。
+概念受公开文档化的 agent 编排工作流启发（如 Google Antigravity 的 `/teamwork-preview`；机制实现融合开源项目 Microsoft Magentic-One、Google Research **Harness²** 与 claude-flow）。独立实现，与 Google、Anthropic、OpenAI 或 DeepSeek 无关联、未获其背书；Antigravity 是 Google LLC 的商标，此处仅作概念说明。支持 **ZCode、Claude Code、OpenAI Codex、Google Antigravity / Gemini CLI、DeepSeek (V3/R1)、OpenCode、WorkBuddy** 及通用 AI 编程助手。
 
 ## 阶段一：范围访谈 (Phase 1: Scoping Interview)
 
@@ -30,13 +30,13 @@ description: >-
 ### 第 1 步：档位 + 诚信模式选择
 
 - **编队档位 (teamProfile)**：
-  1. **hybrid 混流（推荐）** — 编排者对工作项难度分层：机械/文档/样板类使用轻量模型，核心逻辑使用强模型；把关角色全程强模型。
-  2. **quality 全强** — 所有角色均使用强模型。
-  3. **economy 省钱** — 全部施工下沉轻量模型，质检/挑战/审计强模型把关。
+  1. **hybrid 混流（推荐）**：编排者对工作项难度分层，机械/文档/样板类使用轻量模型，核心逻辑使用强模型；把关角色全程强模型。
+  2. **quality 全强**：所有角色均使用强模型。
+  3. **economy 省钱**：全部施工下沉轻量模型，质检/挑战/审计强模型把关。
 - **诚信模式 (integrityMode)**：
-  1. **development（推荐）** — 质检验收员把关每个里程碑。
-  2. **demo** — 另加对抗挑战员二次攻击（含返工后复验），防止夸大陈述。
-  3. **benchmark** — 最严要求：每条结论必须附带亲自运行命令或读代码的证据。
+  1. **development（推荐）**：质检验收员把关每个里程碑。
+  2. **demo**：另加对抗挑战员二次攻击（含返工后复验），防止夸大陈述。
+  3. **benchmark**：最严要求，每条结论必须附带亲自运行命令或读代码的证据。
 
 ### 第 2 步：启动工作流
 
@@ -89,13 +89,13 @@ Before kicking off multi-agent execution, align with the user using `protocol/sc
 - **`integrityMode`**:
   - `development` (Recommended): Critic verifies every milestone.
   - `demo`: Adds Adversarial Challenger (`{ foundIssue: boolean, evidence: string }`) on both initial construction and post-rework passes.
-  - `benchmark`: Strictest mode — every claim requires direct command execution or line-number code evidence.
+  - `benchmark`: Strictest mode: every claim requires direct command execution or line-number code evidence.
 
 ### Supported Platforms
-Works seamlessly across **Claude Code (`adapters/claude-code/teamwork.md`), OpenAI Codex (`adapters/codex/protocol.md`), DeepSeek V3/R1 (`adapters/deepseek/teamwork.md`), OpenCode (`adapters/opencode/agents.json`), WorkBuddy (`adapters/workbuddy/teamwork.md`), ZCode (`adapters/zcode/teamwork.dwf.ts`), and Generic Agents (`adapters/generic/teamwork.md`)**.
+Runs natively across **Claude Code (`adapters/claude-code/teamwork.md`), OpenAI Codex (`adapters/codex/protocol.md`), Google Antigravity / Gemini CLI (`adapters/generic/teamwork.md`), DeepSeek V3/R1 (`adapters/deepseek/teamwork.md`), OpenCode (`adapters/opencode/agents.json`), WorkBuddy (`adapters/workbuddy/teamwork.md`), ZCode (`adapters/zcode/teamwork.dwf.ts`), and Generic Agents (`adapters/generic/teamwork.md`)**.
 
 ### Live Benchmark & Case Studies
-See [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) and [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (or root portal [`BENCHMARKS.md`](BENCHMARKS.md)) for the 10-task SWE-bench/Aider aligned live A/B exam (OpenCode Zen + `mimo-v2.6-flash`, run 2026-10-24) via `npm run benchmark:live` — real API calls, real subprocess exit-code verdicts, real token billing — plus failure-mode analysis (reasoning-budget squeeze, stagnation-signature misfire on pre-payload turns) and observed guardrail outcomes (zero false victories, 41.7% token cut on shared failures).
+See [`docs/BENCHMARK_REPORT.md`](docs/BENCHMARK_REPORT.md) and [`docs/BENCHMARK_REPORT.zh-CN.md`](docs/BENCHMARK_REPORT.zh-CN.md) (or root portal [`BENCHMARKS.md`](BENCHMARKS.md)) for the 10-task SWE-bench/Aider aligned live A/B exam (OpenCode Zen + `mimo-v2.6-flash`, run 2026-10-24) via `npm run benchmark:live` (real API calls, real subprocess exit-code verdicts, real token billing), plus failure-mode analysis (reasoning-budget squeeze, stagnation-signature misfire on pre-payload turns) and observed guardrail outcomes (zero false victories, 41.7% token cut on shared failures).
 
 ## Credits & Academic References
 

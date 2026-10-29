@@ -3,13 +3,13 @@
 [![CI](https://github.com/CalebChen941028/agent-teamwork/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
-[![Version: 0.5.1](https://img.shields.io/badge/version-0.5.1-green.svg)](CHANGELOG.md)
+[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](CHANGELOG.md)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 **面向大型长周期软件工程任务的多智能体协作编排引擎：动态风险拓扑路由、混合经验检索、提议-组合护栏合成、经验微测试计划合成与结构化对抗质量门禁。**
 
-全面适配 **OpenAI Codex、Claude Code、DeepSeek (V3/R1)、OpenCode、WorkBuddy、ZCode** 以及各类主流通用编程助手（**Cursor、Windsurf、Cline、Roo Code、GitHub Copilot、Aider、Gemini CLI**），提供 100% 完备的 **中英双语（`zh` / `en`）** 协议规范、角色提示词库与一键安装脚本。
+支持 **Google Antigravity、OpenAI Codex、Claude Code、DeepSeek (V3/R1)、OpenCode、WorkBuddy、ZCode** 以及各类主流通用编程助手（**Cursor、Windsurf、Cline、Roo Code、GitHub Copilot、Aider、Gemini CLI**），提供 100% 完备的 **中英双语（`zh` / `en` / `auto`）** 协议规范、角色提示词库与一键安装脚本。
 
 ---
 
@@ -28,15 +28,16 @@
 
 ## 多平台智能体支持矩阵
 
-| 智能体 / 平台 | 适配器与配置文件 | 安装命令 (`--target`) | 模型分级与平台优化 | 双语支持 (`--lang zh\|en`) |
+| 智能体 / 平台 | 适配器与配置文件 | 安装命令 (`--target`) | 模型分级与平台优化 | 双语支持 (`--lang auto\|zh\|en`) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Claude Code CLI** | [`adapters/claude-code/teamwork.md`](adapters/claude-code/teamwork.md) | `./install.sh --target claude` | Opus/Sonnet 动态分级 + Bash 工具门禁 | 完整双语 (`zh` / `en`) |
 | **OpenAI Codex CLI** | [`adapters/codex/protocol.md`](adapters/codex/protocol.md) | `./install.sh --target codex` | 多角色交接协议 + 结构化输出约束 | 完整双语 (`zh` / `en`) |
+| **Google Antigravity / Gemini CLI** | [`skills/teamwork/SKILL.md`](skills/teamwork/SKILL.md) | `./install.sh --target antigravity` | 原生技能库与多级目录自动同步 | 完整双语 (`zh` / `en`) |
 | **DeepSeek (V3 / R1)** | [`adapters/deepseek/teamwork.md`](adapters/deepseek/teamwork.md) | `./install.sh --target deepseek` | R1 推理标签隔离 (`<think>`) + 0.6 温度 | 完整双语 (`zh` / `en`) |
 | **OpenCode** | [`adapters/opencode/agents.json`](adapters/opencode/agents.json) | `./install.sh --target opencode` | 原生多智能体定义 + 细粒度角色调度 | 完整双语 (`roles/*.zh.md` & `*.en.md`) |
 | **WorkBuddy** | [`adapters/workbuddy/teamwork.md`](adapters/workbuddy/teamwork.md) | `./install.sh --target workbuddy` | 任务看板协作流程 + 工作区目录锁 | 完整双语 (`zh` / `en`) |
 | **ZCode 动态工作流** | [`adapters/zcode/teamwork.dwf.ts`](adapters/zcode/teamwork.dwf.ts) | `./install.sh --target zcode` | 完整代码级编排状态机 + `allSettled` 并行 | 自动检测 & 显式指定 (`lang: auto\|zh\|en`) |
-| **通用助手 (Cursor, Windsurf, Cline, Roo Code, Aider, Copilot)** | [`adapters/generic/teamwork.md`](adapters/generic/teamwork.md) | `./install.sh --target generic` | 基于文件的交接协议 + Git 增量快照 | 完整双语 (`zh` / `en`) |
+| **通用助手 (Cursor, Windsurf, Cline, Aider, Agents)** | [`adapters/generic/teamwork.md`](adapters/generic/teamwork.md) | `./install.sh --target cursor\|windsurf\|cline\|aider\|agents\|generic` | 基于文件的交接协议 + Git 增量快照 | 完整双语 (`zh` / `en`) |
 
 ---
 
@@ -80,7 +81,7 @@
 完整脚手架在这台推理模型上拉低了 Pass@1，同时赢下全部护栏维度。已诊断的原因：`computeGapSignature` 把载荷前的"思考轮"误判为停滞。分析与四条具体修复见 [docs/BENCHMARK_REPORT.zh-CN.md §4–§6](docs/BENCHMARK_REPORT.zh-CN.md#4-输掉的差距由什么构成)。
 
 ### 本次活体运行的四个实测场景
-1. **推理预算挤占**：推理耗尽 completion 预算的轮次只返回 200–900 字符的分析短文、不含文件；载荷轮返回 3k–12k 字符。更大的 teamwork 提示放大了挤占——三道争议题失利的根源。
+1. **推理预算挤占**：推理耗尽 completion 预算的轮次只返回 200–900 字符的分析短文、不含文件；载荷轮返回 3k–12k 字符。更大的 teamwork 提示放大了挤占，导致三道争议题失利。
 2. **虚假胜利被捕获记录**：Solo 在 SWE-JS-006 第 1 轮宣称完成而校验退出码为 1；宣称被记为指标，循环继续，第 2 轮真正通过。引擎核算层零此类记录。
 3. **注定失败任务的止损**：双方都失败的三题上，停滞中止把 Token 消耗削减 41.7%（SWE-JS-010：13.7k → 5.3k，−61%）。
 4. **深度推理的招牌胜局**：SWE-JS-009 上 teamwork 轨 2 轮收敛（Solo 用了 5 轮），一次 273.8 秒的推理调用后首写即交出正确解码器。
@@ -162,15 +163,12 @@
 
 ---
 
-## v0.3.0 重大特性与架构升级
+## v0.6.0 重大特性与架构升级
 
-- **真实在线 A/B 评测套件**：`npm run benchmark:live` 把 10 项标准任务作为真实大考跑在任意 OpenAI 兼容端点上（默认 OpenCode Zen + `mimo-v2.6-flash`）——见上方[实测成绩看板](#实测成绩看板-scorecard---opencode-zen--mimo-v26-flash-2026-10-24)。
-- **动态风险拓扑路由**：全量实现 `resolveMilestoneTopology`，跨 TypeScript、JavaScript 与 ZCode DWF 保持 100% 逻辑对齐。
-- **混合经验检索模块**：引入 `rankExperienceLibrary`，以 BM25 + Jaccard 替代朴素截断。
-- **提议-组合护栏合成**：引入 `composeHarnessGuardrails`，内建 Context Tax 上限控制与冲突消解。
-- **经验微测试计划合成**：引入 `synthesizeMicroTestPlan`，补全无测试命令时的实证闭环。
-- **DeepSeek V3/R1 专属适配**：原生支持 R1 推理思考标签隔离（`<think>`）与 0.6 最佳生成温度。
-- **WorkBuddy 与 OpenCode 全面升级**：提供规范的任务看板协作协议与 `agents.json` 原生定义。
+- **统一 CLI 与全平台安装卸载器（`bin/agent-teamwork.mjs`、`install.sh`、`uninstall.sh`）**：新增 `npx agent-teamwork` / `teamwork` 命令行入口，安装目标扩展至 `all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic`，支持 `--lang auto|zh|en` 自动语种探测、分平台独立安装清单与 `--purge-backups` 备份清理。
+- **同里程碑重叠路径自动降级串行调度（`resolveMilestoneTopology`）**：当同一里程碑内多个子项声明的 `allowedPaths` 存在交集时，自动将 `parallelism` 从 `"concurrent"` 降级为 `"sequential"`，防止并行施工互相覆盖文件。
+- **ZCode DWF 状态机加固（`adapters/zcode/teamwork.dwf.ts`）**：修复跨任务经验库落盘时仅保留前 6 条的截断问题；补齐 `"sequential"` 串行施工分支；向返工与复核阶段传递越界改动告警；增加重规划空列表与里程碑上限保护。
+- **手术式代码块替换与写入前语法预检（`benchmarks/live-eval.mjs`、`benchmarks/swebench/runner.mjs`）**：在线评测与 SWE-bench 驱动器支持 `<replace path="...">` 三级空白容错块替换（`normalizeForMatching`）、沙箱语法预检（`node --check` / `JSON.parse` / `py_compile`）、目录边界精确拦截（`isForbiddenSwebenchPath`）与单轨独立 Token 账本。
 - **100% SSOT 单一真相源保证**：构建系统严格比对 18 个共享函数的归一化 AST 代码体，确保三端同源。
 
 ---
@@ -189,53 +187,49 @@
 
 ## 安装与卸载说明
 
-可通过 `--lang zh`（中文）或 `--lang en`（英文）将对应语言的角色库与协议一键安装至任意目标智能体环境：
+可通过 `--lang auto|zh|en`（或 `npx agent-teamwork install`）将对应语言的角色库与协议一键安装至任意目标智能体环境：
 
 ```bash
-# Claude Code CLI (中文或英文)
+# 一键安装到本机已检测到的所有智能体环境（自动识别系统语言）
+./install.sh --target all --lang auto
+
+# Claude Code CLI、OpenAI Codex CLI 或 Google Antigravity
 ./install.sh --target claude --lang zh
-./install.sh --target claude --lang en
-
-# OpenAI Codex CLI
 ./install.sh --target codex --lang zh
+./install.sh --target antigravity --lang zh
 
-# DeepSeek (V3 / R1)
+# DeepSeek (V3 / R1)、OpenCode、WorkBuddy 或 ZCode 动态工作流
 ./install.sh --target deepseek --lang zh
-
-# OpenCode
 ./install.sh --target opencode --lang zh
-
-# WorkBuddy
 ./install.sh --target workbuddy --lang zh
-
-# ZCode 动态工作流
 ./install.sh --target zcode --lang zh
 
-# 通用智能体环境 (Cursor, Windsurf, Cline, Roo Code, Aider, Copilot)
+# 工作区与通用智能体环境 (Cursor, Windsurf, Cline, Aider, Agents)
+./install.sh --target cursor --lang zh --dest /path/to/project
 ./install.sh --target generic --lang zh --dest /path/to/project
 ```
 
-一键卸载并自动恢复历史备份：
+一键卸载并自动恢复历史备份（支持 `--target <name>|all` 与 `--purge-backups`）：
 ```bash
-./uninstall.sh
+./uninstall.sh --target all
 ```
 
 ---
 
 ## 单测与构建校验：三层门禁架构
 
-**Level-1 —— 确定性离线门禁（零网络、零 API Key）：**
+**Level-1：确定性离线门禁（零网络、零 API Key）：**
 
 ```bash
-npm test                      # node scripts/build.mjs（SSOT 同构 + 开源合规扫描）+ 49 项单元测试全绿
+npm test                      # node scripts/build.mjs（SSOT 同构 + 开源合规扫描）+ 全量单元测试
 npm run benchmark             # Level-1 状态机基准评测（离线 runner，跑标准任务）
 ```
 
-**Level-2 —— 真实在线 API 评测（`npm run benchmark:live`）：**
+**Level-2：真实在线 API 评测（`npm run benchmark:live`）：**
 
-对 15 项真实软件工程基准任务发起真实 A/B 活体大考——A 轨（Solo：单模型单体 Prompt、无任何护栏）vs B 轨（模型 + agent-teamwork：范围契约、物理路径锁、失败尾部反馈、写入感知停滞恢复）——每题在 `os.tmpdir()` 下独立 Git 沙箱中执行，胜负严格由真实子进程退出码、真实 `usage` Token 账单与真实网络耗时裁决。
+对 15 项真实软件工程基准任务发起真实 A/B 活体大考，对比 A 轨（Solo：单模型单体 Prompt、无任何护栏）与 B 轨（模型 + agent-teamwork：范围契约、物理路径锁、失败尾部反馈、写入感知停滞恢复）。每题在 `os.tmpdir()` 下独立 Git 沙箱中执行，胜负严格由真实子进程退出码、真实 `usage` Token 账单与真实网络耗时裁决。
 
-**Level-3 —— 官方 SWE-bench Verified 容器评测（`benchmarks/swebench/`）：**
+**Level-3：官方 SWE-bench Verified 容器评测（`benchmarks/swebench/`）：**
 
 借助多回合 `<read path="..."/>` 按需读取协议与物理路径锁，自动生成标准 `predictions.jsonl`，并通过官方 Docker 裁判容器执行全隔离盲测裁决（`swebench.harness.run_evaluation`）：
 

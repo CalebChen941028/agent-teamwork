@@ -28,14 +28,14 @@ Designed for **WorkBuddy** (including WorkBuddy-Bench office, web, and code work
 6. **Budget-Aware Action Urgency**: When budget runs low, prioritize emitting concrete, verifiable code edits over pure analysis.
 
 ### Execution Stages
-1. **Stage 1 — Scoping & Conformance Alignment**: Confirm Primary Goal, The Goal Behind the Goal, exact Deliverable Schema/Path Contract, Non-Goals, and `verifyCommand`.
-2. **Stage 2 — Hybrid Experience Retrieval & Dynamic Planning**: Query prior lessons via `rankExperienceLibrary`; convert nominal requests into action verbs (`restatedGoal`); resolve dynamic topology (`resolveMilestoneTopology`) and split into sequential milestones with non-overlapping `allowedPaths`.
-3. **Stage 3 — Milestone Construction & Incremental Boundary Check**: Snapshot dirty files before each milestone; if no global `verifyCommand` is provided, synthesize an empirical micro-test plan (`synthesizeMicroTestPlan`); execute work items within `allowedPaths`; verify no unauthorized files were modified (`findOutOfBoundsFiles`).
-4. **Stage 4 — Critic, Micro-Testing & Structured Challenger Gate**:
+1. **Stage 1: Scoping & Conformance Alignment**: Confirm Primary Goal, The Goal Behind the Goal, exact Deliverable Schema/Path Contract, Non-Goals, and `verifyCommand`.
+2. **Stage 2: Hybrid Experience Retrieval & Dynamic Planning**: Query prior lessons via `rankExperienceLibrary`; convert nominal requests into action verbs (`restatedGoal`); resolve dynamic topology (`resolveMilestoneTopology`) and split into sequential milestones with non-overlapping `allowedPaths`.
+3. **Stage 3: Milestone Construction & Incremental Boundary Check**: Snapshot dirty files before each milestone; if no global `verifyCommand` is provided, synthesize an empirical micro-test plan (`synthesizeMicroTestPlan`); execute work items within `allowedPaths`; verify no unauthorized files were modified (`findOutOfBoundsFiles`).
+4. **Stage 4: Critic, Micro-Testing & Structured Challenger Gate**:
    - Critic verifies functional completion, runs synthesized micro-tests, and verifies exact deliverable shape conformance.
    - Challenger returns strict structured verdict: `{"foundIssue": boolean, "evidence": string}`.
    - Surgical rework (max 3 rounds) with gap-signature stall early-exit (`computeGapSignature`). If stalled, mark failed milestone `superseded: true`, compose updated guardrails (`composeHarnessGuardrails`), and replan.
-5. **Stage 5 — Final Verification & Audit**: Run `verifyCommand` (capturing tail 2000 chars on failure), audit all active milestones (`calculateTeamworkOpenGaps`), persist non-confounded experiences, and output an honest conclusion (`formatTeamworkConclusion`).
+5. **Stage 5: Final Verification & Audit**: Run `verifyCommand` (capturing tail 2000 chars on failure), audit all active milestones (`calculateTeamworkOpenGaps`), persist non-confounded experiences, and output an honest conclusion (`formatTeamworkConclusion`).
 
 ---
 
@@ -43,7 +43,7 @@ Designed for **WorkBuddy** (including WorkBuddy-Bench office, web, and code work
 
 ### 系统定位与核心优势
 专为 **WorkBuddy**（涵盖代码研发、Web 应用构建、结构化办公文档/表格处理及企业级 WorkBuddy 智能体）定制：
-- **基准实测提分验证**：深度融合 Google Research **Harness² (`arXiv:2610.14224`)** 在 WorkBuddy-Bench 上验证的核心提分机制（单步递归提升达 11.5 分）：通过**交付物形态强一致性校验**与**双层递归护栏演进**消除长周期任务中的格式偏移与重复踩坑。
+- **基准实测提分验证**：集成 Google Research **Harness² (`arXiv:2610.14224`)** 在 WorkBuddy-Bench 上验证的核心提分机制（单步递归提升达 11.5 分）：通过**交付物形态强一致性校验**与**双层递归护栏演进**消除长周期任务中的格式偏移与重复踩坑。
 - **混合经验检索（`rankExperienceLibrary`）**：采用 BM25/Jaccard 线索匹配与置信度权重检索历史经验库，精准激活相关工程知识。
 - **动态风险拓扑路由（`resolveMilestoneTopology`）**：根据低/中/高/高危风险层级，动态匹配算力档位、并发/串行模式、质检深度与对抗挑战门禁。
 - **护栏提议-合成引擎（`composeHarnessGuardrails`）**：自动合并去重并控制上下文税，提炼精炼通用纪律（invariant）与领域规则（domain）。

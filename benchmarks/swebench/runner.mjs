@@ -487,6 +487,17 @@ export function buildSwebenchUserPrompt(instance, fileTree = null) {
   return parts.join("\n");
 }
 
+export function isForbiddenSwebenchPath(filePath, forbiddenPaths = []) {
+  const normF = normalizeRelPath(filePath);
+  if (!normF) return false;
+  const segments = normF.split("/");
+  return (forbiddenPaths || []).some((p) => {
+    const normP = normalizeRelPath(p);
+    if (!normP) return false;
+    return normF === normP || normF.startsWith(normP + "/") || segments.includes(normP);
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Core Task Evaluation Loop
 // ---------------------------------------------------------------------------
@@ -525,9 +536,9 @@ export async function runSwebenchInstance({
     let blockedFiles = [];
     if (track === "teamwork") {
       const forbidden = contract.forbiddenPaths;
-      blockedFiles = files.filter((f) =>
-        forbidden.some((p) => normalizeRelPath(f.path).startsWith(normalizeRelPath(p)))
-      ).map((f) => f.path);
+      blockedFiles = files
+        .filter((f) => isForbiddenSwebenchPath(f.path, forbidden))
+        .map((f) => f.path);
       interceptedWrites += blockedFiles.length;
       allowedFiles = files.filter((f) => !blockedFiles.includes(f.path));
     }
@@ -619,8 +630,13 @@ export async function runSwebenchInstance({
             const errTail = formatFailureOutput(pyComp.stdout, pyComp.stderr, 400);
             feedbackParts.push(`[SYNTAX INTEGRITY WARNING] python3 -m py_compile failed on ${rel}:\n${errTail}\nFix this syntax defect immediately.`);
           }
-        } else if (rel.endsWith(".js") || rel.endsWith(".mjs")) {
-          const jsComp = spawnSync("node", ["--check", path.join(repoDir, rel)], { encoding: "utf8" });
+        } else if (rel.endsWith(".js") || rel.endsWith(".mjs") || rel.endsWith(".cjs")) {
+          const inputType = rel.endsWith(".cjs") ? "commonjs" : "module";
+          const jsSrc = fs.readFileSync(path.join(repoDir, rel), "utf8");
+          const jsComp = spawnSync(process.execPath, [`--input-type=${inputType}`, "--check"], {
+            input: jsSrc,
+            encoding: "utf8",
+          });
           if (jsComp.status !== 0) {
             const errTail = formatFailureOutput(jsComp.stdout, jsComp.stderr, 400);
             feedbackParts.push(`[SYNTAX INTEGRITY WARNING] node --check failed on ${rel}:\n${errTail}\nFix this syntax defect immediately.`);
@@ -666,7 +682,7 @@ export async function runSwebenchInstance({
 // Predictions Exporter
 // ---------------------------------------------------------------------------
 
-export function appendPrediction(predictionsPath, { instanceId, modelPatch, modelName = "agent-teamwork-v0.5.0" }) {
+export function appendPrediction(predictionsPath, { instanceId, modelPatch, modelName = "agent-teamwork-v0.6.0" }) {
   const line = JSON.stringify({
     instance_id: instanceId,
     model_name_or_path: modelName,
@@ -793,7 +809,7 @@ function predictionsPathFor(args, track) {
 }
 
 function modelNameFor(track, model) {
-  return track === "teamwork" ? `agent-teamwork-v0.5.0+swebench (${model})` : `${model}-solo`;
+  return track === "teamwork" ? `agent-teamwork-v0.6.0+swebench (${model})` : `${model}-solo`;
 }
 
 function summarizeResult(result) {
@@ -843,15 +859,6 @@ export async function main(argv = process.argv.slice(2)) {
     return 1;
   }
 
-  const client = createLiveClient({
-    apiKey: config.apiKey,
-    model: args.model,
-    baseUrl: config.baseUrl,
-    extraHeaders: config.extraHeaders,
-    maxTokens: args.maxTokens,
-    timeoutMs: args.timeoutMs,
-  });
-
   const tracks = args.mode === "ab" ? ["teamwork", "baseline"] : [args.mode];
   const report = {
     benchmark: "swebench-verified",
@@ -864,6 +871,14 @@ export async function main(argv = process.argv.slice(2)) {
   };
 
   for (const track of tracks) {
+    const client = createLiveClient({
+      apiKey: config.apiKey,
+      model: args.model,
+      baseUrl: config.baseUrl,
+      extraHeaders: config.extraHeaders,
+      maxTokens: args.maxTokens,
+      timeoutMs: args.timeoutMs,
+    });
     const predPath = predictionsPathFor(args, track);
     const completedIds = new Set();
 

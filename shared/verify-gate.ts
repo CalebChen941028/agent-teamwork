@@ -674,7 +674,24 @@ export function resolveMilestoneTopology(
     }
   }
 
-  const parallelism = (risk === "critical" || items.length <= 1) ? "sequential" : "concurrent";
+  let hasPathOverlap = false;
+  for (let i = 0; i < items.length && !hasPathOverlap; i++) {
+    const pathsA = Array.isArray(items[i] && items[i].allowedPaths) ? items[i].allowedPaths : [];
+    for (let j = i + 1; j < items.length && !hasPathOverlap; j++) {
+      const pathsB = Array.isArray(items[j] && items[j].allowedPaths) ? items[j].allowedPaths : [];
+      for (const pA of pathsA) {
+        for (const pB of pathsB) {
+          if (isPathAllowed(pA, [pB]) || isPathAllowed(pB, [pA])) {
+            hasPathOverlap = true;
+            break;
+          }
+        }
+        if (hasPathOverlap) break;
+      }
+    }
+  }
+
+  const parallelism = (risk === "critical" || items.length <= 1 || hasPathOverlap) ? "sequential" : "concurrent";
 
   const adversarialChallenger =
     risk === "critical" || risk === "high" || prof === "quality" || (risk === "medium" && prof !== "economy");

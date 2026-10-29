@@ -1,6 +1,6 @@
 {
   "name": "agent-teamwork",
-  "version": "0.3.0",
+  "version": "0.6.0",
   "harness2_features": {
     "task_level_guardrails": ["invariant", "domain"],
     "cross_task_experience_library": "~/.config/agent-teamwork/experience.json",
@@ -9,7 +9,9 @@
     "propose_compose_guardrails": true,
     "micro_test_plan_synthesis": true,
     "evidence_boundary_enforced": true,
-    "deliverable_shape_lock": true
+    "deliverable_shape_lock": true,
+    "surgical_block_edit_discipline": true,
+    "preflight_syntax_verification": true
   },
   "roles": {
     "orchestrator": {

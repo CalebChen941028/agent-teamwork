@@ -18,6 +18,7 @@ import {
   appendPrediction,
   parseCliArgs,
   normalizeForMatching,
+  isForbiddenSwebenchPath,
 } from "../benchmarks/swebench/runner.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -335,4 +336,20 @@ test("SWE-bench adapter: extractFileBlocks and applyFileWrites support surgical 
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
+});
+
+test("SWE-bench adapter: isForbiddenSwebenchPath enforces strict segment boundaries without prefix false positives", () => {
+  const forbidden = ["tests/", "test/", "testing/", "conftest.py", "setup.py", "tox.ini"];
+
+  // True positives: root and nested test directories or exact forbidden filenames
+  assert.equal(isForbiddenSwebenchPath("tests/test_models.py", forbidden), true);
+  assert.equal(isForbiddenSwebenchPath("requests/tests/test_models.py", forbidden), true);
+  assert.equal(isForbiddenSwebenchPath("conftest.py", forbidden), true);
+  assert.equal(isForbiddenSwebenchPath("requests/conftest.py", forbidden), true);
+
+  // True negatives: files that merely share a prefix with "test" or "setup.py"
+  assert.equal(isForbiddenSwebenchPath("testset.py", forbidden), false);
+  assert.equal(isForbiddenSwebenchPath("requests/testset.py", forbidden), false);
+  assert.equal(isForbiddenSwebenchPath("testing_utils.py", forbidden), false);
+  assert.equal(isForbiddenSwebenchPath("my_setup.py", forbidden), false);
 });

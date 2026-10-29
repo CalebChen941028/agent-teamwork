@@ -1,10 +1,14 @@
 {
   "name": "agent-teamwork",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Multi-agent collaborative teamwork engine for large-scale multi-step initiatives",
   "type": "module",
   "main": "shared/verify-gate.js",
   "types": "shared/verify-gate.d.ts",
+  "bin": {
+    "agent-teamwork": "bin/agent-teamwork.mjs",
+    "teamwork": "bin/agent-teamwork.mjs"
+  },
   "scripts": {
     "benchmark": "node benchmarks/runner.mjs",
     "benchmark:live": "node benchmarks/live-eval.mjs",

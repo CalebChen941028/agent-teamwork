@@ -51,6 +51,7 @@ try {
 }
 
 const requiredFiles = [
+  "bin/agent-teamwork.mjs",
   "adapters/zcode/teamwork.dwf.ts",
   "adapters/claude-code/teamwork.md",
   "adapters/codex/protocol.md",

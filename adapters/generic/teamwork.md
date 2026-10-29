@@ -61,7 +61,7 @@ For each milestone:
 
 ### 系统定位与核心优势
 `agent-teamwork` 为 **Cursor、Windsurf、Cline、Roo Code、GitHub Copilot、Aider、Gemini CLI / Antigravity、通义千问 Qwen-Agent** 等 AI 编程助手提供通用多智能体工程协议：
-- **通用工程协作范式**：使各类单智能体助手具备拆解里程碑、互斥文件锁、增量脏文件校验与对抗红蓝博弈的完整闭环。
+- **通用工程协作范式**：使各类单智能体助手具备拆解里程碑、互斥文件锁、增量脏文件校验与对抗红蓝博弈的完整机制。
 - **混合经验检索（`rankExperienceLibrary`）**：采用 BM25/Jaccard 线索匹配与置信度权重检索历史经验，避免跨任务重复踩坑。
 - **动态风险拓扑路由（`resolveMilestoneTopology`）**：根据低/中/高/高危风险层级，动态匹配算力档位、并发/串行模式、质检深度与对抗挑战门禁。
 - **护栏提议-合成引擎（`composeHarnessGuardrails`）**：自动合并去重并控制上下文税上限，精炼通用纪律（invariant）与领域规则（domain）。

@@ -53,7 +53,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import process from "node:process";
 import os from "node:os";
 import path from "node:path";
@@ -554,16 +554,58 @@ export function redactSecrets(value) {
 // Model output parsing: <file path="..."> blocks (primary) and fenced fallbacks
 // ---------------------------------------------------------------------------
 
+export function normalizeForMatching(text) {
+  return String(text || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd())
+    .join("\n");
+}
+
 export function extractFileBlocks(text) {
   const source = String(text || "");
+  const replaceBlocks = [];
   const results = [];
+
+  // 1. Surgical block replacement:
+  //    <replace path="..."><target>...</target><replacement>...</replacement></replace>
+  //    or <edit path="..."><old>...</old><new>...</new></edit>
+  //    or <replace path="..."><<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE</replace>
+  const replaceTagRe = /<(?:replace|edit)\s+path\s*=\s*["']([^"']+)["']\s*>([\s\S]*?)<\/(?:replace|edit)>/gi;
+  for (const match of source.matchAll(replaceTagRe)) {
+    const rel = normalizeRelPath(match[1].trim());
+    if (!rel) continue;
+    const body = match[2] || "";
+
+    const targetMatch = /<(?:target|old|search)>([\s\S]*?)<\/(?:target|old|search)>/i.exec(body);
+    const replMatch = /<(?:replacement|new)>([\s\S]*?)<\/(?:replacement|new)>/i.exec(body);
+    if (targetMatch && replMatch) {
+      replaceBlocks.push({
+        type: "replace",
+        path: rel,
+        target: targetMatch[1].replace(/^\r?\n/, "").replace(/\r?\n$/, ""),
+        replacement: replMatch[1].replace(/^\r?\n/, "").replace(/\r?\n$/, ""),
+      });
+      continue;
+    }
+
+    const searchReplaceRe = /<{5,9}\s*(?:SEARCH|TARGET|OLD)?\r?\n([\s\S]*?)\r?\n={5,9}\r?\n([\s\S]*?)\r?\n>{5,9}\s*(?:REPLACE|REPLACEMENT|NEW)?/gi;
+    for (const sm of body.matchAll(searchReplaceRe)) {
+      replaceBlocks.push({
+        type: "replace",
+        path: rel,
+        target: sm[1],
+        replacement: sm[2],
+      });
+    }
+  }
 
   const tagRe = /<file\s+path\s*=\s*["']([^"']+)["']\s*>\n?([\s\S]*?)<\/file>/gi;
   for (const match of source.matchAll(tagRe)) {
     results.push({ path: match[1].trim(), content: stripLeadingNewline(match[2]) });
   }
 
-  if (results.length === 0) {
+  if (results.length === 0 && replaceBlocks.length === 0) {
     // Fenced block with an explicit path in the info string:
     // ```js path=src/x.js   |   ```src/x.js   |   ```js file="src/x.js"
     const fenceRe = /```([^\n`]*)\n([\s\S]*?)```/g;
@@ -586,7 +628,7 @@ export function extractFileBlocks(text) {
     }
   }
 
-  if (results.length === 0) {
+  if (results.length === 0 && replaceBlocks.length === 0) {
     // "### File: src/x.js" header immediately followed by a fenced block
     const headerRe = /(?:^|\n)#{2,4}\s*(?:File|Path)\s*:\s*`?([^\n`]+?)`?\s*\n+```[^\n]*\n([\s\S]*?)```/g;
     for (const match of source.matchAll(headerRe)) {
@@ -602,7 +644,7 @@ export function extractFileBlocks(text) {
       byPath.set(rel, { path: rel, content: block.content });
     }
   }
-  return Array.from(byPath.values());
+  return [...replaceBlocks, ...Array.from(byPath.values())];
 }
 
 function stripLeadingNewline(content) {
@@ -953,14 +995,62 @@ export function applyWrites(sandboxDir, files) {
   const escaped = [];
   const failed = [];
   for (const file of files || []) {
-    const rel = normalizeRelPath(file.path);
-    if (!rel || typeof file.content !== "string") {
+    const rel = normalizeRelPath(file && file.path);
+    if (!rel) {
       failed.push(file && file.path ? file.path : "<empty>");
       continue;
     }
     const abs = path.resolve(sandboxDir, rel);
     if (abs !== sandboxDir && !abs.startsWith(sandboxDir + path.sep)) {
       escaped.push(rel); // Never write outside the sandbox, regardless of track.
+      continue;
+    }
+
+    if (file.type === "replace") {
+      try {
+        if (!existsSync(abs)) {
+          failed.push(`${rel}: file does not exist for surgical replace`);
+          continue;
+        }
+        let original = readFileSync(abs, "utf8");
+        const target = typeof file.target === "string" ? file.target : "";
+        const replacement = typeof file.replacement === "string" ? file.replacement : "";
+        if (!target) {
+          failed.push(`${rel}: empty target block`);
+          continue;
+        }
+        if (original.includes(target)) {
+          original = original.replace(target, replacement);
+        } else {
+          const normOriginal = normalizeForMatching(original);
+          const normTarget = normalizeForMatching(target);
+          const normReplacement = replacement.replace(/\r\n/g, "\n");
+          if (normOriginal.includes(normTarget)) {
+            original = normOriginal.replace(normTarget, normReplacement);
+          } else {
+            const trimmedTarget = normTarget.trim();
+            const trimmedReplacement = normReplacement.trim();
+            if (trimmedTarget && normOriginal.includes(trimmedTarget)) {
+              original = normOriginal.replace(trimmedTarget, trimmedReplacement);
+            } else {
+              failed.push(`${rel}: target block not found in file`);
+              continue;
+            }
+          }
+        }
+        if (original.length > 0 && !original.endsWith("\n")) {
+          original += "\n";
+        }
+        writeFileSync(abs, original, "utf8");
+        written.push(rel);
+      } catch (err) {
+        failed.push(`${rel}: ${(err && err.code) || (err && err.message) || "replace-error"}`);
+      }
+      continue;
+    }
+
+    if (typeof file.content !== "string") {
+      failed.push(rel);
       continue;
     }
     // One malformed proposal (e.g. a file "x" followed by "x/y.js" — EEXIST on
@@ -974,6 +1064,35 @@ export function applyWrites(sandboxDir, files) {
     }
   }
   return { written, escaped, failed };
+}
+
+export function verifySandboxSyntax(sandboxDir, writtenPaths) {
+  const errors = [];
+  for (const rel of writtenPaths || []) {
+    const abs = path.resolve(sandboxDir, rel);
+    if (!existsSync(abs)) continue;
+    if (/\.(js|mjs|cjs)$/i.test(rel)) {
+      const inputType = /\.cjs$/i.test(rel) ? "commonjs" : "module";
+      const src = readFileSync(abs, "utf8");
+      const res = spawnSync(process.execPath, [`--input-type=${inputType}`, "--check"], {
+        cwd: sandboxDir,
+        input: src,
+        encoding: "utf8",
+        timeout: 5000,
+      });
+      if (res.status !== 0) {
+        const errText = ((res.stderr || res.stdout || "syntax error").trim()).slice(0, 400);
+        errors.push(`${rel}: ${errText}`);
+      }
+    } else if (/\.json$/i.test(rel)) {
+      try {
+        JSON.parse(readFileSync(abs, "utf8"));
+      } catch (err) {
+        errors.push(`${rel}: invalid JSON (${err && err.message ? err.message : "parse error"})`);
+      }
+    }
+  }
+  return errors;
 }
 
 // ---------------------------------------------------------------------------
@@ -1124,15 +1243,37 @@ export async function runSoloTrack({
 // Track B — With agent-teamwork (contract + path lock + tail feed + early stop)
 // ---------------------------------------------------------------------------
 
-function teamworkFeedback({ run, failureTail, blockedFiles, replanDirective, wroteFiles }) {
+function teamworkFeedback({
+  run,
+  failureTail,
+  blockedFiles,
+  writeFailures = [],
+  syntaxErrors = [],
+  replanDirective,
+  wroteFiles,
+  turn = 1,
+  maxTurns = DEFAULT_MAX_TURNS,
+}) {
   const parts = [`[ENGINE VERIFICATION] exit code: ${run.exitCode}`];
   if (blockedFiles.length > 0) {
     parts.push(`[PATH LOCK] blocked out-of-bounds writes (NOT written, counted): ${blockedFiles.join(", ")}`);
   }
+  if (writeFailures.length > 0) {
+    parts.push(`[WRITE / REPLACE FAILURE] The following file edits could not be applied:\n${writeFailures.join("\n")}`);
+  }
+  if (syntaxErrors.length > 0) {
+    parts.push(`[PRE-FLIGHT SYNTAX ERROR] Modified files failed syntax check:\n${syntaxErrors.join("\n")}`);
+  }
   if (!wroteFiles) {
     parts.push(
       "[NO DISK WRITES] You produced analysis but wrote no files to disk. " +
-        "Analysis alone cannot pass verification. You must emit <file path=\"...\">...</file> blocks to modify code."
+        "Analysis alone cannot pass verification. You must emit <file path=\"...\">...</file> or <replace path=\"...\">...</replace> blocks to modify code."
+    );
+  }
+  const remaining = Math.max(0, maxTurns - turn);
+  if (remaining <= 2) {
+    parts.push(
+      `[BUDGET URGENCY] Only ${remaining} turn(s) remaining (turn ${turn}/${maxTurns}). Emit your concrete fix immediately.`
     );
   }
   parts.push("[PRESERVED FAILURE TAIL — formatFailureOutput]");
@@ -1201,6 +1342,7 @@ export async function runTeamworkTrack({
       interceptedCount += blocked.length + writeReport.escaped.length;
 
       const wroteFiles = writeReport.written.length > 0;
+      const syntaxErrors = wroteFiles ? verifySandboxSyntax(sandbox.dir, writeReport.written) : [];
 
       const run = runTestsInSandbox({ sandboxDir: sandbox.dir, taskId: task.id, targetRel: sandbox.targetRel, nonce: turn });
       lastRun = run;
@@ -1275,7 +1417,17 @@ export async function runTeamworkTrack({
       messages.push({ role: "assistant", content });
       messages.push({
         role: "user",
-        content: teamworkFeedback({ run, failureTail, blockedFiles: blocked, replanDirective, wroteFiles }),
+        content: teamworkFeedback({
+          run,
+          failureTail,
+          blockedFiles: blocked,
+          writeFailures: writeReport.failed,
+          syntaxErrors,
+          replanDirective,
+          wroteFiles,
+          turn,
+          maxTurns,
+        }),
       });
     }
 

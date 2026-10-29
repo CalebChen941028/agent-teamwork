@@ -1,8 +1,8 @@
 # agent-teamwork 官方 SWE-bench Verified 对接与实操指南
 
-[![Version: 0.5.1](https://img.shields.io/badge/version-0.5.1-green.svg)](../CHANGELOG.md)
+[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](../CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](../tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-100%25%20passing-brightgreen.svg)](../tests/)
 [![SWE-bench: Verified](https://img.shields.io/badge/SWE--bench-Verified%20(500%20Tasks)-purple.svg)](https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified)
 
 [English](SWEBENCH_GUIDE.md) | [简体中文](SWEBENCH_GUIDE.zh-CN.md)
@@ -277,7 +277,7 @@ API 调用：       Teamwork 129 次 对 Solo 236 次（网络往返调用减少
 
 1. **后程防空补丁写入催促：本题集的最大赢面**：
    - Solo 基线的 12 个空补丁全部属于“6 个回合纯读代码耗尽预算”。
-   - Teamwork 在第 4 回合由引擎注入 `[CRITICAL BUDGET ALERT]` 严格警告模型停止重复阅读并强制提出修改方案，成功将空补丁减半至 6 个。4 个 Teamwork 独解胜局中有 3 个直接来自此机制——`django-10914`、`scikit-learn-11310`、`sphinx-10323` 三题 Solo 全部交白卷，Teamwork 分别在第 4、6、3 回合完成落盘并全部通过盲测。
+   - Teamwork 在第 4 回合由引擎注入 `[CRITICAL BUDGET ALERT]` 严格警告模型停止重复阅读并强制提出修改方案，成功将空补丁减半至 6 个。4 个 Teamwork 独解胜局中有 3 个直接来自此机制：`django-10914`、`scikit-learn-11310`、`sphinx-10323` 三题 Solo 全部交白卷，Teamwork 分别在第 4、6、3 回合完成落盘并全部通过盲测。
 2. **行切片读取与树剪枝：彻底逆转大仓上下文膨胀**：
    - 在 pytest 战役中，Teamwork 曾因大仓重复发送完整目录树导致 Token 超支 +13.7%。
    - 在本场 5 个超大仓库中，行切片协议（`lines="n-m"`）与第 2 回合起的紧凑树剪枝生效显著：Teamwork 129 次调用完成任务，总 Token 消耗仅 1.79M，比 Solo 的 3.33M **大幅减少 46.2%（节约 154 万 Token）**。

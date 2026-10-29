@@ -1,8 +1,8 @@
 # agent-teamwork 真实在线基准评测门户
 
-[![Version: 0.5.1](https://img.shields.io/badge/version-0.5.1-green.svg)](CHANGELOG.md)
+[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-100%25%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
@@ -130,7 +130,7 @@ Solo (mimo-v2.6-flash)          [███████████████�
 共同失败题 Token  Solo 55.5k → Teamwork 32.4k（−41.7%）
 ```
 
-诚实的头名结论：在这台推理模型上，脚手架拉低了 Pass@1，同时赢下全部护栏维度。原因具体且已诊断——`computeGapSignature` 把模型载荷前的"思考轮"（推理耗尽 completion 预算、未输出文件、校验输出不变）判为停滞，在第 3/6 轮中止；而 Solo 恰恰用第 4–5 轮在这些题上收敛。完整分析与修复清单见 [docs/BENCHMARK_REPORT.zh-CN.md §4–§6](docs/BENCHMARK_REPORT.zh-CN.md#4-输掉的差距由什么构成)。
+诚实的头名结论：在这台推理模型上，脚手架拉低了 Pass@1，同时赢下全部护栏维度。原因具体且已诊断：`computeGapSignature` 把模型载荷前的"思考轮"（推理耗尽 completion 预算、未输出文件、校验输出不变）判为停滞，在第 3/6 轮中止；而 Solo 恰恰用第 4–5 轮在这些题上收敛。完整分析与修复清单见 [docs/BENCHMARK_REPORT.zh-CN.md §4–§6](docs/BENCHMARK_REPORT.zh-CN.md#4-输掉的差距由什么构成)。
 
 ---
 
@@ -176,9 +176,9 @@ Solo (mimo-v2.6-flash)          [███████████████�
 
 | 层级 | 命令 | 证明什么 | 网络依赖 |
 | :--- | :--- | :--- | :---: |
-| **1 —— 离线门禁** | `npm test` | 18 个共享纯函数 TS/JS/DWF 三端 AST 同构（SSOT）、开源合规扫描、50 项单测 | 无 |
-| **2 —— 在线合成大考** | `npm run benchmark:live` | 15 项真实软件工程基准任务上的 Pass@1、真实 Token 账单与越界拦截 | 真实 API |
-| **3 —— 官方 SWE-bench 实测** | `python3 benchmarks/swebench/eval.py` | 官方 SWE-bench Verified 工业级沙箱容器隐藏盲测裁决 | Docker + 真实 API |
+| **1：离线门禁** | `npm test` | 18 个共享纯函数 TS/JS/DWF 三端 AST 同构（SSOT）、开源合规扫描、全套单测 | 无 |
+| **2：在线合成大考** | `npm run benchmark:live` | 15 项真实软件工程基准任务上的 Pass@1、真实 Token 账单与越界拦截 | 真实 API |
+| **3：官方 SWE-bench 实测** | `python3 benchmarks/swebench/eval.py` | 官方 SWE-bench Verified 工业级沙箱容器隐藏盲测裁决 | Docker + 真实 API |
 
 ---
 

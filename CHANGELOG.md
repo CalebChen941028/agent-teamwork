@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-10-29
+
+### Added
+- **Unified CLI Entrypoint (`bin/agent-teamwork.mjs`)**:
+  - Added `agent-teamwork` / `teamwork` executable supporting `install`, `uninstall`, `benchmark`/`selftest`, `live`, `swebench`, `version`, and `help`.
+- **Multi-Agent Installer & Uninstaller Upgrade (`install.sh`, `uninstall.sh`)**:
+  - Added `--target all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic` (with aliases `claude-code`, `gemini`, `dsh`) and `--lang auto|zh|en` auto-detection.
+  - Added per-target installation manifests (`install-manifest-<target>.json`), multi-target safe uninstallation (`./uninstall.sh --target <name>|all`), and `--purge-backups`.
+  - Synchronized Google Antigravity installations across both `~/.gemini/antigravity/skills/teamwork` and `~/.gemini/config/skills/teamwork`.
+- **Surgical Block Edits & Pre-Flight Syntax Verification in Live Eval (`benchmarks/live-eval.mjs`)**:
+  - Upgraded `extractFileBlocks` and `applyWrites` to support `<replace path="...">` / `<edit path="...">` blocks and Aider `<<<<<<< SEARCH` markers with 3-tier whitespace normalization (`normalizeForMatching`).
+  - Added `verifySandboxSyntax` (`node --check` and `JSON.parse`) to feed immediate syntax diagnostics into subsequent agent turns before test execution.
+
+### Fixed
+- **Overlapping `allowedPaths` Race Prevention (`shared/verify-gate.ts`, `shared/verify-gate.js`, `adapters/zcode/teamwork.dwf.ts`)**:
+  - `resolveMilestoneTopology` now checks whether any two items within a milestone have overlapping `allowedPaths` and automatically downgrades `parallelism` from `"concurrent"` to `"sequential"`.
+- **ZCode DWF State Machine Fixes (`adapters/zcode/teamwork.dwf.ts`)**:
+  - Preserved `fullExperienceLibrary` during end-of-run persistence so non-matching historical lessons are not truncated to top-6.
+  - Added explicit sequential worker execution when `topology.parallelism === "sequential"`.
+  - Propagated `outOfBoundsNotice` to `reworker` and recomputed `reworkOutOfBoundsNotice` before post-rework `critic` evaluation.
+  - Guarded dynamic replanning against `executed >= MAX_TOTAL_MILESTONES` and empty `replanned.milestones` arrays.
+- **SWE-bench Runner & Loader Hardening (`benchmarks/swebench/runner.mjs`, `benchmarks/swebench/loader.py`)**:
+  - Added `isForbiddenSwebenchPath` with strict path-segment boundary matching so directory rules like `tests/` block `tests/test_a.py` and `pkg/tests/test_a.py` without falsely blocking `testset.py`.
+  - Isolated per-track `client` instances in `runSwebench` to prevent token usage cross-contamination in `--mode ab`.
+  - Lazy-imported `pandas` in `loader.py` with an offline summary fallback so `--info` and `--help` work without local dataset packages.
+
 ## [0.5.1] - 2026-10-25
 
 ### Added
@@ -15,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Feeds structured `[SYNTAX INTEGRITY WARNING]` diagnostic feedback directly into model turns before invoking tests or committing patches.
 - **High-Reliability Concurrent Execution Pool & Checkpointing**:
   - Added `--concurrency <N>` asynchronous task worker pool for high-throughput batch evaluation.
-  - Added atomic `--resume` checkpointing to seamlessly skip completed instance predictions during network interruptions or rate-limit events.
+  - Added atomic `--resume` checkpointing to automatically skip completed instance predictions during network interruptions or rate-limit events.
 - **Universal Cross-Platform Adapter Synchronization**:
   - Synchronized surgical edit protocols, syntax integrity checks, and budget action urgency across Claude Code, Codex, DeepSeek, WorkBuddy, and Generic adapters, as well as role prompts and skill manifests.
 

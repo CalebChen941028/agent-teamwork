@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -475,7 +476,21 @@ test("Regression: multilingual cue ranking, unicode guardrail preservation, glob
 });
 
 test("Installer & Build verification smoke test across all supported agent targets and languages", () => {
-  const targets = ["zcode", "claude", "codex", "deepseek", "opencode", "workbuddy", "generic"];
+  const targets = [
+    "zcode",
+    "claude",
+    "codex",
+    "antigravity",
+    "agents",
+    "deepseek",
+    "opencode",
+    "workbuddy",
+    "cursor",
+    "windsurf",
+    "cline",
+    "aider",
+    "generic",
+  ];
   for (const t of targets) {
     for (const lang of ["en", "zh"]) {
       const dryRunOut = execFileSync(
@@ -488,10 +503,104 @@ test("Installer & Build verification smoke test across all supported agent targe
     }
   }
 
+  // CLI entrypoint (--version, --help, install --dry-run)
+  const cliPath = path.join(rootDir, "bin", "agent-teamwork.mjs");
+  const versionOut = execFileSync(process.execPath, [cliPath, "--version"], { encoding: "utf8" });
+  assert.ok(versionOut.includes("agent-teamwork v0.6.0"));
+  const helpOut = execFileSync(process.execPath, [cliPath, "--help"], { encoding: "utf8" });
+  assert.ok(helpOut.includes("agent-teamwork v0.6.0"));
+  assert.ok(helpOut.includes("antigravity"));
+  const cliDryRun = execFileSync(process.execPath, [cliPath, "install", "--target", "antigravity", "--lang", "zh", "--dry-run"], {
+    encoding: "utf8",
+  });
+  assert.ok(cliDryRun.includes("[Dry-Run] Target: antigravity (zh)"));
+
   const buildOut = execFileSync(process.execPath, [path.join(rootDir, "scripts", "build.mjs")], {
     encoding: "utf8",
   });
   assert.ok(buildOut.includes("Build verification successful!"));
+});
+
+test("v0.6.0: resolveMilestoneTopology downgrades parallelism to sequential when allowedPaths overlap", () => {
+  const disjointMs = {
+    title: "Update UI components",
+    done: "Both buttons and modals updated",
+    items: [
+      { id: "1", detail: "Update button", allowedPaths: ["src/ui/button.ts"] },
+      { id: "2", detail: "Update modal", allowedPaths: ["src/ui/modal.ts"] },
+    ],
+  };
+  const disjointTopo = resolveMilestoneTopology(disjointMs, "hybrid");
+  assert.equal(disjointTopo.parallelism, "concurrent", "Disjoint paths in low/medium risk must remain concurrent");
+
+  const overlappingExactMs = {
+    title: "Update UI components",
+    done: "Shared index updated",
+    items: [
+      { id: "1", detail: "Export button", allowedPaths: ["src/ui/button.ts", "src/ui/index.ts"] },
+      { id: "2", detail: "Export modal", allowedPaths: ["src/ui/modal.ts", "src/ui/index.ts"] },
+    ],
+  };
+  const overlappingExactTopo = resolveMilestoneTopology(overlappingExactMs, "hybrid");
+  assert.equal(overlappingExactTopo.parallelism, "sequential", "Overlapping exact file path must downgrade to sequential");
+
+  const overlappingGlobMs = {
+    title: "Update UI module",
+    done: "Module updated",
+    items: [
+      { id: "1", detail: "Update all UI", allowedPaths: ["src/ui/**"] },
+      { id: "2", detail: "Update nested theme", allowedPaths: ["src/ui/theme/dark.ts"] },
+    ],
+  };
+  const overlappingGlobTopo = resolveMilestoneTopology(overlappingGlobMs, "hybrid");
+  assert.equal(overlappingGlobTopo.parallelism, "sequential", "Parent glob overlapping nested path must downgrade to sequential");
+});
+
+test("v0.6.0: Multi-target install.sh and uninstall.sh manifest lifecycle in isolated HOME", () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "teamwork-home-"));
+  const fakeProject = fs.mkdtempSync(path.join(os.tmpdir(), "teamwork-proj-"));
+  try {
+    const env = { ...process.env, HOME: fakeHome, LANG: "zh_CN.UTF-8" };
+
+    // Install antigravity and cursor targets with --lang auto
+    execFileSync(
+      "bash",
+      [path.join(rootDir, "install.sh"), "--target", "antigravity", "--lang", "auto"],
+      { env, encoding: "utf8" },
+    );
+    execFileSync(
+      "bash",
+      [path.join(rootDir, "install.sh"), "--target", "cursor", "--lang", "en", "--dest", fakeProject],
+      { env, encoding: "utf8" },
+    );
+
+    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "SKILL.md")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "config", "skills", "teamwork", "SKILL.md")));
+    assert.ok(fs.existsSync(path.join(fakeProject, "rules", "teamwork.md")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".local", "share", "agent-teamwork", "install-manifest-antigravity.json")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".local", "share", "agent-teamwork", "install-manifest-cursor.json")));
+
+    // Uninstall only cursor; antigravity files and shared roles must remain intact
+    execFileSync(
+      "bash",
+      [path.join(rootDir, "uninstall.sh"), "--target", "cursor", "--purge-backups"],
+      { env, encoding: "utf8" },
+    );
+    assert.ok(!fs.existsSync(path.join(fakeProject, "rules", "teamwork.md")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "SKILL.md")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "roles", "orchestrator.zh.md")));
+
+    // Uninstall all remaining targets
+    execFileSync(
+      "bash",
+      [path.join(rootDir, "uninstall.sh"), "--target", "all", "--purge-backups"],
+      { env, encoding: "utf8" },
+    );
+    assert.ok(!fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "SKILL.md")));
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+    fs.rmSync(fakeProject, { recursive: true, force: true });
+  }
 });
 
 

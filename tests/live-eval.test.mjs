@@ -16,10 +16,12 @@ import {
   resolveLiveApiKey,
   resolveRuntimeConfig,
   createLiveClient,
+  normalizeForMatching,
   extractFileBlocks,
   detectDoneClaim,
   createSandbox,
   applyWrites,
+  verifySandboxSyntax,
   parseGitStatus,
   buildRunTestsScript,
   writeRunTestsScript,
@@ -1108,4 +1110,51 @@ test("live-eval CLI: --help exits 0 with usage and invalid --mode exits 2 with a
   });
   assert.equal(badMode.status, 2);
   assert.match(badMode.stderr, /invalid --mode "bogus"/);
+});
+
+test("live-eval v0.6.0: surgical <replace> block extraction, whitespace-tolerant applyWrites, and verifySandboxSyntax", () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "live-eval-surgical-"));
+  try {
+    const targetFile = path.join(tmpDir, "src", "math.js");
+    fs.mkdirSync(path.dirname(targetFile), { recursive: true });
+    fs.writeFileSync(targetFile, "export function add(a, b) {   \r\n  return a - b;\r\n}\r\n", "utf8");
+
+    const responseText = [
+      '<replace path="src/math.js">',
+      "<target>",
+      "export function add(a, b) {",
+      "  return a - b;",
+      "}",
+      "</target>",
+      "<replacement>",
+      "export function add(a, b) {",
+      "  return a + b;",
+      "}",
+      "</replacement>",
+      "</replace>",
+    ].join("\n");
+
+    const blocks = extractFileBlocks(responseText);
+    assert.equal(blocks.length, 1);
+    assert.equal(blocks[0].type, "replace");
+    assert.equal(blocks[0].path, "src/math.js");
+
+    const report = applyWrites(tmpDir, blocks);
+    assert.deepEqual(report.written, ["src/math.js"]);
+    assert.deepEqual(report.failed, []);
+    assert.ok(fs.readFileSync(targetFile, "utf8").includes("return a + b;"));
+    assert.equal(normalizeForMatching("a  \r\nb\n"), "a\nb\n");
+
+    // Pre-flight syntax verification passes valid JS/JSON and catches broken JS/JSON
+    assert.deepEqual(verifySandboxSyntax(tmpDir, ["src/math.js"]), []);
+
+    fs.writeFileSync(path.join(tmpDir, "src", "broken.js"), "export function ((( {\n", "utf8");
+    fs.writeFileSync(path.join(tmpDir, "bad.json"), "{ invalid json ", "utf8");
+    const syntaxErrors = verifySandboxSyntax(tmpDir, ["src/broken.js", "bad.json"]);
+    assert.equal(syntaxErrors.length, 2);
+    assert.ok(syntaxErrors[0].startsWith("src/broken.js:"));
+    assert.ok(syntaxErrors[1].startsWith("bad.json:"));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
 });

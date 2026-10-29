@@ -88,7 +88,7 @@ When using DeepSeek-R1 (`deepseek-reasoner`), perform your reasoning inside `<th
 - 语法与导入预检门禁：运行重型测试集前先行执行单文件编译校验（`python -m py_compile`、`node --check`），杜绝收集阶段崩溃。
 - 预算感知行动力：预算过半后停止泛分析，强制输出具体可落盘代码。
 
-## 2. 五阶段闭环流程
+## 2. 五阶段执行流程
 1. 范围访谈（见 `protocol/scoping-interview.md`）：锁定直接目标、目标背后的目标、统一验收命令（`verifyCommand`）、非目标边界与涉及目录。
 2. 经验检索、动词化与动态拓扑规划：
    - 读取 `~/.config/agent-teamwork/experience.json` 执行线索匹配检索（`rankExperienceLibrary`）。

@@ -1,8 +1,8 @@
 # agent-teamwork Official SWE-bench Verified Integration & Operations Guide
 
-[![Version: 0.5.1](https://img.shields.io/badge/version-0.5.1-green.svg)](../CHANGELOG.md)
+[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](../CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](../tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-100%25%20passing-brightgreen.svg)](../tests/)
 [![SWE-bench: Verified](https://img.shields.io/badge/SWE--bench-Verified%20(500%20Tasks)-purple.svg)](https://huggingface.co/datasets/SWE-bench/SWE-bench_Verified)
 
 [English](SWEBENCH_GUIDE.md) | [简体中文](SWEBENCH_GUIDE.zh-CN.md)
@@ -161,7 +161,7 @@ The decisive Pass@1 difference came down to **`psf__requests-6028`**:
 ### 4.4 Engineering Hardening & Key Insights
 
 1. **Dataset Repository Slug**: `swebench.harness` 5.0.2 requires an `image_name` column in the dataset metadata. While `princeton-nlp/SWE-bench_Verified` lacks this column, the official HuggingFace repository `SWE-bench/SWE-bench_Verified` contains the full container image catalog with identical instance definitions.
-2. **Apple Silicon Docker Emulation**: Official SWE-bench evaluation images are built for `x86_64` only. On macOS arm64 machines, running `docker pull --platform=linux/amd64 swebench/sweb.eval.x86_64.psf_1776_requests-<id>:latest` pre-pulls the image so Docker Desktop's Rosetta 2 emulation executes the test harness seamlessly without registry 404 errors.
+2. **Apple Silicon Docker Emulation**: Official SWE-bench evaluation images are built for `x86_64` only. On macOS arm64 machines, running `docker pull --platform=linux/amd64 swebench/sweb.eval.x86_64.psf_1776_requests-<id>:latest` pre-pulls the image so Docker Desktop's Rosetta 2 emulation executes the test harness cleanly without registry 404 errors.
 3. **Multi-Turn Read Buffer Headroom**: An initial 14KB read limit caused the model to enter infinite "read-only" loops on large files like `requests/models.py` (20.8KB). Raising `maxChars` to 60,000 (60KB) coupled with turn budget prompts stabilized single-task resolution in 2–3 turns.
 4. **Zero Guardrail Degradation**: On the 3 shared-failure instances (`2317`, `2931`, `5414`), both tracks generated identical failed logic. The failure represents the raw LLM's zero-shot algorithmic boundary, verifying that `agent-teamwork` never compromises or degrades the underlying model's reasoning power.
 
@@ -283,7 +283,7 @@ API Calls:              Teamwork 129 vs Solo 236 (−45.3% network roundtrips)
    - In Tier 2.5, across 5 massive repositories (Django, SymPy, Scikit-learn, Sphinx, Pylint), the combination of 1-based line slicing (`lines="n-m"`) and tree compaction on turn 2+ reversed this completely: **Teamwork consumed 1.79M tokens vs Solo's 3.33M tokens (−46.2% token overhead)**.
 3. **Surgical Diffs vs. Huge Rewrites**:
    - On `sympy-11618`, Solo emitted a 1,320-char patch that broke git apply (`error`), while Teamwork generated an exact 1,135-char patch that cleanly resolved all hidden tests.
-   - On `sphinx-10466`, Teamwork produced a comprehensive 314,717-character patch that applied cleanly in the container and passed 100% of the hidden test suite.
+   - On `sphinx-10466`, Teamwork produced a complete 314,717-character patch that applied cleanly in the container and passed 100% of the hidden test suite.
    - Three Teamwork tasks suffered `error` due to monolithic file rewrites (`sympy-12096`, `sympy-12481`, `scikit-learn-10908`), highlighting the target for future diff extraction guardrails.
 
 ### 6.4 Tier 2.5 Audit Artifacts

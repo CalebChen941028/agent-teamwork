@@ -3,13 +3,13 @@
 [![CI](https://github.com/CalebChen941028/agent-teamwork/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
-[![Version: 0.5.1](https://img.shields.io/badge/version-0.5.1-green.svg)](CHANGELOG.md)
+[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](CHANGELOG.md)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
 **Multi-Agent Team Orchestration Engine for Long-Horizon Engineering Initiatives: Dynamic Risk Topology Routing, Hybrid Experience Retrieval, Propose-Compose Guardrail Synthesis, Empirical Micro-Test Verification, and Adversarial Quality Gates.**
 
-Compatible with **OpenAI Codex, Claude Code, DeepSeek (V3/R1), OpenCode, WorkBuddy, ZCode**, and mainstream coding agents (**Cursor, Windsurf, Cline, Roo Code, GitHub Copilot, Aider, Gemini CLI**), with 100% **English & Chinese (`en` / `zh`)** bilingual support.
+Compatible with **Google Antigravity, OpenAI Codex, Claude Code, DeepSeek (V3/R1), OpenCode, WorkBuddy, ZCode**, and mainstream coding agents (**Cursor, Windsurf, Cline, Roo Code, GitHub Copilot, Aider, Gemini CLI**), with 100% **English & Chinese (`en` / `zh` / `auto`)** bilingual support.
 
 ---
 
@@ -28,15 +28,16 @@ Monolithic single-agent loops quickly degrade on large-scale, multi-file codebas
 
 ## Supported Agents & Compatibility Matrix
 
-| Agent / Platform | Adapter / Config File | Installer Target (`--target`) | Model Tiering & Optimization | Bilingual (`--lang en\|zh`) |
+| Agent / Platform | Adapter / Config File | Installer Target (`--target`) | Model Tiering & Optimization | Bilingual (`--lang auto\|en\|zh`) |
 | :--- | :--- | :--- | :--- | :--- |
 | **Claude Code CLI** | [`adapters/claude-code/teamwork.md`](adapters/claude-code/teamwork.md) | `./install.sh --target claude` | Opus/Sonnet tiering + bash tool gating | Full (`en` / `zh`) |
 | **OpenAI Codex CLI** | [`adapters/codex/protocol.md`](adapters/codex/protocol.md) | `./install.sh --target codex` | Multi-agent role handoffs + structured outputs | Full (`en` / `zh`) |
+| **Google Antigravity / Gemini CLI** | [`skills/teamwork/SKILL.md`](skills/teamwork/SKILL.md) | `./install.sh --target antigravity` | Native skill + role library mirror | Full (`en` / `zh`) |
 | **DeepSeek (V3 / R1)** | [`adapters/deepseek/teamwork.md`](adapters/deepseek/teamwork.md) | `./install.sh --target deepseek` | R1 reasoning isolation (`<think>`) + temp 0.6 | Full (`en` / `zh`) |
 | **OpenCode** | [`adapters/opencode/agents.json`](adapters/opencode/agents.json) | `./install.sh --target opencode` | Native agent definitions + role dispatching | Full (`roles/*.en.md` & `*.zh.md`) |
 | **WorkBuddy** | [`adapters/workbuddy/teamwork.md`](adapters/workbuddy/teamwork.md) | `./install.sh --target workbuddy` | Interactive team task board + workspace lock | Full (`en` / `zh`) |
 | **ZCode Dynamic Workflow** | [`adapters/zcode/teamwork.dwf.ts`](adapters/zcode/teamwork.dwf.ts) | `./install.sh --target zcode` | Full programmatic state machine + `allSettled` | Auto-detect & Explicit (`lang: auto\|en\|zh`) |
-| **Generic (Cursor, Windsurf, Cline, Roo Code, Aider, Copilot)** | [`adapters/generic/teamwork.md`](adapters/generic/teamwork.md) | `./install.sh --target generic` | File-based handoff protocol + Git snapshot guards | Full (`en` / `zh`) |
+| **Generic (Cursor, Windsurf, Cline, Aider, Agents)** | [`adapters/generic/teamwork.md`](adapters/generic/teamwork.md) | `./install.sh --target cursor\|windsurf\|cline\|aider\|agents\|generic` | File-based handoff protocol + Git snapshot guards | Full (`en` / `zh`) |
 
 ---
 
@@ -80,7 +81,7 @@ Initial 10-task exam where write-aware engine improvements were diagnosed and de
 The full harness lowered Pass@1 on this reasoning model while winning every guardrail axis. The diagnosed cause: `computeGapSignature` reads pre-payload "thinking" turns as stagnation. Analysis and the four concrete fixes: [docs/BENCHMARK_REPORT.md §4–§6](docs/BENCHMARK_REPORT.md#4-what-the-losing-margin-is-made-of).
 
 ### Four Observed Scenarios from the Live Run
-1. **Reasoning-budget squeeze**: turns where reasoning consumed the whole completion budget returned 200–900-char analysis stubs with no file; payload turns returned 3k–12k chars. The larger teamwork prompts amplified the squeeze — the root cause behind the three contested losses.
+1. **Reasoning-budget squeeze**: turns where reasoning consumed the whole completion budget returned 200–900-char analysis stubs with no file; payload turns returned 3k–12k chars. The larger teamwork prompts amplified the squeeze, causing the three contested losses.
 2. **False victory, caught and recorded**: Solo claimed completion on SWE-JS-006 turn 1 while the verifier exited 1; the claim was logged as a metric, the loop continued, and turn 2 passed. The engine's gap arithmetic recorded zero such claims.
 3. **Cost containment on doomed tasks**: on the three tasks both tracks failed, the stagnation abort cut token spend 41.7% (SWE-JS-010: 13.7k → 5.3k, −61%).
 4. **Deep-reasoning flagship win**: on SWE-JS-009 the teamwork track converged in 2 turns (vs Solo's 5) after a 273.8 s reasoning call produced a correct decoder on the first write.
@@ -162,15 +163,12 @@ The full harness lowered Pass@1 on this reasoning model while winning every guar
 
 ---
 
-## What's New in v0.3.0
+## What's New in v0.6.0
 
-- **Live Online A/B Evaluation Suite**: `npm run benchmark:live` runs the 10 canonical tasks as a real exam against any OpenAI-compatible endpoint (default: OpenCode Zen + `mimo-v2.6-flash`) — see the [live scorecard above](#live-scorecard-solo-vs-agent-teamwork-v030-opencode-zen--mimo-v26-flash-2026-10-24).
-- **Dynamic Topology Routing**: Full implementation of `resolveMilestoneTopology` across TypeScript, JavaScript, and ZCode DWF.
-- **Hybrid Experience Ranking**: Added `rankExperienceLibrary` replacing naive slicing with BM25/Jaccard cue matching.
-- **Propose-Compose Guardrail Synthesis**: Added `composeHarnessGuardrails` with Context Tax ceiling and conflict resolution.
-- **Empirical Micro-Test Plan Synthesis**: Added `synthesizeMicroTestPlan` for test synthesis when `verifyCommand` is empty.
-- **DeepSeek V3/R1 Protocol**: Full support for reasoning token isolation (`<think>`) and custom sampling parameters.
-- **WorkBuddy & OpenCode Upgrades**: First-class workspace locking and JSON role mapping.
+- **Unified CLI & Multi-Agent Installer (`bin/agent-teamwork.mjs`, `install.sh`, `uninstall.sh`)**: Added `npx agent-teamwork` / `teamwork` CLI and expanded installer targets to `all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic` with `--lang auto|zh|en`, per-target manifests, and `--purge-backups`.
+- **Automatic Sequential Topology Fallback (`resolveMilestoneTopology`)**: Automatically downgrades milestone item parallelism from `"concurrent"` to `"sequential"` whenever two items declare overlapping `allowedPaths`, preventing parallel workers from overwriting shared files.
+- **ZCode DWF State Machine Hardening (`adapters/zcode/teamwork.dwf.ts`)**: Preserves the full cross-task experience library during deduplication, executes sequential topology branches deterministically, propagates rework out-of-bounds alerts into post-rework Critic reviews, and guards dynamic replanning against empty milestone returns or ceiling exhaustion.
+- **Surgical Block Edits & Pre-Flight Syntax Verification (`benchmarks/live-eval.mjs`, `benchmarks/swebench/runner.mjs`)**: Added 3-tier `<replace path="...">` block matching (`normalizeForMatching`), `verifySandboxSyntax` (`node --check` / `JSON.parse` / `py_compile`), strict directory segment boundary checks (`isForbiddenSwebenchPath`), and isolated per-track token accounting.
 - **100% SSOT Parity**: Strict build verification guarantees that all 18 shared functions have 100% identical normalized AST bodies across TypeScript, JavaScript, and ZCode DWF.
 
 ---
@@ -189,53 +187,49 @@ All protocols, adapters, and role prompts ship in both English and Chinese:
 
 ## Installation & Setup
 
-Install the appropriate adapter and bilingual role definitions with a single command:
+Install the appropriate adapter and bilingual role definitions with a single command (or via `npx agent-teamwork install`):
 
 ```bash
-# Claude Code CLI (English or Chinese)
+# Install across all detected local agent environments (auto-detects system language)
+./install.sh --target all --lang auto
+
+# Claude Code CLI, OpenAI Codex CLI, or Google Antigravity
 ./install.sh --target claude --lang en
-./install.sh --target claude --lang zh
-
-# OpenAI Codex CLI
 ./install.sh --target codex --lang en
+./install.sh --target antigravity --lang zh
 
-# DeepSeek (V3 / R1)
+# DeepSeek (V3 / R1), OpenCode, WorkBuddy, or ZCode Dynamic Workflow
 ./install.sh --target deepseek --lang en
-
-# OpenCode
 ./install.sh --target opencode --lang en
-
-# WorkBuddy
 ./install.sh --target workbuddy --lang zh
-
-# ZCode Dynamic Workflow
 ./install.sh --target zcode --lang zh
 
-# Generic Agents (Cursor, Windsurf, Cline, Roo Code, Aider, Copilot)
+# Workspace / Generic Agents (Cursor, Windsurf, Cline, Aider, Agents)
+./install.sh --target cursor --lang en --dest /path/to/project
 ./install.sh --target generic --lang en --dest /path/to/project
 ```
 
-To uninstall and restore backups:
+To uninstall and restore backups (supports `--target <name>|all` and `--purge-backups`):
 ```bash
-./uninstall.sh
+./uninstall.sh --target all
 ```
 
 ---
 
 ## Testing & Build Verification: Multi-Level Architecture
 
-**Level-1 — Deterministic offline gates (no network, no API key):**
+**Level-1: Deterministic offline gates (no network, no API key):**
 
 ```bash
-npm test                      # node scripts/build.mjs (SSOT parity + open-source compliance) + all 49 unit tests
+npm test                      # node scripts/build.mjs (SSOT parity + open-source compliance) + full unit test suite
 npm run benchmark             # Level-1 state-machine benchmark over the canonical tasks (offline runner)
 ```
 
-**Level-2 — Real online API evaluation (`npm run benchmark:live`):**
+**Level-2: Real online API evaluation (`npm run benchmark:live`):**
 
-Runs the 15 canonical SWE-bench tasks as a genuine live A/B exam — Track A (Solo: single model, monolithic prompt, no guardrails) vs Track B (model + agent-teamwork: scoping contract, path lock, failure-tail feedback, write-aware stagnation recovery) — each task in its own git sandbox under `os.tmpdir()`, scored strictly by real subprocess exit codes, real `usage` token accounting, and real wall-clock latency.
+Runs the 15 canonical SWE-bench tasks as a genuine live A/B exam comparing Track A (Solo: single model, monolithic prompt, no guardrails) against Track B (model + agent-teamwork: scoping contract, path lock, failure-tail feedback, write-aware stagnation recovery). Each task runs in its own git sandbox under `os.tmpdir()`, scored strictly by real subprocess exit codes, real `usage` token accounting, and real wall-clock latency.
 
-**Level-3 — Official SWE-bench Verified containerized evaluation (`benchmarks/swebench/`):**
+**Level-3: Official SWE-bench Verified containerized evaluation (`benchmarks/swebench/`):**
 
 Generates standard `predictions.jsonl` using the multi-turn `<read path="..."/>` protocol and path lock, then verifies blind patches via the official Docker harness (`swebench.harness.run_evaluation`):
 

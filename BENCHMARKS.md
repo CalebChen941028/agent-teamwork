@@ -1,8 +1,8 @@
 # agent-teamwork Live Benchmark & Evaluation Portal
 
-[![Version: 0.5.1](https://img.shields.io/badge/version-0.5.1-green.svg)](CHANGELOG.md)
+[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests: 100% Pass](https://img.shields.io/badge/tests-50%2F50%20passing-brightgreen.svg)](tests/)
+[![Tests: 100% Pass](https://img.shields.io/badge/tests-100%25%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)
 
 [English](BENCHMARKS.md) | [简体中文](BENCHMARKS.zh-CN.md)
@@ -130,7 +130,7 @@ Out-of-bounds writes     Solo 0  →  Teamwork 0
 Tokens on shared failures Solo 55.5k → Teamwork 32.4k  (−41.7%)
 ```
 
-The honest headline: on this reasoning model, the harness **lowered** Pass@1 while winning every guardrail axis. The cause is specific and diagnosed — `computeGapSignature` reads the model's pre-payload "thinking" turns (reasoning consumed the completion budget, no file emitted, verifier output unchanged) as stagnation, and aborts at turn 3 of 6. Solo used turns 4–5 to converge on exactly those tasks. Full analysis and the fix list: [docs/BENCHMARK_REPORT.md §4–§6](docs/BENCHMARK_REPORT.md#4-what-the-losing-margin-is-made-of).
+The honest headline: on this reasoning model, the harness **lowered** Pass@1 while winning every guardrail axis. The cause is specific and diagnosed: `computeGapSignature` reads the model's pre-payload "thinking" turns (reasoning consumed the completion budget, no file emitted, verifier output unchanged) as stagnation, and aborts at turn 3 of 6. Solo used turns 4–5 to converge on exactly those tasks. Full analysis and the fix list: [docs/BENCHMARK_REPORT.md §4–§6](docs/BENCHMARK_REPORT.md#4-what-the-losing-margin-is-made-of).
 
 ---
 
@@ -176,9 +176,9 @@ The canonical benchmark suite includes 15 standardized engineering tasks:
 
 | Level | Command | What it proves | Network |
 | :--- | :--- | :--- | :---: |
-| **1 — Offline gates** | `npm test` | 18 shared pure functions AST-identical across TS/JS/DWF (SSOT), open-source compliance scan, 50 unit tests | none |
-| **2 — Live Synthetic Exam** | `npm run benchmark:live` | Real Pass@1, real token billing, real latency, real boundary behavior on the 15 canonical tasks | real API |
-| **3 — Official SWE-bench Verified** | `python3 benchmarks/swebench/eval.py` | Official Docker container blind test adjudication on SWE-bench Verified tasks | Docker + real API |
+| **1: Offline gates** | `npm test` | 18 shared pure functions AST-identical across TS/JS/DWF (SSOT), open-source compliance scan, full unit test suite | none |
+| **2: Live Synthetic Exam** | `npm run benchmark:live` | Real Pass@1, real token billing, real latency, real boundary behavior on the 15 canonical tasks | real API |
+| **3: Official SWE-bench Verified** | `python3 benchmarks/swebench/eval.py` | Official Docker container blind test adjudication on SWE-bench Verified tasks | Docker + real API |
 
 ---
 
