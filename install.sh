@@ -214,7 +214,8 @@ elif [[ "$TARGET" == "claude" ]]; then
   echo "Installed Claude Code command protocol to $WORKFLOW_DEST/teamwork.md"
 elif [[ "$TARGET" == "codex" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/codex/protocol.md" "$WORKFLOW_DEST/protocol.md"
-  echo "Installed Codex protocol to $WORKFLOW_DEST/protocol.md"
+  backup_and_copy "$SCRIPT_DIR/adapters/codex/protocol.md" "$WORKFLOW_DEST/teamwork.md"
+  echo "Installed Codex protocol to $WORKFLOW_DEST/protocol.md and $WORKFLOW_DEST/teamwork.md"
 elif [[ "$TARGET" == "deepseek" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/deepseek/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
   echo "Installed DeepSeek protocol to $WORKFLOW_DEST/teamwork.md"
@@ -234,7 +235,9 @@ elif [[ "$TARGET" == "opencode" ]]; then
   echo "Installed OpenCode agents configuration (lang: $LANG_OPT) and role prompts to $WORKFLOW_DEST"
 elif [[ "$TARGET" == "antigravity" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/generic/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
-  echo "Installed Antigravity teamwork protocol to $WORKFLOW_DEST/teamwork.md"
+  mkdir -p "$BASE_DEST/workflows"
+  backup_and_copy "$SCRIPT_DIR/adapters/generic/teamwork.md" "$BASE_DEST/workflows/teamwork.md"
+  echo "Installed Antigravity teamwork protocol to $WORKFLOW_DEST/teamwork.md and $BASE_DEST/workflows/teamwork.md"
   if [[ -z "$DEST" && "$SKILL_DEST" != "$HOME/.gemini/config/skills/teamwork" ]]; then
     GEMINI_CONFIG_SKILL="$HOME/.gemini/config/skills/teamwork"
     mkdir -p "$GEMINI_CONFIG_SKILL/protocol" "$GEMINI_CONFIG_SKILL/roles"
@@ -251,7 +254,9 @@ elif [[ "$TARGET" == "antigravity" ]]; then
   fi
 elif [[ "$TARGET" == "agents" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/generic/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
-  echo "Installed universal agents teamwork protocol to $WORKFLOW_DEST/teamwork.md"
+  mkdir -p "$BASE_DEST/workflows"
+  backup_and_copy "$SCRIPT_DIR/adapters/generic/teamwork.md" "$BASE_DEST/workflows/teamwork.md"
+  echo "Installed universal agents teamwork protocol to $WORKFLOW_DEST/teamwork.md and $BASE_DEST/workflows/teamwork.md"
 elif [[ "$TARGET" == "workbuddy" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/workbuddy/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
   echo "Installed WorkBuddy protocol to $WORKFLOW_DEST/teamwork.md"
