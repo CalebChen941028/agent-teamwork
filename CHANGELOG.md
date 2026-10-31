@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.6.3] - 2026-10-31
+
+### Fixed
+- **Install instructions no longer point at an unpublished npm package**
+  - The npm package is not being published, so the `npx agent-teamwork-harness` examples added in 0.6.2 were dead instructions.
+  - Both READMEs and the CLI usage header now reference `./bin/agent-teamwork.mjs`, which works from a clone.
+
 ## [0.6.2] - 2026-10-31
 
 ### Changed

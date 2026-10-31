@@ -1,6 +1,6 @@
 {
   "name": "agent-teamwork",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "harness2_features": {
     "task_level_guardrails": ["invariant", "domain"],
     "cross_task_experience_library": "~/.config/agent-teamwork/experience.json",
