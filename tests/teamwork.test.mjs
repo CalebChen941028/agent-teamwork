@@ -604,3 +604,45 @@ test("v0.6.0: Multi-target install.sh and uninstall.sh manifest lifecycle in iso
 });
 
 
+
+test("codex target installs a skill-scoped protocol and migrates the legacy ambiguous filename", () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "teamwork-codex-"));
+  try {
+    const env = { ...process.env, HOME: fakeHome };
+    const workflowsDir = path.join(fakeHome, ".codex", "workflows");
+    fs.mkdirSync(workflowsDir, { recursive: true });
+
+    // Simulate a pre-existing install that used the ambiguous shared filename.
+    fs.copyFileSync(
+      path.join(rootDir, "adapters", "codex", "protocol.md"),
+      path.join(workflowsDir, "protocol.md"),
+    );
+
+    execFileSync("bash", [path.join(rootDir, "install.sh"), "--target", "codex", "--lang", "zh"], {
+      env,
+      encoding: "utf8",
+    });
+
+    const scoped = path.join(workflowsDir, "teamwork.protocol.md");
+    assert.ok(fs.existsSync(scoped), "teamwork.protocol.md must be installed");
+    assert.ok(fs.existsSync(path.join(workflowsDir, "teamwork.md")), "teamwork.md must still be installed");
+    assert.ok(
+      !fs.existsSync(path.join(workflowsDir, "protocol.md")),
+      "legacy protocol.md must be migrated away so other skill packs can share the directory",
+    );
+
+    const manifest = JSON.parse(
+      fs.readFileSync(
+        path.join(fakeHome, ".local", "share", "agent-teamwork", "install-manifest-codex.json"),
+        "utf8",
+      ),
+    );
+    assert.ok(manifest.files.includes(scoped), "manifest must record the scoped filename");
+    assert.ok(
+      !manifest.files.some((entry) => entry.endsWith(path.join("workflows", "protocol.md"))),
+      "manifest must not record the ambiguous filename",
+    );
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+  }
+});

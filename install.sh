@@ -213,9 +213,17 @@ elif [[ "$TARGET" == "claude" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/claude-code/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
   echo "Installed Claude Code command protocol to $WORKFLOW_DEST/teamwork.md"
 elif [[ "$TARGET" == "codex" ]]; then
-  backup_and_copy "$SCRIPT_DIR/adapters/codex/protocol.md" "$WORKFLOW_DEST/protocol.md"
+  # Skill-scoped filename: other Codex skill packs share the same workflows directory,
+  # so a generic "protocol.md" would silently overwrite them (and vice versa).
+  backup_and_copy "$SCRIPT_DIR/adapters/codex/protocol.md" "$WORKFLOW_DEST/teamwork.protocol.md"
   backup_and_copy "$SCRIPT_DIR/adapters/codex/protocol.md" "$WORKFLOW_DEST/teamwork.md"
-  echo "Installed Codex protocol to $WORKFLOW_DEST/protocol.md and $WORKFLOW_DEST/teamwork.md"
+  # Migrate legacy installs: drop the ambiguous protocol.md only when it is byte-identical
+  # to this adapter, i.e. the file content is already preserved under the scoped name.
+  if [[ -f "$WORKFLOW_DEST/protocol.md" ]] && cmp -s "$SCRIPT_DIR/adapters/codex/protocol.md" "$WORKFLOW_DEST/protocol.md"; then
+    rm "$WORKFLOW_DEST/protocol.md"
+    echo "Removed legacy ambiguous $WORKFLOW_DEST/protocol.md (content now in teamwork.protocol.md)"
+  fi
+  echo "Installed Codex protocol to $WORKFLOW_DEST/teamwork.protocol.md and $WORKFLOW_DEST/teamwork.md"
 elif [[ "$TARGET" == "deepseek" ]]; then
   backup_and_copy "$SCRIPT_DIR/adapters/deepseek/teamwork.md" "$WORKFLOW_DEST/teamwork.md"
   echo "Installed DeepSeek protocol to $WORKFLOW_DEST/teamwork.md"
