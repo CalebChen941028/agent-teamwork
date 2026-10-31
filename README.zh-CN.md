@@ -1,6 +1,6 @@
 # agent-teamwork（多智能体团队协作大任务攻坚引擎）
 
-[![CI](https://github.com/CalebChen941028/agent-teamwork/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork/actions)
+[![CI](https://github.com/CalebChen941028/agent-teamwork-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork-harness/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
 [![Version: 0.6.4](https://img.shields.io/badge/version-0.6.4-green.svg)](CHANGELOG.md)
