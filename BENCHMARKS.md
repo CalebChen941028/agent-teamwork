@@ -1,6 +1,6 @@
 # agent-teamwork Live Benchmark & Evaluation Portal
 
-[![Version: 0.6.3](https://img.shields.io/badge/version-0.6.3-green.svg)](CHANGELOG.md)
+[![Version: 0.6.4](https://img.shields.io/badge/version-0.6.4-green.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tests: 100% Pass](https://img.shields.io/badge/tests-100%25%20passing-brightgreen.svg)](tests/)
 [![SSOT: Parity](https://img.shields.io/badge/SSOT-100%25%20identical-blueviolet.svg)](scripts/build.mjs)

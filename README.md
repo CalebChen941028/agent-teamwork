@@ -3,7 +3,7 @@
 [![CI](https://github.com/CalebChen941028/agent-teamwork/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
-[![Version: 0.6.3](https://img.shields.io/badge/version-0.6.3-green.svg)](CHANGELOG.md)
+[![Version: 0.6.4](https://img.shields.io/badge/version-0.6.4-green.svg)](CHANGELOG.md)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
@@ -186,6 +186,9 @@ All protocols, adapters, and role prompts ship in both English and Chinese:
 ---
 
 ## Installation & Setup
+
+> **Skill naming:** the skill installs as `teamwork-harness` so it never shadows a host-provided skill of the same base name (Antigravity ships a built-in `teamwork`). Override with `--name <alias>`; the installer refuses to overwrite a `SKILL.md` owned by another skill unless you pass `--force`.
+
 
 Install the appropriate adapter and bilingual role definitions with a single command (or via `./bin/agent-teamwork.mjs install`):
 

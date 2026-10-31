@@ -5,6 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.6.4] - 2026-10-31
+
+### Changed
+- **Installed skill name is now `teamwork-harness`**
+  - Antigravity ships a built-in `teamwork` orchestrator (`teamwork_conductor`, `teamwork_critic`, `teamwork_solver`, … compiled into the agent runtime). Host skills override built-ins by name, so a skill called `teamwork` silently shadowed it with no way back.
+  - Installing as `teamwork-harness` keeps `/teamwork` bound to the host implementation while `/teamwork-harness` runs this protocol.
+  - Added `--name <alias>` to install under any name, and `--force` to overwrite on purpose.
+  - The installer now refuses with exit code 3 when the target `SKILL.md` declares a different skill name.
+
+### Fixed
+- **Antigravity target installed to a directory nothing scans (`install.sh`)**
+  - Skills now go to `~/.gemini/config/skills/<name>`, the global discovery root documented by Antigravity's own `agy-customizations` skill.
+  - Dropped the deprecated `~/.gemini/antigravity/workflows/*.md` write; workflows no longer surface slash commands.
+  - Removed the redundant `~/.gemini/config/skills/teamwork` mirror, which is now the primary destination.
+
 ## [0.6.3] - 2026-10-31
 
 ### Fixed
