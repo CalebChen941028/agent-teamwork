@@ -3,7 +3,7 @@
 [![CI](https://github.com/CalebChen941028/agent-teamwork/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
-[![Version: 0.6.2](https://img.shields.io/badge/version-0.6.2-green.svg)](CHANGELOG.md)
+[![Version: 0.6.3](https://img.shields.io/badge/version-0.6.3-green.svg)](CHANGELOG.md)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
@@ -165,7 +165,7 @@ The full harness lowered Pass@1 on this reasoning model while winning every guar
 
 ## What's New in v0.6.0
 
-- **Unified CLI & Multi-Agent Installer (`bin/agent-teamwork.mjs`, `install.sh`, `uninstall.sh`)**: Added `npx agent-teamwork-harness` / `teamwork` CLI and expanded installer targets to `all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic` with `--lang auto|zh|en`, per-target manifests, and `--purge-backups`.
+- **Unified CLI & Multi-Agent Installer (`bin/agent-teamwork.mjs`, `install.sh`, `uninstall.sh`)**: Added `bin/agent-teamwork.mjs` / `teamwork` CLI and expanded installer targets to `all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic` with `--lang auto|zh|en`, per-target manifests, and `--purge-backups`.
 - **Automatic Sequential Topology Fallback (`resolveMilestoneTopology`)**: Automatically downgrades milestone item parallelism from `"concurrent"` to `"sequential"` whenever two items declare overlapping `allowedPaths`, preventing parallel workers from overwriting shared files.
 - **ZCode DWF State Machine Hardening (`adapters/zcode/teamwork.dwf.ts`)**: Preserves the full cross-task experience library during deduplication, executes sequential topology branches deterministically, propagates rework out-of-bounds alerts into post-rework Critic reviews, and guards dynamic replanning against empty milestone returns or ceiling exhaustion.
 - **Surgical Block Edits & Pre-Flight Syntax Verification (`benchmarks/live-eval.mjs`, `benchmarks/swebench/runner.mjs`)**: Added 3-tier `<replace path="...">` block matching (`normalizeForMatching`), `verifySandboxSyntax` (`node --check` / `JSON.parse` / `py_compile`), strict directory segment boundary checks (`isForbiddenSwebenchPath`), and isolated per-track token accounting.
@@ -187,7 +187,7 @@ All protocols, adapters, and role prompts ship in both English and Chinese:
 
 ## Installation & Setup
 
-Install the appropriate adapter and bilingual role definitions with a single command (or via `npx agent-teamwork-harness install`):
+Install the appropriate adapter and bilingual role definitions with a single command (or via `./bin/agent-teamwork.mjs install`):
 
 ```bash
 # Install across all detected local agent environments (auto-detects system language)
