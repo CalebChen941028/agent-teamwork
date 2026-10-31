@@ -506,9 +506,9 @@ test("Installer & Build verification smoke test across all supported agent targe
   // CLI entrypoint (--version, --help, install --dry-run)
   const cliPath = path.join(rootDir, "bin", "agent-teamwork.mjs");
   const versionOut = execFileSync(process.execPath, [cliPath, "--version"], { encoding: "utf8" });
-  assert.ok(versionOut.includes("agent-teamwork v0.6.0"));
+  assert.ok(versionOut.includes("agent-teamwork v0.6.1"));
   const helpOut = execFileSync(process.execPath, [cliPath, "--help"], { encoding: "utf8" });
-  assert.ok(helpOut.includes("agent-teamwork v0.6.0"));
+  assert.ok(helpOut.includes("agent-teamwork v0.6.1"));
   assert.ok(helpOut.includes("antigravity"));
   const cliDryRun = execFileSync(process.execPath, [cliPath, "install", "--target", "antigravity", "--lang", "zh", "--dry-run"], {
     encoding: "utf8",
