@@ -506,9 +506,9 @@ test("Installer & Build verification smoke test across all supported agent targe
   // CLI entrypoint (--version, --help, install --dry-run)
   const cliPath = path.join(rootDir, "bin", "agent-teamwork.mjs");
   const versionOut = execFileSync(process.execPath, [cliPath, "--version"], { encoding: "utf8" });
-  assert.ok(versionOut.includes("agent-teamwork v0.6.3"));
+  assert.ok(versionOut.includes("agent-teamwork v0.6.4"));
   const helpOut = execFileSync(process.execPath, [cliPath, "--help"], { encoding: "utf8" });
-  assert.ok(helpOut.includes("agent-teamwork v0.6.3"));
+  assert.ok(helpOut.includes("agent-teamwork v0.6.4"));
   assert.ok(helpOut.includes("antigravity"));
   const cliDryRun = execFileSync(process.execPath, [cliPath, "install", "--target", "antigravity", "--lang", "zh", "--dry-run"], {
     encoding: "utf8",
@@ -574,9 +574,8 @@ test("v0.6.0: Multi-target install.sh and uninstall.sh manifest lifecycle in iso
       { env, encoding: "utf8" },
     );
 
-    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "SKILL.md")));
-    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "config", "skills", "teamwork", "SKILL.md")));
-    assert.ok(fs.existsSync(path.join(fakeProject, "rules", "teamwork.md")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "config", "skills", "teamwork-harness", "SKILL.md")));
+    assert.ok(fs.existsSync(path.join(fakeProject, "rules", "teamwork-harness.md")));
     assert.ok(fs.existsSync(path.join(fakeHome, ".local", "share", "agent-teamwork", "install-manifest-antigravity.json")));
     assert.ok(fs.existsSync(path.join(fakeHome, ".local", "share", "agent-teamwork", "install-manifest-cursor.json")));
 
@@ -586,9 +585,9 @@ test("v0.6.0: Multi-target install.sh and uninstall.sh manifest lifecycle in iso
       [path.join(rootDir, "uninstall.sh"), "--target", "cursor", "--purge-backups"],
       { env, encoding: "utf8" },
     );
-    assert.ok(!fs.existsSync(path.join(fakeProject, "rules", "teamwork.md")));
-    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "SKILL.md")));
-    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "roles", "orchestrator.zh.md")));
+    assert.ok(!fs.existsSync(path.join(fakeProject, "rules", "teamwork-harness.md")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "config", "skills", "teamwork-harness", "SKILL.md")));
+    assert.ok(fs.existsSync(path.join(fakeHome, ".gemini", "config", "skills", "teamwork-harness", "roles", "orchestrator.zh.md")));
 
     // Uninstall all remaining targets
     execFileSync(
@@ -596,7 +595,7 @@ test("v0.6.0: Multi-target install.sh and uninstall.sh manifest lifecycle in iso
       [path.join(rootDir, "uninstall.sh"), "--target", "all", "--purge-backups"],
       { env, encoding: "utf8" },
     );
-    assert.ok(!fs.existsSync(path.join(fakeHome, ".gemini", "antigravity", "skills", "teamwork", "SKILL.md")));
+    assert.ok(!fs.existsSync(path.join(fakeHome, ".gemini", "config", "skills", "teamwork-harness", "SKILL.md")));
   } finally {
     fs.rmSync(fakeHome, { recursive: true, force: true });
     fs.rmSync(fakeProject, { recursive: true, force: true });
@@ -623,9 +622,9 @@ test("codex target installs a skill-scoped protocol and migrates the legacy ambi
       encoding: "utf8",
     });
 
-    const scoped = path.join(workflowsDir, "teamwork.protocol.md");
-    assert.ok(fs.existsSync(scoped), "teamwork.protocol.md must be installed");
-    assert.ok(fs.existsSync(path.join(workflowsDir, "teamwork.md")), "teamwork.md must still be installed");
+    const scoped = path.join(workflowsDir, "teamwork-harness.protocol.md");
+    assert.ok(fs.existsSync(scoped), "teamwork-harness.protocol.md must be installed");
+    assert.ok(fs.existsSync(path.join(workflowsDir, "teamwork-harness.md")), "teamwork-harness.md must still be installed");
     assert.ok(
       !fs.existsSync(path.join(workflowsDir, "protocol.md")),
       "legacy protocol.md must be migrated away so other skill packs can share the directory",
@@ -641,6 +640,62 @@ test("codex target installs a skill-scoped protocol and migrates the legacy ambi
     assert.ok(
       !manifest.files.some((entry) => entry.endsWith(path.join("workflows", "protocol.md"))),
       "manifest must not record the ambiguous filename",
+    );
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+  }
+});
+
+test("--name installs under a custom skill name and rewrites the SKILL.md frontmatter", () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "teamwork-name-"));
+  try {
+    const env = { ...process.env, HOME: fakeHome };
+    execFileSync(
+      "bash",
+      [path.join(rootDir, "install.sh"), "--target", "antigravity", "--lang", "zh", "--name", "my-teamwork"],
+      { env, encoding: "utf8" },
+    );
+
+    const skillMd = path.join(fakeHome, ".gemini", "config", "skills", "my-teamwork", "SKILL.md");
+    assert.ok(fs.existsSync(skillMd), "custom skill directory must be created");
+    assert.match(fs.readFileSync(skillMd, "utf8"), /^name: my-teamwork$/m, "frontmatter name must match --name");
+    assert.ok(
+      !fs.existsSync(path.join(fakeHome, ".gemini", "config", "skills", "teamwork-harness")),
+      "default name must not be installed when --name is given",
+    );
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+  }
+});
+
+test("installer refuses to overwrite a skill owned by someone else unless --force is passed", () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "teamwork-guard-"));
+  try {
+    const env = { ...process.env, HOME: fakeHome };
+    const skillDir = path.join(fakeHome, ".gemini", "config", "skills", "teamwork-harness");
+    fs.mkdirSync(skillDir, { recursive: true });
+    fs.writeFileSync(path.join(skillDir, "SKILL.md"), "---\nname: someone-elses-skill\ndescription: builtin\n---\n\n# Not ours\n");
+
+    assert.throws(
+      () => execFileSync("bash", [path.join(rootDir, "install.sh"), "--target", "antigravity", "--lang", "zh"], { env, encoding: "utf8", stdio: "pipe" }),
+      /Refusing to overwrite/,
+      "installer must refuse a foreign SKILL.md",
+    );
+    assert.match(
+      fs.readFileSync(path.join(skillDir, "SKILL.md"), "utf8"),
+      /someone-elses-skill/,
+      "foreign skill must be left untouched without --force",
+    );
+
+    execFileSync(
+      "bash",
+      [path.join(rootDir, "install.sh"), "--target", "antigravity", "--lang", "zh", "--force"],
+      { env, encoding: "utf8" },
+    );
+    assert.match(
+      fs.readFileSync(path.join(skillDir, "SKILL.md"), "utf8"),
+      /^name: teamwork-harness$/m,
+      "--force must install over the foreign skill",
     );
   } finally {
     fs.rmSync(fakeHome, { recursive: true, force: true });
