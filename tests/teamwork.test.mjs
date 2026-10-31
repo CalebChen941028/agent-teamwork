@@ -506,9 +506,9 @@ test("Installer & Build verification smoke test across all supported agent targe
   // CLI entrypoint (--version, --help, install --dry-run)
   const cliPath = path.join(rootDir, "bin", "agent-teamwork.mjs");
   const versionOut = execFileSync(process.execPath, [cliPath, "--version"], { encoding: "utf8" });
-  assert.ok(versionOut.includes("agent-teamwork v0.6.4"));
+  assert.ok(versionOut.includes("agent-teamwork v0.6.5"));
   const helpOut = execFileSync(process.execPath, [cliPath, "--help"], { encoding: "utf8" });
-  assert.ok(helpOut.includes("agent-teamwork v0.6.4"));
+  assert.ok(helpOut.includes("agent-teamwork v0.6.5"));
   assert.ok(helpOut.includes("antigravity"));
   const cliDryRun = execFileSync(process.execPath, [cliPath, "install", "--target", "antigravity", "--lang", "zh", "--dry-run"], {
     encoding: "utf8",
@@ -696,6 +696,24 @@ test("installer refuses to overwrite a skill owned by someone else unless --forc
       fs.readFileSync(path.join(skillDir, "SKILL.md"), "utf8"),
       /^name: teamwork-harness$/m,
       "--force must install over the foreign skill",
+    );
+  } finally {
+    fs.rmSync(fakeHome, { recursive: true, force: true });
+  }
+});
+
+test("--target all re-execs the installer even when started as `bash install.sh`", () => {
+  const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), "teamwork-all-"));
+  try {
+    const env = { ...process.env, HOME: fakeHome };
+    execFileSync(
+      "bash",
+      [path.join(rootDir, "install.sh"), "--target", "all", "--lang", "zh"],
+      { env, encoding: "utf8" },
+    );
+    assert.ok(
+      fs.existsSync(path.join(fakeHome, ".claude", "skills", "teamwork-harness", "SKILL.md")),
+      "batch mode must reach the fallback targets instead of failing on `install.sh: command not found`",
     );
   } finally {
     fs.rmSync(fakeHome, { recursive: true, force: true });

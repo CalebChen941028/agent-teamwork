@@ -3,7 +3,7 @@
 [![CI](https://github.com/CalebChen941028/agent-teamwork-harness/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork-harness/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
-[![Version: 0.6.4](https://img.shields.io/badge/version-0.6.4-green.svg)](CHANGELOG.md)
+[![Version: 0.6.5](https://img.shields.io/badge/version-0.6.5-green.svg)](CHANGELOG.md)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 

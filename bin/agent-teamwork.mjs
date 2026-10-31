@@ -24,12 +24,12 @@ function readPackageJson() {
     const pkgPath = path.join(ROOT_DIR, "package.json");
     return JSON.parse(fs.readFileSync(pkgPath, "utf8"));
   } catch {
-    return { version: "0.6.4" };
+    return { version: "0.6.5" };
   }
 }
 
 const pkg = readPackageJson();
-const VERSION = pkg.version || "0.6.4";
+const VERSION = pkg.version || "0.6.5";
 
 function printHelp() {
   console.log(`
