@@ -3,7 +3,7 @@
 [![CI](https://github.com/CalebChen941028/agent-teamwork/actions/workflows/ci.yml/badge.svg)](https://github.com/CalebChen941028/agent-teamwork/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Node 18+](https://img.shields.io/badge/node-18+-blue.svg)](https://nodejs.org/)
-[![Version: 0.6.1](https://img.shields.io/badge/version-0.6.1-green.svg)](CHANGELOG.md)
+[![Version: 0.6.2](https://img.shields.io/badge/version-0.6.2-green.svg)](CHANGELOG.md)
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
@@ -165,7 +165,7 @@
 
 ## v0.6.0 重大特性与架构升级
 
-- **统一 CLI 与全平台安装卸载器（`bin/agent-teamwork.mjs`、`install.sh`、`uninstall.sh`）**：新增 `npx agent-teamwork` / `teamwork` 命令行入口，安装目标扩展至 `all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic`，支持 `--lang auto|zh|en` 自动语种探测、分平台独立安装清单与 `--purge-backups` 备份清理。
+- **统一 CLI 与全平台安装卸载器（`bin/agent-teamwork.mjs`、`install.sh`、`uninstall.sh`）**：新增 `npx agent-teamwork-harness` / `teamwork` 命令行入口，安装目标扩展至 `all|zcode|claude|codex|antigravity|agents|deepseek|opencode|workbuddy|cursor|windsurf|cline|aider|generic`，支持 `--lang auto|zh|en` 自动语种探测、分平台独立安装清单与 `--purge-backups` 备份清理。
 - **同里程碑重叠路径自动降级串行调度（`resolveMilestoneTopology`）**：当同一里程碑内多个子项声明的 `allowedPaths` 存在交集时，自动将 `parallelism` 从 `"concurrent"` 降级为 `"sequential"`，防止并行施工互相覆盖文件。
 - **ZCode DWF 状态机加固（`adapters/zcode/teamwork.dwf.ts`）**：修复跨任务经验库落盘时仅保留前 6 条的截断问题；补齐 `"sequential"` 串行施工分支；向返工与复核阶段传递越界改动告警；增加重规划空列表与里程碑上限保护。
 - **手术式代码块替换与写入前语法预检（`benchmarks/live-eval.mjs`、`benchmarks/swebench/runner.mjs`）**：在线评测与 SWE-bench 驱动器支持 `<replace path="...">` 三级空白容错块替换（`normalizeForMatching`）、沙箱语法预检（`node --check` / `JSON.parse` / `py_compile`）、目录边界精确拦截（`isForbiddenSwebenchPath`）与单轨独立 Token 账本。
@@ -187,7 +187,7 @@
 
 ## 安装与卸载说明
 
-可通过 `--lang auto|zh|en`（或 `npx agent-teamwork install`）将对应语言的角色库与协议一键安装至任意目标智能体环境：
+可通过 `--lang auto|zh|en`（或 `npx agent-teamwork-harness install`）将对应语言的角色库与协议一键安装至任意目标智能体环境：
 
 ```bash
 # 一键安装到本机已检测到的所有智能体环境（自动识别系统语言）

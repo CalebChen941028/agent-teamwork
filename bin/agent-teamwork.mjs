@@ -4,10 +4,10 @@
  * agent-teamwork — Unified CLI interface
  *
  * Provides a direct command-line entrypoint for agent-teamwork:
- *   npx agent-teamwork install --target all --lang auto
- *   npx agent-teamwork benchmark --verbose
- *   npx agent-teamwork live --tasks LIVE-01-WORKSPACE-MONOREPO
- *   npx agent-teamwork swebench --dry-run
+ *   npx agent-teamwork-harness install --target all --lang auto
+ *   npx agent-teamwork-harness benchmark --verbose
+ *   npx agent-teamwork-harness live --tasks LIVE-01-WORKSPACE-MONOREPO
+ *   npx agent-teamwork-harness swebench --dry-run
  */
 
 import { fileURLToPath } from "node:url";
@@ -24,12 +24,12 @@ function readPackageJson() {
     const pkgPath = path.join(ROOT_DIR, "package.json");
     return JSON.parse(fs.readFileSync(pkgPath, "utf8"));
   } catch {
-    return { version: "0.6.1" };
+    return { version: "0.6.2" };
   }
 }
 
 const pkg = readPackageJson();
-const VERSION = pkg.version || "0.6.1";
+const VERSION = pkg.version || "0.6.2";
 
 function printHelp() {
   console.log(`
