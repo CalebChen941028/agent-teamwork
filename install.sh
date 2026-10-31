@@ -9,7 +9,7 @@ DRY_RUN=false
 DEST=""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "0.6.1")"
+VERSION="$(cat "$SCRIPT_DIR/VERSION" 2>/dev/null || echo "0.6.2")"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

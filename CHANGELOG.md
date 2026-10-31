@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.6.2] - 2026-10-31
+
+### Changed
+- **npm package renamed to `agent-teamwork-harness`**
+  - The bare `agent-teamwork` name on the public npm registry is held by an unrelated publisher, so publishing under it is impossible.
+  - Added an `agent-teamwork-harness` bin alias; the `agent-teamwork` and `teamwork` command names are unchanged.
+  - Updated the `npx` examples in both READMEs to the new package name.
+
 ## [0.6.1] - 2026-10-31
 
 ### Fixed
